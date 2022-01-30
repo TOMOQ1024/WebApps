@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>Snake</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        overflow: hidden;
+      }
+      html,body,#wrapper{
+        height: 100%;
+      }
+      #canvas{
+        transition: .3s;
+        background-image: url(tiles\\202020-o.png);
+        background-size: 5% 5%;
+        z-index: 10;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <canvas id="canvas"></canvas>
+    </div>
+  </body>
+  <script type="text/javascript">
+    //
+
+
+
+
+
+    let player;//  e:[[x,y],[x,y],...], r:*, v=*, c:"#*"
+    let coin;
+    let mouse,touch;
+    let score;
+
+
+    let wr = document.querySelector("#wrapper");
+    let cvs = document.querySelector("#canvas");
+    cvs.width = window.innerWidth*.9;
+    cvs.height = window.innerHeight*.9;
+    let ctx = cvs.getContext("2d");
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+
+
+
+
+    setTimeout(() => {
+      Init();
+
+      //  クリック時動作
+      mouse = {
+        b : 0,
+        p : [0,0]
+      }
+      touch = {
+        b : 0,
+        touching : 0,
+        start : [0,0],
+        angle : 0
+      }
+      wr.onclick = () => {
+        ctx.clearRect(0,0,cvs.width,cvs.height);
+        wr.onclick = "";
+
+        Main();
+      };
+      wr.onmousemove = (e) => {
+        //if(touch.b)return false;
+        if(!mouse.b)mouse.b = 1;
+        mouse.p = [
+          e.pageX - e.target.offsetLeft,
+          e.pageY - e.target.offsetTop
+        ];
+      };
+
+      /*
+      cvs.addEventListener("mousemove",()=>{
+        event.preventDefault();
+        mouse.p = [
+          event.pageX - event.target.offsetLeft,
+          event.pageY - event.target.offsetTop
+        ];
+      });
+      */
+
+      //  スワイプ操作
+      wr.ontouchstart=()=>{
+        let x = event.touches[0].pageX;
+        let y = event.touches[0].pageY;
+        touch.start = [x,y];
+      };
+      wr.ontouchmove = () => {
+        let x = event.touches[0].pageX;
+        let y = event.touches[0].pageY;
+        if(!touch.b){
+          touch.b = 1;
+          mouse.p = [x,y];
+        }
+        if(mouse.b)mouse.b = 0;
+        /*
+        if((x-touch.start[0])**2 + (y-touch.start[1])**2 > 25**2){
+          touch.angle = Math.atan2(y-touch.start[1],x-touch.start[0]);
+          //player.d = touch.angle;
+          touch.start = [x,y];
+        }
+        */
+        ///////////////////////////////////
+        mouse.p = [
+          mouse.p[0] + (x - touch.start[0])*2,
+          mouse.p[1] + (y - touch.start[1])*2
+        ];
+        touch.start = [x,y];
+        ///////////////////////////////////
+      }
+    }, 100);
+
+
+
+
+
+
+
+    //  初期画面
+    function Init(){
+      ctx.fillStyle = "#ffffff80";
+      ctx.fillRect(0,0,cvs.width,cvs.height);
+      ctx.fillStyle = "black";
+      ctx.font = ""+cvs.width/10+"px serif";
+      ctx.fillText("START",cvs.width/2,cvs.height/2);
+
+      //  変数
+      score = 0;
+
+      player = {
+        e : [[cvs.width/2,cvs.height/2]],
+        r : Math.max(cvs.width,cvs.height)/30,
+        v : Math.max(cvs.width,cvs.height)/300,
+        d : 0,
+        c : "green",
+        update : ()=>{
+          if(/*mouse.b*/1){
+            //  マウス操作
+            let a = [Math.cos(player.d),Math.sin(player.d)];//  蛇ベクトル
+            a = [a[0]/(a[0]**2+a[1]**2)*.5,a[1]/(a[0]**2+a[1]**2)*.5];//  正規化
+            let b = [mouse.p[0]-player.e[0][0],mouse.p[1]-player.e[0][1]];//  蛇マウスベクトル
+            b = [b[0]/(b[0]**2+b[1]**2)*.5,b[1]/(b[0]**2+b[1]**2)*.5];//  正規化
+            //  内積がcos(pi/64)より小さいとき
+            if(a[0]*b[0]+a[1]*b[1] < Math.cos(Math.PI/32)){
+              //  (sign引数は外積)
+              player.d += Math.PI/32*Math.sign(a[0]*b[1]-a[1]*b[0]);
+            }else{
+              player.d = Math.atan2(
+                b[1],
+                b[0]
+              );
+            }
+          }else if(touch.b){
+            //  スワイプ操作
+            let a = [Math.cos(player.d),Math.sin(player.d)];//  蛇ベクトル
+            a = [a[0]/(a[0]**2+a[1]**2)*.5,a[1]/(a[0]**2+a[1]**2)*.5];//  正規化
+            let b = [Math.cos(touch.angle),Math.sin(touch.angle)];//  スワイプベクトル
+            //  内積がcos(pi/64)より小さいとき
+            if(a[0]*b[0]+a[1]*b[1] < Math.cos(Math.PI/32)){
+              //  (sign引数は外積)
+              player.d += Math.PI/32*Math.sign(a[0]*b[1]-a[1]*b[0]);
+            }else{
+              player.d = Math.atan2(
+                b[1],
+                b[0]
+              );
+            }
+          }
+
+          //  前進
+          player.e.unshift([player.e[0][0]+Math.cos(player.d)*player.v,player.e[0][1]+Math.sin(player.d)*player.v]);
+          player.e.pop();
+
+          //  コイン獲得判定
+          for(let i=0; i<coin.e.length; i++){
+            //  蛇の頭とコインiとの距離が蛇r+コインrより小さいとき
+            if(
+              (player.e[0][0]-coin.e[i][0])**2+(player.e[0][1]-coin.e[i][1])**2 < (player.r+coin.r)**2
+            ){
+              coin.e.splice(i,1);//  獲得したコインを消す
+              coin.add();//  新しくコインを置く
+              player.add();//  体を伸ばす
+              score += 1;//  スコア加算
+              //  スコアに応じてギミック作動
+              //  コインをとる毎にスピード1.01倍
+              player.v *= 1.01;
+              if(score%50 === 0){
+                //  50毎にコイン追加
+                coin.add();
+              }
+            }
+          }
+
+          //  壁衝突判定
+          if(
+              (player.e[0][0] < player.r)
+            ||(cvs.width - player.r < player.e[0][0])
+            ||(player.e[0][1] < player.r)
+            ||(cvs.height - player.r < player.e[0][1])
+          ){
+            End();//  ゲームオーバー
+          }
+          //  自己衝突判定
+          for(let i=20; i<player.e.length; i++){
+            if(
+              (player.e[0][0]-player.e[i][0])**2+(player.e[0][1]-player.e[i][1])**2 < (player.r*3/2)**2
+            ){
+              End();//  ゲームオーバー
+            }
+          }
+        },
+        add : ()=>{
+          player.e.push(
+            [
+              player.e[player.e.length-1][0],
+              player.e[player.e.length-1][1]
+            ]
+          );
+        }
+      };
+
+      coin = {
+        e : [
+          [cvs.width*(Math.random()*.8+.1),cvs.height*(Math.random()*.8+.1)]
+        ],
+        r : Math.max(cvs.width,cvs.height)/100,
+        c : "yellow",
+        add : ()=>{
+          coin.e.push(
+            [cvs.width*(Math.random()*.9+.05),cvs.height*(Math.random()*.8+.1)]
+          );
+          /*/
+          coin.e.push(
+            [cvs.width*(Math.random()*.8+.1),cvs.height*(Math.random()*.8+.1)]
+          );
+          /**/
+        }
+      }
+    }
+
+
+
+
+
+
+    //  繰り返す
+    function Main(){
+      player.update();
+      Draw();
+
+
+
+
+      requestAnimationFrame(Main);
+    }
+
+    //  描画
+    function Draw(){
+      //  初期化
+      ctx.clearRect(0,0,cvs.width,cvs.height);
+
+      //  プレイヤー描画
+
+      /*
+        ctx.fillStyle = player.c;
+        for(let i=0; i<player.e.length; i++){
+          ctx.beginPath();
+          ctx.arc(player.e[i][0],player.e[i][1],player.r,0,Math.PI*2);
+          ctx.fill();
+        }
+      */
+      ctx.fillStyle = player.c;
+      ctx.beginPath();
+      ctx.arc(player.e[0][0],player.e[0][1],player.r,0,Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = player.c;
+      ctx.lineWidth = player.r;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(player.e[0][0],player.e[0][1]);
+      for(let i=1; i<player.e.length; i++){
+        ctx.lineTo(player.e[i][0],player.e[i][1]);
+      }
+      ctx.stroke();
+
+      //  コイン描画
+      ctx.fillStyle = coin.c;
+      for(let i=0; i<coin.e.length; i++){
+        ctx.beginPath();
+        ctx.arc(coin.e[i][0],coin.e[i][1],coin.r,0,Math.PI*2);
+        ctx.fill();
+      }
+
+      //  スコア描画
+      ctx.textAlign = "right";
+      ctx.textBaseline = "top";
+      ctx.fillStyle = "cyan";
+      ctx.font = ""+cvs.width/20+"px serif";
+      ctx.fillText("SCORE : "+score,cvs.width,0);
+
+      //  タッチ時ポインター描画
+      if(touch.b){
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = coin.r/2;
+        ctx.beginPath();
+        //ctx.arc(mouse.p[0],mouse.p[1],coin.r,0,Math.PI*2);
+        ctx.moveTo(mouse.p[0]+coin.r*2,mouse.p[1]);
+        ctx.lineTo(mouse.p[0]-coin.r*2,mouse.p[1]);
+        ctx.moveTo(mouse.p[0],mouse.p[1]+coin.r*2);
+        ctx.lineTo(mouse.p[0],mouse.p[1]-coin.r*2);
+        ctx.stroke();
+      }
+    }
+
+    //  ゲームオーバー
+    function End(){
+      player.v = 0;
+      if(confirm(
+        "GAME OVER!\n"+
+        "SCORE : "+score+"\n"+
+        "RETRY?"
+      ))Init();
+    }
+
+
+
+
+
+
+
+
+
+
+  </script>
+</html>

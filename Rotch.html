@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no"/>
+    <title>Rotch</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        overflow: hidden;
+      }
+      #wrapper{
+        position: relative;
+        opacity: 0;
+        transition: .5s;
+      }
+      #cwr{
+        display: inline-block;
+        position: absolute;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      #cvs{
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: initial;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <canvas id="mvs"></canvas>
+      <div id="cwr">
+        <canvas id="cvs"></canvas>
+        <!--  ここにアニメーション用のcanvasが挿入される  -->
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript">
+    //
+
+
+    const R3 = Math.sqrt(3);//  ここではよく使うため，定数とする
+    const dt = 270;//  ms
+    let ctrl;
+    let score;
+    let combo;
+    const time0 = 20;
+    let time;
+    let stonecolors = [
+      "#37f",//  Blue
+      "#f43",//  Red
+      "#6f5",//  Green
+      "#fc3",//  Yellow
+      "#f7d"//  Pink*/
+    ]
+    let cells;//  [5,7,7,5]
+    let adjcells = [
+      //  x列目
+      [
+        //  y行目
+        [
+          [1,1],[0,1]
+        ],[
+          [0,0],[0,2]
+        ],[
+          [0,1],[1,3],[0,3]
+        ],[
+          [0,2],[0,4]
+        ],[
+          [0,3],[1,5]
+        ]
+      ],[
+        [
+          [2,0],[1,1]
+        ],[
+          [1,0],[1,2],[0,0]
+        ],[
+          [1,1],[2,2],[1,3]
+        ],[
+          [1,2],[1,4],[0,2]
+        ],[
+          [1,3],[2,4],[1,5]
+        ],[
+          [1,4],[0,4],[1,6]
+        ],[
+          [1,5],[2,6]
+        ]
+      ],[
+        [
+          [2,1],[1,0]
+        ],[
+          [2,0],[3,0],[2,2]
+        ],[
+          [2,1],[2,3],[1,2]
+        ],[
+          [2,2],[3,2],[2,4]
+        ],[
+          [2,3],[2,5],[1,4]
+        ],[
+          [2,4],[3,4],[2,6]
+        ],[
+          [2,5],[1,6]
+        ]
+      ],[
+        [
+          [3,1],[2,1]
+        ],[
+          [3,0],[3,2]
+        ],[
+          [3,1],[3,3],[2,3]
+        ],[
+          [3,2],[3,4]
+        ],[
+          [3,3],[2,5]
+        ]
+      ]
+    ];
+    const Sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+    //  長さの単位
+    let len = Math.min(window.innerWidth/(5*R3),window.innerHeight/(11))*.9;
+    //  canvas定義(まとめるためにif1)
+    if(1){
+      //  menu_canvas  全体を覆い, スコア, canvas, タイマーがこの上に描画される。
+      mvs = document.querySelector("#mvs");
+      mtx = mvs.getContext("2d");
+      mvs.width = len*5*R3;
+      mvs.height = len*11;
+
+      //  main_canvas  石の描画をする。
+      cvs = document.querySelector("#cvs");
+      ctx = cvs.getContext("2d");
+      cvs.width = len*4*R3;
+      cvs.height = len*8;
+
+      //  canvas_wrapper  main_canvas, アニメーション用canvasを含む。
+      cwr = document.querySelector("#cwr");
+      cwr.style.left = `${len*R3*.5}px`;
+      cwr.style.top = `${len*2}px`;
+      cwr.style.width = `${len*4*R3}px`;
+      cwr.style.height = `${len*8}px`;
+    }
+
+
+
+
+    window.onload = () => {
+      document.querySelector("#wrapper").style.opacity = 1;
+      Init();
+
+      cvs.onclick = async (e) => {
+        if(!ctrl)return 0;
+        let x = e.offsetX/len;
+        let y = e.offsetY/len;
+        if(4*R3 <= Math.abs(Math.abs(x-2*R3)+R3*Math.abs(y-4)))return 0;
+        let l;
+        let ll = Infinity;
+        let lll;
+
+        for(let i=0; i<7; i++){
+          l = (x-R3*[1,1,2,2,2,3,3][i])**2+(y-[3,5,2,4,6,3,5][i])**2;
+          if(l<ll){
+            ll = l;
+            lll = i;
+          }
+        }
+
+        ctrl = 0;
+        Rotate(lll);
+        await Sleep(dt+50);
+        Check();
+      }
+    }
+
+    //  初期化
+    function Init(){
+      cells = [];
+      for(let x=0; x<4; x++){
+        cells.push([]);
+        for(let y=0; y<8-Math.abs(x*2-3); y++){
+          cells[x].push(Math.floor(Math.random()*stonecolors.length));
+        }
+      }
+      RemoveMatch(0);
+      score = 0;
+      combo = 0;
+      time = {
+        crnt : time0+2,
+        delta : 50,
+        dec : ()=>{time.crnt=Math.max(0,time.crnt-time.delta/1000)}
+      }
+      DrawMenu();
+      DrawAll();
+      Timer();
+    }
+
+    //  石の描画
+    function DrawAll(){
+      ctx.clearRect(0,0,cvs.width,cvs.height);
+      //  石の描画
+      for(let x=0; x<4; x++){
+        for(let y=0; y<8-Math.abs(x*2-3); y++){
+          if(cells[x][y]<0)continue;
+          ctx.fillStyle = stonecolors[cells[x][y]];
+          ctx.beginPath();
+          ctx.arc(
+            len*R3*(x+((1<x?y%2:1-y%2)+1)/3),
+            len*(y+(Math.abs(x*2-3)-1)/2+1),
+            len*R3*.3,0,Math.PI*2
+          );
+          ctx.fill();
+        }
+      }
+
+      //  操作ボタンの描画
+      for(let x=0; x<3; x++){
+        for(let y=0; y<3-Math.abs(x-1); y++){
+          ctx.fillStyle = "#000";
+          ctx.beginPath();
+          ctx.arc(
+            len*R3*(x+1),
+            len*(y*2+Math.abs(x-1)+2),
+            len*R3*.18,0,Math.PI*2
+          );
+          ctx.fill();
+          ctx.fillStyle = ctrl ? "#0f0" : "#040";
+          ctx.beginPath();
+          ctx.arc(
+            len*R3*(x+1),
+            len*(y*2+Math.abs(x-1)+2),
+            len*R3*.14,0,Math.PI*2
+          );
+          ctx.fill();
+        }
+      }
+    }
+
+    //  背景, スコア, タイマーの描画
+    function DrawMenu(){
+      //  背景
+      mtx.fillStyle = "#000";
+      mtx.fillRect(0,0,mvs.width,mvs.height);
+
+      //  main_canvas背景
+      mtx.fillStyle = "#333";
+      mtx.beginPath();
+      mtx.moveTo(len*R3*2.5,len*2);
+      mtx.lineTo(len*R3*.5,len*4);
+      mtx.lineTo(len*R3*.5,len*8);
+      mtx.lineTo(len*R3*2.5,len*10);
+      mtx.lineTo(len*R3*4.5,len*8);
+      mtx.lineTo(len*R3*4.5,len*4);
+      mtx.lineTo(len*R3*2.5,len*2);
+      mtx.fill();
+
+      //  枠
+      mtx.strokeStyle = "black";
+      mtx.lineWidth = len/16;
+      for(let i=-1; i<4; i++){
+        //  左上から右下へ
+        mtx.beginPath();
+        mtx.moveTo(0,len*(2*i+1.5));
+        mtx.lineTo(mvs.width,len*(2*i+6.5));
+        mtx.stroke();
+        //  右上から左下へ
+        mtx.beginPath();
+        mtx.moveTo(mvs.width,len*(2*i+1.5));
+        mtx.lineTo(0,len*(2*i+6.5));
+        mtx.stroke();
+      }
+      for(let i=0; i<5; i++){
+        //  上から下へ
+        mtx.beginPath();
+        mtx.moveTo(len*R3*(i+.5),0);
+        mtx.lineTo(len*R3*(i+.5),mvs.height);
+        mtx.stroke();
+      }
+
+      //  タイマー
+      mtx.strokeStyle = "#0f0";
+      mtx.lineWidth = len/4;
+      mtx.save();
+      mtx.beginPath();
+      mtx.moveTo(len*R3*2.5,len*6);
+      if(time0<time.crnt)mtx.arc(len*R3*2.5,len*6,len*6,-Math.PI*2*(2-time.crnt+time0)/2-Math.PI/2,-Math.PI/2);
+      else mtx.arc(len*R3*2.5,len*6,len*6,-Math.PI*2*Math.min(time.crnt,time0)/time0-Math.PI/2,-Math.PI/2);
+      mtx.closePath();
+      mtx.clip();
+      mtx.beginPath();
+      mtx.moveTo(len*R3*2.5,len*1.5);
+      mtx.lineTo(len*R3*4.75,len*3.75);
+      mtx.lineTo(len*R3*4.75,len*8.25);
+      mtx.lineTo(len*R3*2.5,len*10.5);
+      mtx.lineTo(len*R3*.25,len*8.25);
+      mtx.lineTo(len*R3*.25,len*3.75);
+      mtx.closePath();
+      mtx.stroke();
+      mtx.restore();
+
+      //  スコア
+      mtx.fillStyle = "#0f0";
+      mtx.font = `${len}px serif`;
+      mtx.textAlign = "center";
+      mtx.bottomline = "middle";
+      mtx.fillText(`SCORE : ${score}`,len*R3*2.5,len);
+    }
+
+    //
+    async function Check(){
+      ctrl = 0;
+      while(GetRemovableStones().length){
+        RemoveMatch(1);
+        await Sleep(dt*2+50);
+        combo += 1;
+      }
+      combo = 0;
+      ctrl = 1;
+      DrawAll();
+    }
+
+    //  回転
+    async function Rotate(i){
+      let C = document.createElement("canvas");
+      let stones = [
+        [
+          [0,0],[0,1],[0,2],[1,3],[1,2],[1,1]
+        ],[
+          [0,2],[0,3],[0,4],[1,5],[1,4],[1,3]
+        ],[
+          [1,0],[1,1],[1,2],[2,2],[2,1],[2,0]
+        ],[
+          [1,2],[1,3],[1,4],[2,4],[2,3],[2,2]
+        ],[
+          [1,4],[1,5],[1,6],[2,6],[2,5],[2,4]
+        ],[
+          [2,1],[2,2],[2,3],[3,2],[3,1],[3,0]
+        ],[
+          [2,3],[2,4],[2,5],[3,4],[3,3],[3,2]
+        ]
+      ][i];
+      for(let j=0; j<6; j++)stones[j].push(cells[stones[j][0]][stones[j][1]]);
+      cwr.appendChild(C);
+      let c = C.getContext("2d");
+      C.width = len*R3*2;
+      C.height = len*4;
+      C.style.position = "absolute";
+      C.style.left = `${len*R3*[1,1,2,2,2,3,3][i]}px`;
+      C.style.top = `${len*[3,5,2,4,6,3,5][i]}px`;
+      C.style.transform = `translate3d(${-len*R3}px,${-len*2}px,0) rotate(0deg)`;
+      C.opacity = 1;
+      //  fill
+      if(1){
+        c.fillStyle = stonecolors[stones[0][2]];
+        cells[stones[0][0]][stones[0][1]] = -1;
+        c.beginPath();
+        c.arc(
+          len*R3*2/3,
+          len*1,
+          len*R3*.3,0,Math.PI*2
+        );
+        c.fill();
+        c.fillStyle = stonecolors[stones[1][2]];
+        cells[stones[1][0]][stones[1][1]] = -1;
+        c.beginPath();
+        c.arc(
+          len*R3*1/3,
+          len*2,
+          len*R3*.3,0,Math.PI*2
+        );
+        c.fill();
+        c.fillStyle = stonecolors[stones[2][2]];
+        cells[stones[2][0]][stones[2][1]] = -1;
+        c.beginPath();
+        c.arc(
+          len*R3*2/3,
+          len*3,
+          len*R3*.3,0,Math.PI*2
+        );
+        c.fill();
+        c.fillStyle = stonecolors[stones[3][2]];
+        cells[stones[3][0]][stones[3][1]] = -1;
+        c.beginPath();
+        c.arc(
+          len*R3*4/3,
+          len*3,
+          len*R3*.3,0,Math.PI*2
+        );
+        c.fill();
+        c.fillStyle = stonecolors[stones[4][2]];
+        cells[stones[4][0]][stones[4][1]] = -1;
+        c.beginPath();
+        c.arc(
+          len*R3*5/3,
+          len*2,
+          len*R3*.3,0,Math.PI*2
+        );
+        c.fill();
+        c.fillStyle = stonecolors[stones[5][2]];
+        cells[stones[5][0]][stones[5][1]] = -1;
+        c.beginPath();
+        c.arc(
+          len*R3*4/3,
+          len*1,
+          len*R3*.3,0,Math.PI*2
+        );
+        c.fill();
+      }
+      DrawAll();
+      C.style.transition = `${dt-40}ms`;
+      await Sleep(20);
+      C.style.transform = `translate3d(${-len*R3}px,${-len*2}px,0) rotate(60deg)`;
+      await Sleep(dt-40);
+      C.style.transition = `0s`;
+      await Sleep(20);
+      for(let j=0; j<6; j++){
+        cells[stones[j][0]][stones[j][1]] = stones[(j+1)%6][2];
+      }
+      DrawAll();
+      cwr.removeChild(C);
+    }
+
+    //  消去可能な石の消去
+    async function RemoveMatch(b){
+      //  アニメーション有
+      if(b){
+        let rstones = GetRemovableStones();
+        if(!rstones.length)return 0;
+        for(let i=0; i<rstones.length; i++){
+          Replace(rstones[i][0],rstones[i][1],Math.floor(Math.random()*stonecolors.length));
+        }
+        score += (2 + ((rstones.length)-2)**2)*(combo+1);
+        time.crnt += (2 + ((rstones.length)-2)**2)*(combo+1)/4;
+        time.crnt = Math.min(time.crnt,time0);
+      }
+      //  アニメーション無
+      else{
+        let rstones = GetRemovableStones();
+        while(rstones.length){
+          for(let i=0; i<rstones.length; i++){
+            cells[rstones[i][0]][rstones[i][1]] = Math.floor(Math.random()*stonecolors.length);
+          }
+          rstones = GetRemovableStones();
+        }
+        DrawAll();
+      }
+    }
+
+    //  石の置換
+    async function Replace(x,y,i){
+      let C = document.createElement("canvas");
+      cwr.appendChild(C);
+      let c = C.getContext("2d");
+      C.width = cvs.width;
+      C.height = cvs.height;
+      C.style.position = "absolute";
+      C.style.left = 0;
+      C.style.top = 0;
+      C.opacity = 1;
+      C.style.transition = `${dt-40}ms`;
+      c.fillStyle = stonecolors[cells[x][y]];
+      c.beginPath();
+      c.arc(
+        len*R3*(x+((1<x?y%2:1-y%2)+1)/3),
+        len*(y+(Math.abs(x*2-3)-1)/2+1),
+        len*R3*.3,0,Math.PI*2
+      );
+      c.fill();
+      cells[x][y] = -1;
+      DrawAll();
+      await Sleep(20);
+      //  fade out
+      C.style.opacity = 0;
+      await Sleep(dt-40);
+      C.style.transition = "0s";
+      c.clearRect(0,0,C.width,C.height);
+      c.fillStyle = stonecolors[i];
+      await Sleep(20);
+      C.style.opacity = 1;
+      for(let j=0; j<=10; j++){
+        c.beginPath();
+        c.arc(
+          len*R3*(x+((1<x?y%2:1-y%2)+1)/3),
+          len*(y+(Math.abs(x*2-3)-1)/2+1),
+          len*R3*.03*j,0,Math.PI*2
+        );
+        c.fill();
+        await Sleep((dt-20)/11);
+      }
+      C.style.transition = "0s";
+      await Sleep(20);
+      cells[x][y] = i;
+      DrawAll()
+      cwr.removeChild(C);
+    }
+
+    //  消去可能な石の配列
+    function GetRemovableStones(){
+      let stones = CopyArr(cells);//  cellsのコピー。探索済の石は-1
+      let group;
+      let rtn = [];
+      let adj;
+      for(let x=0; x<4; x++){
+        for(let y=0; y<8-Math.abs(x*2-3); y++){
+          if(stones[x][y]<0)continue;
+          group = [[x,y]];
+          adj = CopyArr(adjcells[x][y]);
+          stones[x][y] = -1;
+          while(adj.length){
+            if(
+              !(stones[adj[0][0]][adj[0][1]]<0) &&
+              cells[x][y]===stones[adj[0][0]][adj[0][1]]
+            ){
+              group.push(CopyArr(adj[0]));
+              adj = adj.concat(adjcells[adj[0][0]][adj[0][1]]);
+              stones[adj[0][0]][adj[0][1]] = -1;
+            }
+            adj.shift();
+          }
+          if(3 <= group.length){
+            rtn = rtn.concat(group);
+          }
+        }
+      }
+      return rtn;
+    }
+
+    //  配列のコピー
+    function CopyArr(arg){
+      return Array.isArray(arg) ? arg.map(i=>CopyArr(i)) : arg;
+    }
+
+    //  タイマー
+    async function Timer(){
+      while(time0 < time.crnt){
+        time.dec();
+        DrawMenu();
+        await Sleep(time.delta);
+      }
+      ctrl = 1;
+      DrawAll();
+      while(0 < time.crnt){
+        time.dec();
+        DrawMenu();
+        await Sleep(time.delta);
+      }
+      while(!ctrl){
+        DrawMenu();
+        await Sleep(time.delta);
+      }
+      if(0 < time.crnt){
+        Timer();
+        return 0;
+      }
+      if(confirm(
+        "TIME UP!\n"+
+        `SCORE : ${score}\n`+
+        "Retry?"
+      )){
+        Init();
+      }else{
+        ctrl = 0;
+      }
+    }
+
+
+
+
+
+
+
+
+    /*  参考URL
+
+    Sleep関数
+    https://qiita.com/asa-taka/items/888bc5a1d7f30ee7eda2
+
+    */
+
+
+
+
+
+
+
+  </script>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no"/>
+    <title>Reversi</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+  </body>
+  <script type="text/javascript">
+    //
+
+
+
+
+
+
+
+    let len = Math.round(Math.min(window.innerWidth,window.innerHeight)/8*.9);
+    let cvs = document.querySelector("#canvas");
+    let ctx = cvs.getContext("2d");
+    cvs.width = len*8;
+    cvs.height = len*8;
+    //cvs.style.background = "green";//"#0E9E18";
+
+    let time = [0,0,[]];
+    let player = 0;
+    let stones;//  連想配列を含む二次元配列
+    let guide = +!(prompt("ガイドの有無を選択\n0:無 1:有")==="0");
+    let canput = [];
+    let countrand = 0;
+    let opponent = +!(prompt("相手を選択\n0 : プレイヤー\n1 : Mardon (\"random\"に石を置く)")==="0");//  相手  0:another player, 1:Mardon
+    let ctrl = 0;
+
+
+    Init();
+
+
+
+
+
+    //  ゲーム初期化
+    function Init(){
+      //  石の配列の初期化
+      stones = [];
+      for(let y=0; y<8; y++){
+        stones.push([]);
+        for(let x=0; x<8; x++){
+          stones[y].push({
+            /*
+            int value
+              -1 : empty
+               0 : black
+               1 : white
+            array turn
+              そこにplayerを置いた場合にひっくり返す石の個数
+            */
+            value:-1
+          });
+        }
+      }
+      stones[3][3].value = 0;
+      stones[3][4].value = 1;
+      stones[4][3].value = 1;
+      stones[4][4].value = 0;
+
+      Calc();
+      Draw();
+
+      //  クリック時の動作
+      cvs.onclick = (e)=>{
+        let x = (Math.floor(e.offsetX/len));
+        let y = (Math.floor(e.offsetY/len));
+
+        //  ランダム動作コマンド
+        if(x===countrand && !y){
+          countrand++;
+          if(countrand === 8){
+            countrand = 0;
+            Rand(Number(prompt("Rand:")) || 60);
+          }
+        }else{
+          countrand = 0;
+        }
+
+        if(stones[y][x].turn.length && ctrl){
+          //  設置可能
+          Put(x,y);
+          Draw();
+          if(opponent){
+            //  Mardon
+            ctrl = 0;
+            setTimeout(function(){
+              if(player){
+                Rand(1);
+              }
+              ctrl = 1;
+            }, 500);
+          }
+        }
+      };
+
+      ctrl = 1;
+    }
+
+    //  全体の描画
+    function Draw(){
+      ctx.shadowBlur = len/16;
+      ctx.shadowColor = "#00000050";
+      ctx.shadowOffsetX = len/16;
+      ctx.shadowOffsetY = len/16;
+      ctx.clearRect(0,0,cvs.width,cvs.height);
+
+      //  背景
+      ctx.fillStyle = "green";
+      ctx.fillRect(0,0,cvs.width,cvs.height);
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = len*.04;
+      for(let i=1; i<8; i++){
+        ctx.beginPath();
+        ctx.moveTo(0,len*i);
+        ctx.lineTo(cvs.width,len*i);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(len*i,0);
+        ctx.lineTo(len*i,cvs.height);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "black";
+      for(let y=0; y<2; y++){
+        for(let x=0; x<2; x++){
+          ctx.beginPath();
+          ctx.arc(len*(2+4*x),len*(2+4*y),len*.08,0,Math.PI*2);
+          ctx.fill();
+        }
+      }
+
+      //  石
+      for(let y=0; y<8; y++){
+        for(let x=0; x<8; x++){
+          if(stones[y][x].value<0){
+            if(stones[y][x].turn.length && guide){
+              ctx.fillStyle = player ? "#ffffff80" : "#00000080";
+              ctx.beginPath();
+              ctx.arc(len*(x+.5),len*(y+.5),len*.1,0,Math.PI*2);
+              ctx.fill();
+            }
+          }else{
+            ctx.fillStyle = stones[y][x].value ? "white" : "black";
+            ctx.beginPath();
+            ctx.arc(len*(x+.5),len*(y+.5),len*.4,0,Math.PI*2);
+            ctx.fill();
+          }
+        }
+      }
+    }
+
+    //  stones内のturnを設定
+    function Calc(){
+      canput = [];
+      let bool = 0;
+      for(let y=0; y<8; y++){
+        for(let x=0; x<8; x++){
+          stones[y][x].turn = [];
+          if(0 <= stones[y][x].value)continue;
+          for(let t=0; t<8; t++){
+            let dx = Math.max(-1,Math.min(1,Math.abs(t-4)-2));
+            let dy = Math.max(-1,Math.min(1,Math.abs(t-2)-Math.abs(t-6)-t+4));
+            let p = x+dx;
+            let q = y+dy;
+            let arr = [];
+            while(0<=p&&p<8 && 0<=q&&q<8){
+              if(stones[q][p].value === 1-player){
+                //  異色
+                arr.push({x:p,y:q});
+                if(bool!==2)bool = 1;
+                p += dx;
+                q += dy;
+              }else if(stones[q][p].value === player){
+                //  同色
+                stones[y][x].turn = stones[y][x].turn.concat(arr);
+                if(arr.length){
+                  //  (x,y)は設置可能
+                  bool = 2;
+                  if(canput.indexOf(x+y*8)<0)canput.push(x+y*8);
+                }
+                break;
+              }else{
+                //  空白
+                break;
+              }
+            }
+          }
+        }
+      }
+      return bool===2;
+    }
+
+    //  石を置く
+    function Put(x,y){
+      //  タイム計測開始
+      if(!time[0])time[0] = Number(String(new Date().getTime()));
+
+      stones[y][x].value = player;
+      for(let i=0; i<stones[y][x].turn.length; i++){
+        stones[stones[y][x].turn[i].y][stones[y][x].turn[i].x].value = player;
+      }
+      player = 1-player;
+      if(!Calc()){
+        //  パス or 終了
+        player = 1-player;
+        if(Calc()){
+          //  パス
+          ////////////////////////////////////////////  draw "pass" for a while
+        }else{
+          End();
+        }
+      }
+    }
+
+    //  ランダムにn手打つ
+    function Rand(n){
+      let id;
+      for(let i=0; i<Math.min(n,60); i++){
+        if(!canput.length){
+          player = 1-player;
+          Calc();
+          continue;
+        }
+        id = canput[Math.floor(Math.random()*canput.length)];
+        //console.log(id);
+        Put(id%8,Math.floor(id/8));
+        Calc();
+      }
+      Draw();
+    }
+
+    //  終了
+    function End(){
+      let count = [0,0];
+      for(let y=0; y<8; y++){
+        for(let x=0; x<8; x++){
+          if(0 <= stones[y][x].value){///////////////////////////////////  終了条件について
+            count[stones[y][x].value]++;
+          }
+        }
+      }
+
+      time[1] = Number(String(new Date().getTime()));
+      time[2][0] = time[1] - time[0];
+      time[2][1] = time[2][0] % 1000;//cs
+      time[2][2] = (time[2][0]-time[2][1])/1000 % 60//sec
+      time[2][3] = (time[2][0]-time[2][1]-time[2][2]*1000)/60000//min
+      setTimeout(function(){
+        if(confirm(
+          (count[0]===count[1] ? "引き分け!\n" : (count[0]<count[1] ? "白の勝利!\n" : "黒の勝利!\n"))+
+          "黒 : "+count[0]+", 白 : "+count[1]+"\n"+
+          "タイム : "+
+          time[2][3]+"分"+
+          String(time[2][2]).padStart(2,'0')+'.'+String(time[2][1]).padStart(3,'0')+"秒"
+        )){
+          Init();
+        }
+        time = [0,0,[]];
+      }, 100);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </script>
+</html>
