@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no"/>
+    <title>Stopwatch Game</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" onclick="OnClick(event,0)"></canvas>
+  </body>
+  <script type="text/javascript">
+    //
+
+
+
+
+
+    let width = 9;
+    let height = 5;
+    const Sleep = ms => new Promise(r=>setTimeout(r,ms));
+    let Segs = {
+      "0":"11100110011001110",
+      "1":"00001000000100000",
+      "2":"11000011110000110",
+      "3":"11000011100001110",
+      "4":"00100011100001000",
+      "5":"11100001100001110",
+      "6":"11100001110001110",
+      "7":"11000010000001000",
+      "8":"11100011110001110",
+      "9":"11100011100001110",
+      "A":"11100011110001000",
+      "B":"10101001110001110",
+      "C":"11100000010000110",
+      "D":"11001010000101110",
+      "E":"11100001010000110",
+      "F":"11100001010000000",
+      "G":"11100000110001110",
+      "H":"00100011110001000",
+      "I":"11001000000100110",
+      "J":"11001000010100100",
+      "K":"00100101010010000",
+      "L":"00100000010000110",
+      "M":"00110110010001000",
+      "N":"00110010010011000",
+      "O":"11100010010001110",
+      "P":"11100011110000000",
+      "Q":"11100010010011110",
+      "R":"11100011110010000",
+      "S":"11010000100001110",
+      "T":"11001000000100000",
+      "U":"00100010010001110",
+      "V":"00100100011000000",
+      "W":"00100010011011000",
+      "X":"00010100001010000",
+      "Y":"00010100000100000",
+      "Z":"11000100001000110",
+      "+":"00001001100100000",
+      "-":"00000001100000000",
+      "*":"00011100001110000",
+      "/":"00000100001000000",
+      "!":"00000100000000100",
+      "?":"11000010100000100",
+      "{":"01001001000100010",
+      "}":"10001000100100100",
+      "[":"01001000000100010",
+      "]":"10001000000100100",
+      " ":"00000000000000000",
+      "Δ":"00000110001001110",
+      "上":"00000000001010000",
+      "下":"00010100000000000",
+      "全":"11111111111111111"
+    };
+    Object.defineProperty(Segs,"乱",{get:function(){return Math.floor(Math.random()*2**17).toString(2).padStart(17,"0")}});
+    let time = {
+      goal : 10,
+      buttons : [1,1,1,1],
+      from : 0,
+      to : 0
+    };
+    let mode = 0;
+    Object.defineProperty(time,"goalstr",{get:function(){return String(time.goal).padStart(2,"0")}});
+    Object.defineProperty(time,"crnt",{get:function(){return time.to - time.from}});
+    Object.defineProperty(time,"crntstr",{
+      get:function(){
+        return time.crnt.toFixed(2).padStart(6," ");
+      }
+    });
+    Object.defineProperty(time,"delta",{get:function(){return Math.floor(time.crnt*100)/100 - time.goal}});
+    Object.defineProperty(time,"deltastr",{
+      get:function(){
+        return time.delta.toFixed(2).replace(/^([^-])/,"+$1").padStart(6," ");
+      }
+    });
+    Object.defineProperty(time,"result",{
+      get:function(){
+        if(Math.abs(time.delta)===0)
+          return "PERFECT";
+        if(Math.abs(time.delta)<.1)
+          return "ALMOST";
+        if(Math.abs(time.delta)<.2)
+          return "GOOD";
+        if(Math.abs(time.delta)<.5)
+          return "NOT BAD";
+        if(Math.abs(time.delta)<1)
+          return "FAIR";
+        if(Math.abs(time.delta)<2)
+          return "POOR";
+        return "TOO BAD";
+      }
+    });
+
+
+    let len = 128;
+    let cvs = document.querySelector("#canvas");
+    cvs.width = len*width;
+    cvs.height = len*2*height;
+    cvs.style.width = `${Math.min(window.innerWidth,window.innerHeight)*.9}px`;
+    cvs.style.height = `${Math.min(window.innerWidth,window.innerHeight)*.9}px`;
+    cvs.style.filter = `drop-shadow(0px 0px ${cvs.style.width.match(/[0-9]+/)[0]/width/16}px red)`;
+    cvs.style.margin = `${cvs.style.width.match(/[0-9]+/)[0]/width/16}px`;
+    let ctx = cvs.getContext("2d");
+    ctx.strokeStyle = "gray";
+    ctx.lineWidth = 2;
+
+
+
+
+    window.onload = () => {
+      DrawAll();
+    }
+
+    async function OnClick(e){
+      let x = Math.floor(e.offsetX/cvs.offsetWidth*width);
+      let y = Math.floor(e.offsetY/cvs.offsetHeight*height);
+
+      if(mode===0){
+        if(y===0){
+          if(x===2){
+            time.goal = Math.min(time.goal+10,99);
+          }else if(x===3){
+            time.goal = Math.min(time.goal+1,99);
+          }
+        }else if(y===2){
+          if(x===2){
+            time.goal = Math.max(time.goal-10,0);
+          }else if(x===3){
+            time.goal = Math.max(time.goal-1,0);
+          }
+        }else if(y===3){
+          if(1<x && x<7){
+            //  スタート
+            mode = 1;
+            time.from = performance.now()/1000;
+            if(10 <= time.goal){
+              while(time.crnt < 3){
+                if(mode!==1)break;
+                time.to = performance.now()/1000;
+                DrawAll(time.crntstr);
+                await Sleep(3);
+              }
+            }
+            if(mode===1)DrawAll("???.??");
+          }
+          return 0;
+        }
+        time.buttons = [1,1,1,1];
+        if(time.goal === 99){
+          time.buttons[0] = 0;
+          time.buttons[1] = 0;
+        }else if(time.goal === 0){
+          time.buttons[2] = 0;
+          time.buttons[3] = 0;
+        }
+        DrawAll();
+      }else if(mode===1){
+        if(y===3 && 1<x && x<7){
+          //  ストップ
+          mode = 2;
+          time.to = performance.now()/1000;
+          DrawAll("!!!.!!");
+          await Sleep(1000);
+          mode = 3;
+          for(let i=0; i<10; i++){
+            DrawAll(
+              (time.crnt/9*i).toFixed(2).padStart(6," "),
+              (time.delta*10/(i+1)).toFixed(2).replace(/^([^-])/,"+$1").padStart(6," "),
+              "乱乱乱乱乱乱乱乱乱"
+            );
+            await Sleep(100);
+          }
+          DrawAll(
+            time.crntstr,
+            time.deltastr,
+            time.result.padStart(9," ")
+          );
+        }
+      }
+    }
+
+    function DrawAll(s0,s1,s2){
+      DrawBG();
+      if(mode===0){
+        ctx.globalAlpha = time.buttons[0] ? 1 : .3;
+        DrawChar("上",2,0);
+        ctx.globalAlpha = time.buttons[1] ? 1 : .3;
+        DrawChar("上",3,0);
+        ctx.globalAlpha = 1;
+        DrawStr(time.goalstr+"SEC",2,1);
+        ctx.globalAlpha = time.buttons[2] ? 1 : .3;
+        DrawChar("下",2,2);
+        ctx.globalAlpha = time.buttons[3] ? 1 : .3;
+        DrawChar("下",3,2);
+        ctx.globalAlpha = 1;
+        DrawStr("START",2,3);
+      }else if(mode===1){
+        DrawStr(s0,2,1);
+        DrawStr("STOP",2,3);
+      }else if(mode===2){
+        DrawStr(s0,2,1);
+      }else{
+        DrawStr("RESULT",0,0);
+        DrawStr((time.goalstr+".00").replace(/^0/," "),5,1);
+        DrawStr(s0,4,2);
+        DrawStr("Δ",1,3);
+        DrawStr(s1,4,3);
+        DrawStr(s2,0,4);
+      }
+    }
+
+    function DrawBG(){
+      ctx.clearRect(0,0,cvs.width,cvs.height);
+      ctx.globalAlpha = .1;
+      for(let i=0; i<width*height; i++){
+        DrawChar("全",i%width,Math.floor(i/width));
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function DrawChar(c,x,y){
+      let seg = Segs[c[0]];
+      if(c[1] === ".")seg = seg.replace(/.$/,"1");
+
+      ctx.save();
+      ctx.translate(len*x,len*2*y);
+      ctx.scale(len,len);
+      ctx.fillStyle = "white";
+
+      if(+seg[0]){
+        ctx.beginPath();
+        ctx.moveTo(.29, .17);
+        ctx.lineTo(.32, .15);
+        ctx.lineTo(.55, .15);
+        ctx.lineTo(.58, .20);
+        ctx.lineTo(.52, .25);
+        ctx.lineTo(.34, .25);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[1]){
+        ctx.beginPath();
+        ctx.moveTo(.61, .20);
+        ctx.lineTo(.68, .15);
+        ctx.lineTo(.90, .15);
+        ctx.lineTo(.92, .17);
+        ctx.lineTo(.84, .25);
+        ctx.lineTo(.64, .25);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[2]){
+        ctx.beginPath();
+        ctx.moveTo(.27, .19);
+        ctx.lineTo(.32, .26);
+        ctx.lineTo(.24, .93);
+        ctx.lineTo(.18, .98);
+        ctx.lineTo(.14, .94);
+        ctx.lineTo(.23, .21);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[3]){
+        ctx.beginPath();
+        ctx.moveTo(.34, .28);
+        ctx.lineTo(.46, .74);
+        ctx.lineTo(.48, .97);
+        ctx.lineTo(.42, .92);
+        ctx.lineTo(.31, .51);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[4]){
+        ctx.beginPath();
+        ctx.moveTo(.59, .22);
+        ctx.lineTo(.63, .28);
+        ctx.lineTo(.58, .72);
+        ctx.lineTo(.50, .98);
+        ctx.lineTo(.48, .75);
+        ctx.lineTo(.53, .27);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[5]){
+        ctx.beginPath();
+        ctx.moveTo(.84, .27);
+        ctx.lineTo(.80, .57);
+        ctx.lineTo(.61, .93);
+        ctx.lineTo(.53, .97);
+        ctx.lineTo(.60, .74);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[6]){
+        ctx.beginPath();
+        ctx.moveTo(.93, .19);
+        ctx.lineTo(.97, .23);
+        ctx.lineTo(.88, .94);
+        ctx.lineTo(.82, .99);
+        ctx.lineTo(.77, .94);
+        ctx.lineTo(.86, .26);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[7]){
+        ctx.beginPath();
+        ctx.moveTo(.19,1.00);
+        ctx.lineTo(.25, .95);
+        ctx.lineTo(.42, .95);
+        ctx.lineTo(.48,1.00);
+        ctx.lineTo(.36,1.05);
+        ctx.lineTo(.24,1.05);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[8]){
+        ctx.beginPath();
+        ctx.moveTo(.52,1.00);
+        ctx.lineTo(.62, .95);
+        ctx.lineTo(.75, .95);
+        ctx.lineTo(.80,1.00);
+        ctx.lineTo(.75,1.05);
+        ctx.lineTo(.61,1.05);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[9]){
+        ctx.beginPath();
+        ctx.moveTo(.17,1.01);
+        ctx.lineTo(.23,1.07);
+        ctx.lineTo(.14,1.73);
+        ctx.lineTo(.07,1.81);
+        ctx.lineTo(.03,1.76);
+        ctx.lineTo(.13,1.04);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[10]){
+        ctx.beginPath();
+        ctx.moveTo(.48,1.02);
+        ctx.lineTo(.38,1.32);
+        ctx.lineTo(.16,1.73);
+        ctx.lineTo(.20,1.44);
+        ctx.lineTo(.39,1.06);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[11]){
+        ctx.beginPath();
+        ctx.moveTo(.50,1.04);
+        ctx.lineTo(.51,1.29);
+        ctx.lineTo(.46,1.73);
+        ctx.lineTo(.40,1.79);
+        ctx.lineTo(.35,1.73);
+        ctx.lineTo(.39,1.36);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[12]){
+        ctx.beginPath();
+        ctx.moveTo(.52,1.02);
+        ctx.lineTo(.61,1.07);
+        ctx.lineTo(.69,1.43);
+        ctx.lineTo(.65,1.73);
+        ctx.lineTo(.54,1.27);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[13]){
+        ctx.beginPath();
+        ctx.moveTo(.82,1.01);
+        ctx.lineTo(.87,1.05);
+        ctx.lineTo(.78,1.76);
+        ctx.lineTo(.73,1.80);
+        ctx.lineTo(.68,1.73);
+        ctx.lineTo(.76,1.07);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[14]){
+        ctx.beginPath();
+        ctx.moveTo(.09,1.83);
+        ctx.lineTo(.16,1.75);
+        ctx.lineTo(.34,1.75);
+        ctx.lineTo(.38,1.80);
+        ctx.lineTo(.32,1.85);
+        ctx.lineTo(.11,1.85);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[15]){
+        ctx.beginPath();
+        ctx.moveTo(.41,1.81);
+        ctx.lineTo(.47,1.75);
+        ctx.lineTo(.66,1.75);
+        ctx.lineTo(.71,1.82);
+        ctx.lineTo(.67,1.85);
+        ctx.lineTo(.44,1.85);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(+seg[16]){
+        ctx.beginPath();
+        ctx.arc(.88,1.80,.05,0,Math.PI*2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function DrawStr(s,x,y){
+      let chars = s.match(/.\.?/g);
+      for(let i=0; i<chars.length; i++){
+        DrawChar(chars[i],x+i,y);
+      }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </script>
+</html>

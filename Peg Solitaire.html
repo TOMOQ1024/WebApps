@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no"/>
+    <title>Peg Solitaire</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+  </body>
+  <script type="text/javascript">
+    //
+
+
+
+
+
+
+    const width = 7;
+    let mode = +(prompt("盤面を選択\n0:イギリス式盤\n1:フランス式盤")==="1");//  0:英(32), 1:仏(36)
+    //let mode = 0;
+    let select = {
+      stage: 0,
+      ball: {x:3,y:3}
+    };
+    let time = [0,0,[]];
+    let last = [];
+    let balls = [];//  二次元配列
+    let len = Math.round(Math.min(window.innerWidth,window.innerHeight)/(width+3)*0.9);
+    let cvs = document.querySelector("#canvas");
+    let ctx = cvs.getContext("2d");
+    cvs.width = len*(width+3);
+    cvs.height = len*(width+3);
+
+
+
+
+    Init();
+
+
+
+
+
+    //  ゲーム初期化
+    function Init(){
+      //  balls初期化
+      balls = [];
+      for(let y=0; y<width; y++){
+        balls.push([]);
+        for(let x=0; x<width; x++){
+          balls[y].push(+((mode && (x-3)**2+(y-3)**2 < 11)||(!mode && ((x-3)**2)**.3+((y-3)**2)**.3 < 3)));
+        }
+      }
+      balls[3][3] = 0;
+
+      //  描画
+      Draw();
+
+      //  ボールの移動
+      cvs.onclick = (e)=>{
+        let x = e.layerX;
+        let y = e.layerY;
+        if((x-Math.round(x/len)*len)**2+(y-Math.round(y/len)*len)**2 > (len*.4)**2)return false;
+        x = Math.round(x/len)-2;
+        y = Math.round(y/len)-2;
+        if(!(0<=x<7 && 0<=y<7))return false;
+        if(select.stage){
+          //  ボール選択済み
+          if(balls[y][x]){
+            //  (x,y)にボールがある
+            if(select.ball.x===x && select.ball.y===y){
+              //  選択ボール取り消し
+              select.stage = 0;
+              balls[y][x] = 1;
+            }else{
+              balls[select.ball.y][select.ball.x] = 1;
+              balls[y][x] = 2;
+              select.ball = {x:x,y:y};
+            }
+          }else{
+            //  (x,y)にボールがない
+            let f = (x,y)=>0>Math.max(x+y-3,1-Math.abs(x-y));
+            if(
+              balls[(select.ball.y+y)/2][(select.ball.x+x)/2] &&
+              f(Math.abs(select.ball.x-x),Math.abs(select.ball.y-y)) &&
+              ((mode && (x-3)**2+(y-3)**2 < 11)||(!mode && ((x-3)**2)**.3+((y-3)**2)**.3 < 3))
+            ){
+              select.stage = 0;
+              balls[select.ball.y][select.ball.x] = 0;
+              balls[(select.ball.y+y)/2][(select.ball.x+x)/2] = 0;
+              balls[y][x] = 1;
+            }
+          }
+        }else{
+          //  ボール未選択
+          if(balls[y][x]){
+            //  (x,y)にボールがある
+            //  タイム計測開始
+            if(!time[0])time[0] = Number(String(new Date().getTime()));
+            if(last.length===1){
+              //  最後の一つ
+              balls[y][x] = 0;
+            }else{
+              balls[y][x] = 2;
+              select.stage = 1;
+              select.ball = {x:x,y:y};
+            }
+          }
+        }
+        Draw();
+        Check();
+      };
+    }
+
+    //  全体の描画
+    function Draw(){
+      ctx.clearRect(0,0,cvs.width,cvs.height);
+
+      Draw0();
+      Draw1();
+    }
+
+    //  盤面背景の描画
+    function Draw0(){
+      ctx.shadowBlur = len/8;
+      //  盤
+      ctx.fillStyle = "#582b0a";
+      ctx.arc(cvs.width/2,cvs.height/2,cvs.width*.5,0,Math.PI*2);
+      ctx.fill();
+
+      ctx.fillStyle = "black";
+      ctx.beginPath();
+      ctx.arc(cvs.width/2,cvs.height/2,cvs.width*.8,0,Math.PI*2);
+      ctx.arc(cvs.width/2,cvs.height/2,cvs.width*.5,0,Math.PI*2,true);
+      ctx.shadowColor = "#ffc08050";
+      ctx.shadowOffsetX = len/12;
+      ctx.shadowOffsetY = len/12;
+      ctx.fill();
+      ctx.shadowColor = "#000000a0";
+      ctx.shadowOffsetX = -len/12;
+      ctx.shadowOffsetY = -len/12;
+      ctx.fill();
+
+      //  溝
+      ctx.fillStyle = "#381b05";
+      ctx.beginPath();
+      ctx.arc(cvs.width/2,cvs.height/2,cvs.width*.45,0,Math.PI*2);
+      ctx.arc(cvs.width/2,cvs.height/2,cvs.width*.41,0,Math.PI*2,true);
+      ctx.shadowColor = "#000000a0";
+      ctx.shadowOffsetX = -len/12;
+      ctx.shadowOffsetY = -len/12;
+      ctx.fill();
+      ctx.shadowColor = "#ffc08060";
+      ctx.shadowOffsetX = len/12;
+      ctx.shadowOffsetY = len/12;
+      ctx.fill();
+
+      //  穴
+      for(let y=0; y<width; y++){
+        for(let x=0; x<width; x++){
+          if(mode){
+            //  仏
+            if((x-3)**2+(y-3)**2 < 11){
+              ctx.fillStyle = "#381b05";
+              ctx.beginPath();
+              ctx.arc(len*(x+2),len*(y+2),len*.15,0,Math.PI*2);
+              ctx.shadowColor = "#000000a0";
+              ctx.shadowOffsetX = -len/12;
+              ctx.shadowOffsetY = -len/12;
+              ctx.fill();
+              ctx.shadowColor = "#ffc08060";
+              ctx.shadowOffsetX = len/12;
+              ctx.shadowOffsetY = len/12;
+              ctx.fill();
+            }
+          }else{
+            //  英
+            if(((x-3)**2)**.3+((y-3)**2)**.3 < 3){
+              ctx.fillStyle = "#381b05";
+              ctx.beginPath();
+              ctx.arc(len*(x+2),len*(y+2),len*.15,0,Math.PI*2);
+              ctx.shadowColor = "#000000a0";
+              ctx.shadowOffsetX = -len/12;
+              ctx.shadowOffsetY = -len/12;
+              ctx.fill();
+              ctx.shadowColor = "#ffc08060";
+              ctx.shadowOffsetX = len/12;
+              ctx.shadowOffsetY = len/12;
+              ctx.fill();
+            }
+          }
+        }
+      }
+    }
+
+    //  玉の描画
+    function Draw1(){
+      let gradient;
+      ctx.shadowColor = "transparent";
+      for(let y=0; y<width; y++){
+        for(let x=0; x<width; x++){
+          if(balls[y][x]){
+            gradient = ctx.createRadialGradient(len*(x+2)-len*.1,len*(y+2)-len*.1,0,len*(x+2),len*(y+2),len*.4);
+            gradient.addColorStop(0, "#ffffffff");
+            gradient.addColorStop(1, balls[y][x]-1?"#ff40c060":"#40c0ff60");
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(len*(x+2),len*(y+2),len*.4,0,Math.PI*2);
+            ctx.fill();
+          }
+        }
+      }
+    }
+
+    //  取り除いたボールの描画
+    function Draw2(n){
+      let x,y;
+      for(let i=0; i<n; i++){
+        x = Math.sin(Math.PI*2/(32+mode*4)*i);
+        y = -Math.cos(Math.PI*2/(32+mode*4)*i);
+        gradient = ctx.createRadialGradient(cvs.width/2+cvs.width*.43*x-len*.1,cvs.height/2+cvs.height*.43*y-len*.1,0,cvs.width/2+cvs.width*.43*x,cvs.height/2+cvs.height*.43*y,len*.4);
+        gradient.addColorStop(0, "#ffffffff");
+        gradient.addColorStop(1, "#40c0ff60");
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(cvs.width/2+cvs.width*.43*x,cvs.height/2+cvs.height*.43*y,len*.4,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    //  クリア判定
+    function Check(){
+      let fin;
+      if(last.length)fin = {x:last[0].x,y:last[0].y};
+      last = [];
+      for(let y=0; y<width; y++){
+        for(let x=0; x<width; x++){
+          if(balls[y][x])last.push({x:x,y:y});
+        }
+      }
+
+      if(!last.length){
+        //  クリア
+
+        time[1] = Number(String(new Date().getTime()));
+        time[2][0] = time[1] - time[0];
+        time[2][1] = time[2][0] % 1000;//cs
+        time[2][2] = (time[2][0]-time[2][1])/1000 % 60//sec
+        time[2][3] = (time[2][0]-time[2][1]-time[2][2]*1000)/60000//min
+
+        setTimeout(function(){
+          alert(
+            (fin.x*fin.y===9?"CLEAR\n":"NORMAL CLEAR\n")+
+            "Time : "+
+              time[2][3]+"分"+
+              String(time[2][2]).padStart(2,'0')+'.'+String(time[2][1]).padStart(3,'0')+"秒"
+          );
+          time = [0,0,[]];
+        }, 100);
+      }else if(!select.stage && last.length!==1){
+        //  ゲームオーバー判定
+        let bool = 0;
+        let BOOL = 0;
+        for(let y=0; y<width; y++){
+          for(let x=0; x<width; x++){
+            if(balls[y][x]){
+              bool++;
+            }else{
+              bool = 0;
+            }
+            if(1 < bool)BOOL = 1;
+          }
+          bool = 0;
+        }
+        for(let x=0; x<width; x++){
+          for(let y=0; y<width; y++){
+            if(balls[y][x]){
+              bool++;
+            }else{
+              bool = 0;
+            }
+            if(1 < bool)BOOL = 1;
+          }
+          bool = 0;
+        }
+
+        if(!BOOL){
+          //  ゲームオーバー
+          setTimeout(function(){
+            if(confirm(
+              "GAME OVER!\n"+
+              last.length+" balls left.\n"+
+              "Retry?"
+            ))Init();
+            time = [0,0,[]];
+          }, 100);
+        }
+      }
+
+      Draw2(32+mode*4-last.length);
+    }
+
+
+
+
+
+
+
+
+
+  </script>
+</html>

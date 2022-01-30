@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no"/>
+    <title>Breakout</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        overflow: hidden;
+        font-size: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <div id="menu_wrapper"></div>
+      <div id="cvs_wrapper"></div>
+    </div>
+    <script type="text/javascript">
+      //
+
+
+
+
+
+      //  w:h = 3:2
+      let width = 3*12;
+      let height = 2*12;
+      let radius;
+      let prevFrame;
+      let count = 0;
+      let balls = [];
+      let blocks = [];
+      let items = [];
+      let lazers = [];
+      let paddle;
+      let angle = 0;
+      let score = 0;
+      let stage = 1;
+      let max_stage = 100;
+      let blocknum;
+      let crntblocknum;
+      let life = 3;
+      let streak = 0;
+      let time = [0,0];
+      let touch = [0,0,0,0, 0,0];
+      let baseimg = new Image();
+      let mode;
+      let effect = -1;//-1;
+      let lock = false;
+      let death = 0;
+      let death0 = 0;
+      let peaceful = 0;
+      let TO = setTimeout(()=>{
+        alert("debug mode started");
+      },10000);
+
+      const WRAPPER = document.querySelector("#wrapper");
+
+      let LEN = Math.round(Math.min(window.innerWidth/width, window.innerHeight/(height+4))*0.9);
+      document.body.style.fontSize = LEN*width/15 + "px";
+      WRAPPER.style.width = LEN*width+"px";
+      WRAPPER.style.height = LEN*(height+4)+"px";
+      let cvs = {
+        ele: document.createElement("canvas"),
+        wr: document.querySelector("#cvs_wrapper"),
+        w: LEN*width,
+        h: LEN*height
+      };
+      cvs.ctx = cvs.ele.getContext("2d");
+      cvs.ele.width = cvs.w;
+      cvs.ele.height = cvs.h;
+      cvs.ele.style.backgroundImage = "url(tiles/202020-o.png)";
+      cvs.ele.style.backgroundSize = 100/width+"% "+100/height+"%";
+      cvs.wr.innerHTML = "";
+      cvs.wr.append(cvs.ele);
+      let menu = {
+        ele:document.createElement("canvas"),
+        wr: document.querySelector("#menu_wrapper"),
+        w: LEN*width,
+        h: LEN*4
+      }
+      menu.ctx = menu.ele.getContext("2d");
+      menu.ele.width = menu.w;
+      menu.ele.height = menu.h;
+      menu.ele.style.backgroundImage = "url(tiles/808080-c.png)";
+      menu.ele.style.backgroundSize = 100/width/2+"% "+100/4/2+"%";
+      menu.wr.innerHTML = "";
+      menu.wr.append(menu.ele);
+      menu.draw = function(){
+        let ctx = menu.ctx;
+        let bgimg = new Image();
+        bgimg.src = "tiles/202020-o.png";
+        ctx.fillStyle = "#0000c0";
+        ctx.font = LEN*1.25+"px serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+
+        //  ステージ番号
+        ctx.fillText("STAGE", LEN*3, LEN*1.375);
+        for(let y=1; y<1+2; y++){
+          for(let x=1; x<1+4; x++){
+            for(let i=0; i<2; i++){
+              for(let j=0; j<2; j++){
+                ctx.drawImage(bgimg,LEN*x+LEN/2*j,LEN*(y+0.5)+LEN/2*i,LEN/2,LEN/2);
+              }
+            }
+          }
+        }
+
+        //  残機
+        ctx.fillText("LIFE", LEN*18.5, LEN*1.375);
+        for(let y=1; y<1+2; y++){
+          for(let x=15; x<15+7; x++){
+            for(let i=0; i<2; i++){
+              for(let j=0; j<2; j++){
+                ctx.drawImage(bgimg,LEN*x+LEN/2*j,LEN*(y+0.5)+LEN/2*i,LEN/2,LEN/2);
+              }
+            }
+          }
+        }
+
+        //  スコア
+        ctx.fillText("SCORE", LEN*26.5, LEN*1.375);
+        for(let y=1; y<1+2; y++){
+          for(let x=23; x<23+7; x++){
+            for(let i=0; i<2; i++){
+              for(let j=0; j<2; j++){
+                ctx.drawImage(bgimg,LEN*x+LEN/2*j,LEN*(y+0.5)+LEN/2*i,LEN/2,LEN/2);
+              }
+            }
+          }
+        }
+
+        ctx.fillStyle = "black";
+        ctx.fillRect(LEN*6,LEN*1.5,LEN*8,LEN*2);
+        ctx.fillStyle = "yellow";
+        if(blocknum)ctx.fillRect(LEN*6,LEN*1.5,LEN*8*(1-crntblocknum/blocknum),LEN*2);
+
+        ctx.fillStyle = "blue";
+        ctx.font = LEN*2+"px serif";
+        ctx.fillText(Math.round((1-crntblocknum/blocknum)*100)+"%", LEN*10, LEN*3.5);
+
+        //  残機表示
+        ctx.fillStyle = "white";
+        ctx.fillText(stage, LEN*3, LEN*3.5);
+        for(let i=0; i<life; i++){
+          ctx.fillStyle = "#808080";
+          ctx.beginPath();
+          ctx.arc(LEN*(i*2+16.50), LEN*2.50, LEN*0.7, 0,2*Math.PI);
+          ctx.fill();
+          ctx.fillStyle = "#a0a0a0";
+          ctx.beginPath();
+          ctx.arc(LEN*(i*2+16.45), LEN*2.45, LEN*0.575, 0,2*Math.PI);
+          ctx.fill();
+          ctx.fillStyle = "#c0c0c0";
+          ctx.beginPath();
+          ctx.arc(LEN*(i*2+16.40), LEN*2.40, LEN*0.450, 0,2*Math.PI);
+          ctx.fill();
+          ctx.fillStyle = "#e0e0e0";
+          ctx.beginPath();
+          ctx.arc(LEN*(i*2+16.35), LEN*2.35, LEN*0.325, 0,2*Math.PI);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(LEN*(i*2+16.30), LEN*2.30, LEN*0.200, 0,2*Math.PI);
+          ctx.fill();
+        }
+        ctx.fillText(score, LEN*26.5, LEN*3.5);
+      }
+
+      baseimg.src = "Breakout.png";
+
+
+
+
+
+      function Ball(x,y){
+        let self = this;
+
+        self.r0 = radius;
+        self.r = radius;
+        self.x = x;
+        self.y = y;
+        self.vx = 0;
+        self.vy = 0;
+        self.speed0 = 1;
+        self.speed = 1;
+        self.power0 = 1;
+        self.power = 1;
+        self.magnet = false;
+
+        self.draw = function(ctx){
+          let op = effect===8 ? Math.sin(performance.now()/5000*Math.PI)/2+0.5 : 1;//  0<=op<=1
+          op *= 255;
+          op = Math.floor(op).toString(16).padStart(2,"0");
+          //console.log(op);
+          ctx.fillStyle = "#"+(effect===2?"ff":"80")+"80"+(effect===3?"ff":"80")+op;
+          ctx.beginPath();// 0.05, 0.05, 0.125
+          ctx.arc(self.x-self.r*0.0, self.y-self.r*0.0, self.r*1.000, 0,2*Math.PI);
+          ctx.fill();
+          ctx.fillStyle = "#"+(effect===2?"ff":"a0")+"a0"+(effect===3?"ff":"a0")+op;
+          ctx.beginPath();// 0.05, 0.05, 1.25
+          ctx.arc(self.x-self.r*0.1, self.y-self.r*0.1, self.r*0.875, 0,2*Math.PI);
+          ctx.fill();
+          ctx.fillStyle = "#"+(effect===2?"ff":"c0")+"c0"+(effect===3?"ff":"c0")+op;
+          ctx.beginPath();// 0.05, 0.05, 1.25
+          ctx.arc(self.x-self.r*0.2, self.y-self.r*0.2, self.r*0.650, 0,2*Math.PI);
+          ctx.fill();
+          ctx.fillStyle = "#"+(effect===2?"ff":"e0")+"e0"+(effect===3?"ff":"e0")+op;
+          ctx.beginPath();// 0.05, 0.05, 1.25
+          ctx.arc(self.x-self.r*0.3, self.y-self.r*0.3, self.r*0.525, 0,2*Math.PI);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff"+op;
+          ctx.beginPath();// 0.05, 0.05, 1.25
+          ctx.arc(self.x-self.r*0.4, self.y-self.r*0.4, self.r*0.400, 0,2*Math.PI);
+          ctx.fill();
+          /*
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.arc(self.x,self.y,self.r,0,2*Math.PI);
+          ctx.fill();
+          */
+          /*
+          ctx.strokeStyle = "blue";
+          ctx.lineWidth = "3";
+          ctx.beginPath();
+          ctx.moveTo(self.x,self.y);
+          ctx.lineTo(self.x+self.vx*50,self.y+self.vy*50);
+          ctx.stroke();
+          */
+        }
+
+        self.update = function(dt,bool){
+          if(effect === 2){
+            self.r = self.r0*2;
+            self.speed = self.speed0*1.5;
+            self.power = self.power0*2;
+          }else if(effect === 3){
+            self.r = self.r0/2;
+            self.speed = self.speed0/1.5;
+            self.power = self.power0/2;
+          }else{
+            self.r = self.r0;
+            self.speed = self.speed0;
+            self.power = self.power0;
+          }
+          if(bool){
+            self.x += self.vx*self.speed*dt;
+            self.y += self.vy*self.speed*dt;
+          }
+        }
+      }
+
+      function Block(d,type,color,x,y,w,h){
+        let self = this;
+        self.x = x*LEN;
+        self.y = y*LEN;
+        self.w = w*LEN;
+        self.h = h*LEN;
+        self.d0 = d;//  初期の耐久度
+        self.durability = d;
+        self.type = type;
+        self.draw = function(ctx){
+          ctx.drawImage(baseimg,  (color%3)*128,Math.floor(color/3+2)*64, 128,64,  self.x,self.y, self.w,self.h);
+          if(Math.ceil(self.durability) === 2){
+            ctx.drawImage(baseimg,  0*128,5*64, 128,64,  self.x,self.y, self.w,self.h);
+          }else if(Math.ceil(self.durability) === 3){
+            ctx.drawImage(baseimg,  1*128,5*64, 128,64,  self.x,self.y, self.w,self.h);
+          }else if(Math.ceil(self.durability) === 4){
+            ctx.drawImage(baseimg,  2*128,5*64, 128,64,  self.x,self.y, self.w,self.h);
+          }
+        }
+        self.hit = function(b,a){
+          if(a === -1){
+            self.durability -= lazers[0].power;
+            if(self.durability <= 0){
+              score += self.d0*5;
+              blocks.splice(b,1);
+              DropItem(self.x+self.w/2,self.y+self.h);
+              if(blocks.length === 0){
+                setTimeout(function(){
+                  Clear();
+                }, 1000/60);
+              }
+            }
+          }else{
+            switch(self.type){
+              case 0:
+                //  普通のブロック
+                break;
+              case 2:
+                //  加速(2x)ブロック
+                balls[a].speed = Math.max(balls[a].speed,2);
+                break;
+              case 3:
+                //  加速(3x)ブロック
+                balls[a].speed = Math.max(balls[a].speed,3);
+                break;
+            }
+            self.durability -= balls[a].power;
+            streak++;
+            score += self.d0*streak*5;
+            if(self.durability <= 0){
+              blocks.splice(b,1);
+              DropItem(self.x+self.w/2,self.y+self.h);
+              if(blocks.length === 0){
+                setTimeout(function(){
+                  Clear();
+                }, 1000/60);
+              }
+            }
+          }
+        }
+      }
+
+      function Item(id,x,y){
+        let self = this;
+        self.x = x;
+        self.y = y;
+        self.r = LEN;
+        self.id = id;
+
+        self.draw = (ctx)=>{
+          ctx.drawImage(baseimg,  (id%6)*64,Math.floor(id/6)*64, 64,64,  self.x-self.r,self.y-self.r, self.r*2,self.r*2);
+        }
+
+        self.update = (dt)=>{
+          self.y += LEN/50*dt;
+        }
+
+        self.affect = (i)=>{
+          if(self.id === 4){
+            life--;
+          }else if(self.id === 5){
+            for(let i=0; i<3; i++){
+              balls.push(new Ball(paddle.x+paddle.w/2, paddle.y-balls[0].r-2));
+              balls[balls.length-1].vx = LEN/10 * Math.cos((i+1)*Math.PI/4);
+              balls[balls.length-1].vy = -LEN/10 * Math.sin((i+1)*Math.PI/4);
+            }
+          }else if(self.id === 7){
+            if(life === 3){
+              score += 500;
+            }else{
+              life++;
+            }
+          }else if(self.id === 9){
+            lock = true;
+            setTimeout(function(){
+              lock = false;
+            }, 2000);
+          }else{
+            effect = self.id;
+          }
+          items.splice(i,1);
+        }
+      }
+
+      function Paddle(x,y,w,h){
+        let self = this;
+        self.x = x*LEN;
+        self.y = y*LEN;
+        self.w0 = w*LEN;
+        self.w = w*LEN;
+        self.h = h*LEN;
+        self.draw = function(ctx){
+          if(effect === 0)self.w = self.w0*2;
+          else if(effect === 1)self.w = self.w0/2;
+          else self.w = self.w0;
+          if(effect === 0)ctx.drawImage(baseimg,  0*128,7*64, 6*64,64,  self.x,self.y, self.w,self.h);
+          else if(effect === 1)ctx.drawImage(baseimg,  0*128,8*64, 6*64,64,  self.x,self.y, self.w,self.h);
+          else if(effect === 11)ctx.drawImage(baseimg,  0*128,9*64, 6*64,64,  self.x,self.y, self.w,self.h);
+          else ctx.drawImage(baseimg,  0*128,6*64, 6*64,64,  self.x,self.y, self.w,self.h);
+        }
+        self.move = function(X,Y){
+          X -= self.w/2;
+          Y -= self.h/2;
+          if(X<0){
+            self.x = 0;
+          }else if(width*LEN < X+self.w){
+            self.x = width*LEN-self.w;
+          }else{
+            self.x = X;
+          }
+          if(Y<0){
+            self.y = 0;
+          }else if(height*LEN < Y+self.h){
+            self.y = height*LEN-self.h;
+          }else{
+            self.y = Y;
+          }
+        }
+        self.hit = function(){
+          return 0;
+        }
+      }
+
+      function Lazer(x,y){
+        let self = this;
+        self.x = x;
+        self.y = y;
+        self.vx = 0;
+        self.vy = -LEN/10;
+        self.r = radius*0.75;
+        self.power = 2;
+
+        self.draw = (ctx)=>{
+          ctx.fillStyle = "#20ffffc0";
+          ctx.beginPath();// 0.05, 0.05, 0.125
+          ctx.arc(self.x, self.y+self.r*0, self.r*1.000, 0,2*Math.PI);
+          ctx.fill();
+          ctx.fillStyle = "#40ffffc0";
+          ctx.beginPath();// 0.05, 0.05, 1.25
+          ctx.arc(self.x, self.y+self.r*1, self.r*0.875, 0,2*Math.PI);
+          ctx.fill();
+          ctx.fillStyle = "#60ffffc0";
+          ctx.beginPath();// 0.05, 0.05, 1.25
+          ctx.arc(self.x, self.y+self.r*2, self.r*0.650, 0,2*Math.PI);
+          ctx.fill();
+          ctx.fillStyle = "#80ffffc0";
+          ctx.beginPath();// 0.05, 0.05, 1.25
+          ctx.arc(self.x, self.y+self.r*3, self.r*0.525, 0,2*Math.PI);
+          ctx.fill();
+          ctx.fillStyle = "#a0ffff"+"c0";
+          ctx.beginPath();// 0.05, 0.05, 1.25
+          ctx.arc(self.x, self.y+self.r*4, self.r*0.400, 0,2*Math.PI);
+          ctx.fill();
+        }
+
+        self.update = (dt)=>{
+          self.x += self.vx * dt;
+          self.y += self.vy * dt;
+        }
+      }
+
+
+
+
+
+      /**/
+      window.onload = function(){
+        Init();
+        Main();
+
+        //  マウス操作
+        window.addEventListener("mousemove",(e)=>{
+          if(!lock){
+            var rect = cvs.ele.getBoundingClientRect();
+            var x = e.clientX - rect.left;
+            var y = e.clientY - rect.top;
+            paddle.move((effect===10?cvs.w-x:x),paddle.y+paddle.h/2);
+          }
+        });
+        window.addEventListener("mouseup",(e)=>{
+          if(mode === "waiting"){
+            mode = "playing";
+            balls[0].vx = LEN/10 * Math.cos(angle);
+            balls[0].vy = -LEN/10 * Math.abs(Math.sin(angle));
+            if(death === 0){
+              time[0] = performance.now();
+            }
+          }else{
+            for(let a=0; a<balls.length; a++){
+              if(effect===6 && balls[a].magnet===true){
+                balls[a].magnet = false;
+              }
+            }
+          }
+        });
+
+        cvs.ele.addEventListener("click",()=>{
+          if(mode === "clear"){
+            if(stage < max_stage){
+              lazers = [];
+              items = [];
+              balls = balls.slice(0,1);
+              effect = -1;
+              death0 = death;
+              ChangeStage(++stage);
+              mode = "waiting";
+            }
+          }
+        });
+
+
+        //  スワイプ操作
+        //  https://dianxnao.com/javascript%E3%81%A7%E3%82%B9%E3%83%AF%E3%82%A4%E3%83%97%E5%87%A6%E7%90%86%E3%82%92%E3%81%99%E3%82%8B/
+        window.addEventListener("touchstart",function(e){
+          e.preventDefault();
+          touch[0] = e.touches[0].pageX;
+          touch[1] = e.touches[0].pageY;
+          touch[2] = e.touches[0].pageX;
+          touch[3] = e.touches[0].pageY;
+          touch[4] = paddle.x;
+          touch[5] = paddle.y;
+
+          if(mode === "waiting"){
+            mode = "playing";
+            balls[0].vx = LEN/10 * Math.cos(angle);
+            balls[0].vy = -LEN/10 * Math.abs(Math.sin(angle));
+            if(death === 0){
+              time[0] = performance.now();
+            }
+          }else{
+            for(let a=0; a<balls.length; a++){
+              if(effect===6 && balls[a].magnet===true){
+                balls[a].magnet = false;
+              }
+            }
+          }
+        });
+        window.addEventListener("touchmove",function(e){
+          if(!lock){
+            e.preventDefault();
+            touch[2] = e.touches[0].pageX;
+            touch[3] = e.touches[0].pageY;
+            console.log(touch);
+            paddle.move((effect===10?cvs.w-(touch[4]+(touch[2]-touch[0])*2):touch[4]+(touch[2]-touch[0])*2),paddle.y+paddle.h/2);
+          }
+        });
+      }
+      /**/
+
+
+
+
+
+      function Init(){
+        count = 0;
+        angle = 0;
+        score = 0;
+        streak = 0;
+        time = [0,0];
+        radius = LEN/2;
+
+        prevFrame = performance.now();
+        balls = [];
+        balls.push(new Ball(0,0));
+        paddle = new Paddle(width/2-3,height-2,6,1)
+        ChangeStage(stage);
+
+        mode = "waiting";
+        //items.push(new Item(11,cvs.w/2,LEN));
+      }
+
+
+      //  ステージ変更
+      function ChangeStage(id){
+        stage = id;
+        blocks = [];
+        switch(id){
+          case 1:
+            //  長方形敷き詰め
+            for(let y=1; y<6; y++){
+              for(let x=1; x<11; x++){
+                blocks.push(new Block(1,0,y-1/*3-Math.abs(3-y)*/,x*3,y*2,3,2));
+              }
+            }
+            break;
+          case 2:
+            //  窓
+            for(let y=1; y<6; y++){
+              for(let x=0; x<9; x++){
+                if(!(x%2) || y%2){
+                  blocks.push(new Block(1,0,7,x*4,y*2,4,2));
+                }else{
+                  blocks.push(new Block(2,0,5,x*4,y*2,2,1));
+                  blocks.push(new Block(2,0,5,x*4+2,y*2,2,1));
+                  blocks.push(new Block(2,0,5,x*4,y*2+1,2,1));
+                  blocks.push(new Block(2,0,5,x*4+2,y*2+1,2,1));
+                }
+              }
+            }
+            break;
+          case 3:
+            //  内包
+            for(let y=1; y<8; y++){
+              for(let x=0; x<12; x++){
+                if(Math.abs(x-5.5) > 5 || Math.abs(y-4) > 2){
+                  blocks.push(new Block(1,0,2,x*3,y*2,3,2));
+                }else if(Math.abs(x-5.5) > 4 || Math.abs(y-4) > 1){
+                  blocks.push(new Block(2,0,1,x*3,y*2,3,2));
+                }else{
+                  blocks.push(new Block(3,0,0,x*3,y*2,3,2));
+                }
+              }
+            }
+            break;
+        }
+
+        blocknum = 0;
+        for(let b=0; b<blocks.length; b++){
+          blocknum += blocks[b].durability;
+        }
+        max_stage = 3;
+        death0 = death;
+        death = 0;
+      }
+
+      //  アイテム召喚
+      function DropItem(x,y){
+        let id = Math.floor(Math.random()*10000);
+
+        /****if(id <   100)id =  0;// 100/10000  widen
+        else if(id <   200)id =  1;// 100/10000 narrow
+        else if(id <   270)id =  2;//  70/10000   fire
+        else if(id <   340)id =  3;//  70/10000    ice
+        else if(id <   380)id =  4;//  40/10000 poison
+        else if(id <   410)id =  5;//  30/10000 triple
+        else if(id <   480)id =  6;//  70/10000 magnet
+        else if(id <   520)id =  7;//  40/10000  heart
+        else if(id <   570)id =  8;//  50/10000  clear
+        else if(id <   600)id =  9;//  30/10000   lock
+        else if(id <   630)id = 10;//  30/10000    alt
+        else if(id <   632)id = 11;//   2/10000  lazer
+        else id = 111;
+        /***/if(id <  1000)id =  0;// 500/10000  widen
+        else if(id <  1100)id =  1;// 100/10000 narrow
+        else if(id <  1300)id =  2;// 200/10000   fire
+        else if(id <  1500)id =  3;// 200/10000    ice
+        else if(id <  1550)id =  4;//   0/10000 poison
+        else if(id <  3550)id =  5;//1000/10000 triple
+        else if(id <  3600)id =  6;//   0/10000 magnet
+        else if(id <  3700)id =  7;// 100/10000  heart
+        else if(id <  3750)id =  8;// 100/10000  clear
+        else if(id <  3800)id =  9;//  50/10000   lock
+        else if(id <  3850)id = 10;//  50/10000    alt
+        else if(id <  3900)id = 11;//  50/10000  lazer
+        else id = 111;
+        /**/
+
+        if(id<12)items.push(new Item(id,x,y));
+      }
+
+      //  ステージクリア
+      function Clear(){
+        mode = "clear";
+        time[1] = performance.now();
+        if(Math.floor((time[1]-time[0])/1000) < blocknum){
+          // time bonus
+          score += 200;
+        }
+        if(death === death0){
+          // no death
+          score += 200;
+        }
+
+        Render();
+
+
+        cvs.ctx.fillStyle = "#00000080";
+        cvs.ctx.fillRect(0,0,cvs.w,cvs.h);
+        cvs.ctx.fillStyle = "#00c0c0";
+        cvs.ctx.font = "bold "+LEN*2.5+"px serif";
+        cvs.ctx.textAlign = "center";
+        cvs.ctx.textBaseline = "bottom";
+        cvs.ctx.fillText("CLEAR", cvs.w/2, LEN*3);
+        cvs.ctx.fillText("STAGE : "+stage, cvs.w/2, LEN*6);
+        cvs.ctx.fillText("SCORE : "+score, cvs.w/2, LEN*9);
+        cvs.ctx.fillText("TIME : "+Math.floor((time[1]-time[0])/1000)+"sec", cvs.w/2, LEN*12);
+        if(stage < max_stage){
+          cvs.ctx.fillText("Click here to continue", cvs.w/2, LEN*18);
+        }else{
+          cvs.ctx.fillText("Congratulations!", cvs.w/2, LEN*18);
+        }
+
+      }
+
+
+      //  ゲームオーバー
+      function Gameover(){
+        mode = "gameover";
+        balls = [];
+
+        setTimeout(function(){
+          cvs.ctx.fillStyle = "#00000080";
+          cvs.ctx.fillRect(0,0,cvs.w,cvs.h);
+          cvs.ctx.fillStyle = "#ff0000";
+          cvs.ctx.font = "bold "+LEN*2.5+"px serif";
+          cvs.ctx.textAlign = "center";
+          cvs.ctx.textBaseline = "bottom";
+          cvs.ctx.fillText("GAMEOVER", cvs.w/2, LEN*3);
+          cvs.ctx.fillText("STAGE : "+stage, cvs.w/2, LEN*6);
+          cvs.ctx.fillText("SCORE : "+score, cvs.w/2, LEN*9);
+          cvs.ctx.fillText("DEATH : "+death, cvs.w/2, LEN*12);
+        }, 20);
+      }
+
+
+      //  更新
+      function Update(dt){
+        if(mode === "waiting"){
+          angle = count/50*Math.PI;
+          balls[0].x = paddle.x+paddle.w/2;
+          balls[0].y = paddle.y-balls[0].r-2;
+          balls[0].update(dt,false);
+        }else{
+          for(let a=0; a<balls.length; a++){
+            if(effect===6 && balls[a].magnet===true){
+              balls[a].x = paddle.x+balls[a].magnetX;
+              balls[a].y = paddle.y-balls[a].r-2;
+              balls[a].update(dt,false);
+            }else{
+              balls[a].update(dt,true);
+            }
+          }
+        }
+        /**/
+        if(life===0 && mode !== "gameover"){
+          Gameover();
+        }
+        /**/
+        for(let i=0; i<items.length; i++){
+          items[i].update(dt);
+        }
+        for(let i=0; i<lazers.length; i++){
+          lazers[i].update(dt);
+        }
+
+        crntblocknum = 0;
+        for(let b=0; b<blocks.length; b++)crntblocknum += blocks[b].durability;
+      }
+
+
+      //  衝突判定
+      function CheckCollision(){
+        for(let a=0; a<balls.length; a++){
+          for(let b=0; b<blocks.length; b++){
+            //  balls[a]  blocks[b]
+            if(
+              blocks[b].y-balls[a].r > balls[a].y
+              || balls[a].y > blocks[b].y+blocks[b].h+balls[a].r
+              || blocks[b].x-balls[a].r > balls[a].x
+              || balls[a].x > blocks[b].x+blocks[b].w+balls[a].r
+            )continue;
+            if(
+              blocks[b].x < balls[a].x
+              && balls[a].x < blocks[b].x+blocks[b].w
+            ){
+              if(
+                (blocks[b].y+blocks[b].h/2-balls[a].y)*balls[a].vy > 0
+              ){
+                balls[a].vy *= -1;
+                //console.log("鉛直");
+                blocks[b].hit(b,a);
+              }
+            }
+            else if(
+              blocks[b].y < balls[a].y
+              && balls[a].y < blocks[b].y+blocks[b].h
+            ){
+              if(
+                (blocks[b].x+blocks[b].w/2-balls[a].x)*balls[a].vx > 0
+              ){
+                balls[a].vx *= -1;
+                //console.log("水平");
+                blocks[b].hit(b,a);
+              }
+            }
+            else{
+              //console.log("角");
+              if(
+                (blocks[b].y-balls[a].y)**2+(blocks[b].x-balls[a].x)**2 < balls[a].r**2
+                && (balls[a].vx>0||balls[a].vy>0)
+              ){
+                /*
+                cvs.ctx.strokeStyle = "red";
+                cvs.ctx.lineWidth = "3";
+                cvs.ctx.beginPath();
+                //cvs.ctx.arc(balls[a].x,balls[a].y,balls[a].r*2,0,2*Math.PI);
+                cvs.ctx.moveTo(blocks[b].x,blocks[b].y);
+                cvs.ctx.lineTo(balls[a].x,balls[a].y);
+                cvs.ctx.stroke();
+                */
+                let cos = (balls[a].x-blocks[b].x) / Math.sqrt((balls[a].x-blocks[b].x)**2+(balls[a].y-blocks[b].y)**2);
+                let sin = (balls[a].y-blocks[b].y) / Math.sqrt((balls[a].x-blocks[b].x)**2+(balls[a].y-blocks[b].y)**2);
+                let v = balls[a].vx*cos + balls[a].vy*sin;
+                blocks[b].hit(b,a);
+                balls[a].vx -= v*cos*2;
+                balls[a].vy -= v*sin*2;
+              }else if(
+                (blocks[b].y-balls[a].y)**2+(blocks[b].x+blocks[b].w-balls[a].x)**2 < balls[a].r**2
+                && (balls[a].vx<0||balls[a].vy>0)
+              ){
+                /*
+                cvs.ctx.strokeStyle = "red";
+                cvs.ctx.lineWidth = "3";
+                cvs.ctx.beginPath();
+                //cvs.ctx.arc(balls[a].x,balls[a].y,balls[a].r*2,0,2*Math.PI);
+                cvs.ctx.moveTo(blocks[b].x+blocks[b].w,blocks[b].y);
+                cvs.ctx.lineTo(balls[a].x,balls[a].y);
+                cvs.ctx.stroke();
+                /**/
+                let cos = (balls[a].x-blocks[b].x-blocks[b].w) / Math.sqrt((balls[a].x-blocks[b].x-blocks[b].w)**2+(balls[a].y-blocks[b].y)**2);
+                let sin = (balls[a].y-blocks[b].y) / Math.sqrt((balls[a].x-blocks[b].x-blocks[b].w)**2+(balls[a].y-blocks[b].y)**2);
+                let v = balls[a].vx*cos + balls[a].vy*sin;
+                blocks[b].hit(b,a);
+                balls[a].vx -= v*cos*2;
+                balls[a].vy -= v*sin*2;
+              }else if(
+                (blocks[b].y+blocks[b].h-balls[a].y)**2+(blocks[b].x-balls[a].x)**2 < balls[a].r**2
+                && (balls[a].vx>0||balls[a].vy<0)
+              ){
+                /*
+                cvs.ctx.strokeStyle = "red";
+                cvs.ctx.lineWidth = "3";
+                cvs.ctx.beginPath();
+                //cvs.ctx.arc(balls[a].x,balls[a].y,balls[a].r*2,0,2*Math.PI);
+                cvs.ctx.moveTo(blocks[b].x,blocks[b].y+blocks[b].h);
+                cvs.ctx.lineTo(balls[a].x,balls[a].y);
+                cvs.ctx.stroke();
+                */
+                let cos = (balls[a].x-blocks[b].x) / Math.sqrt((balls[a].x-blocks[b].x)**2+(balls[a].y-blocks[b].y-blocks[b].h)**2);
+                let sin = (balls[a].y-blocks[b].y-blocks[b].h) / Math.sqrt((balls[a].x-blocks[b].x)**2+(balls[a].y-blocks[b].y-blocks[b].h)**2);
+                let v = balls[a].vx*cos + balls[a].vy*sin;
+                blocks[b].hit(b,a);
+                balls[a].vx -= v*cos*2;
+                balls[a].vy -= v*sin*2;
+              }else if(
+                (blocks[b].y+blocks[b].h-balls[a].y)**2+(blocks[b].x+blocks[b].w-balls[a].x)**2 < balls[a].r**2
+                && (balls[a].vx<0||balls[a].vy<0)
+              ){
+                /*
+                cvs.ctx.strokeStyle = "red";
+                cvs.ctx.lineWidth = "3";
+                cvs.ctx.beginPath();
+                //cvs.ctx.arc(balls[a].x,balls[a].y,balls[a].r*2,0,2*Math.PI);
+                cvs.ctx.moveTo(blocks[b].x+blocks[b].w,blocks[b].y+blocks[b].h);
+                cvs.ctx.lineTo(balls[a].x,balls[a].y);
+                cvs.ctx.stroke();
+                */
+                let cos = (balls[a].x-blocks[b].x-blocks[b].w) / Math.sqrt((balls[a].x-blocks[b].x-blocks[b].w)**2+(balls[a].y-blocks[b].y-blocks[b].h)**2);
+                let sin = (balls[a].y-blocks[b].y-blocks[b].h) / Math.sqrt((balls[a].x-blocks[b].x-blocks[b].w)**2+(balls[a].y-blocks[b].y-blocks[b].h)**2);
+                let v = balls[a].vx*cos + balls[a].vy*sin;
+                blocks[b].hit(b,a);
+                balls[a].vx -= v*cos*2;
+                balls[a].vy -= v*sin*2;
+              }
+            }
+          }
+
+
+          //  paddle
+          if(
+            paddle.y-balls[a].r < balls[a].y
+            && balls[a].y < paddle.y+paddle.h+balls[a].r
+            && paddle.x-balls[a].r < balls[a].x
+            && balls[a].x < paddle.x+paddle.w+balls[a].r
+          ){
+            if(
+              paddle.x < balls[a].x
+              && balls[a].x < paddle.x+paddle.w
+            ){
+              if(
+                (paddle.y+paddle.h/2-balls[a].y)*balls[a].vy > 0
+              ){
+                let v0 = Math.sqrt(balls[a].vx**2+balls[a].vy**2);
+                let theta = Math.PI*5/6 - (balls[a].x-paddle.x)/paddle.w * Math.PI*2/3;
+                balls[a].vx = v0*Math.cos(theta);
+                balls[a].vy = -v0*Math.sin(theta);
+                //console.log("鉛直");
+                paddle.hit();
+                streak = 0;
+              }
+            }
+            else if(
+              paddle.y < balls[a].y
+              && balls[a].y < paddle.y+paddle.h
+            ){
+              if(
+                (paddle.x+paddle.w/2-balls[a].x)*balls[a].vx > 0
+              ){
+                balls[a].vx *= -1;
+                //console.log("水平");
+                paddle.hit();
+                streak = 0;
+              }
+            }
+            else{
+              //console.log("角");
+              if(
+                (paddle.y-balls[a].y)**2+(paddle.x-balls[a].x)**2 < balls[a].r**2
+                && (balls[a].vx>0||balls[a].vy>0)
+              ){
+                /*
+                cvs.ctx.strokeStyle = "red";
+                cvs.ctx.lineWidth = "3";
+                cvs.ctx.beginPath();
+                //cvs.ctx.arc(balls[a].x,balls[a].y,balls[a].r*2,0,2*Math.PI);
+                cvs.ctx.moveTo(paddle.x,paddle.y);
+                cvs.ctx.lineTo(balls[a].x,balls[a].y);
+                cvs.ctx.stroke();
+                */
+                let cos = (balls[a].x-paddle.x) / Math.sqrt((balls[a].x-paddle.x)**2+(balls[a].y-paddle.y)**2);
+                let sin = (balls[a].y-paddle.y) / Math.sqrt((balls[a].x-paddle.x)**2+(balls[a].y-paddle.y)**2);
+                let v = balls[a].vx*cos + balls[a].vy*sin;
+                paddle.hit();
+                streak = 0;
+                balls[a].vx -= v*cos*2;
+                balls[a].vy -= v*sin*2;
+              }else if(
+                (paddle.y-balls[a].y)**2+(paddle.x+paddle.w-balls[a].x)**2 < balls[a].r**2
+                && (balls[a].vx<0||balls[a].vy>0)
+              ){
+                /*
+                cvs.ctx.strokeStyle = "red";
+                cvs.ctx.lineWidth = "3";
+                cvs.ctx.beginPath();
+                //cvs.ctx.arc(balls[a].x,balls[a].y,balls[a].r*2,0,2*Math.PI);
+                cvs.ctx.moveTo(paddle.x+paddle.w,paddle.y);
+                cvs.ctx.lineTo(balls[a].x,balls[a].y);
+                cvs.ctx.stroke();
+                /**/
+                let cos = (balls[a].x-paddle.x-paddle.w) / Math.sqrt((balls[a].x-paddle.x-paddle.w)**2+(balls[a].y-paddle.y)**2);
+                let sin = (balls[a].y-paddle.y) / Math.sqrt((balls[a].x-paddle.x-paddle.w)**2+(balls[a].y-paddle.y)**2);
+                let v = balls[a].vx*cos + balls[a].vy*sin;
+                paddle.hit();
+                streak = 0;
+                balls[a].vx -= v*cos*2;
+                balls[a].vy -= v*sin*2;
+              }else if(
+                (paddle.y+paddle.h-balls[a].y)**2+(paddle.x-balls[a].x)**2 < balls[a].r**2
+                && (balls[a].vx>0||balls[a].vy<0)
+              ){
+                /*
+                cvs.ctx.strokeStyle = "red";
+                cvs.ctx.lineWidth = "3";
+                cvs.ctx.beginPath();
+                //cvs.ctx.arc(balls[a].x,balls[a].y,balls[a].r*2,0,2*Math.PI);
+                cvs.ctx.moveTo(paddle.x,paddle.y+paddle.h);
+                cvs.ctx.lineTo(balls[a].x,balls[a].y);
+                cvs.ctx.stroke();
+                */
+                let cos = (balls[a].x-paddle.x) / Math.sqrt((balls[a].x-paddle.x)**2+(balls[a].y-paddle.y-paddle.h)**2);
+                let sin = (balls[a].y-paddle.y-paddle.h) / Math.sqrt((balls[a].x-paddle.x)**2+(balls[a].y-paddle.y-paddle.h)**2);
+                let v = balls[a].vx*cos + balls[a].vy*sin;
+                paddle.hit();
+                streak = 0;
+                balls[a].vx -= v*cos*2;
+                balls[a].vy -= v*sin*2;
+              }else if(
+                (paddle.y+paddle.h-balls[a].y)**2+(paddle.x+paddle.w-balls[a].x)**2 < balls[a].r**2
+                && (balls[a].vx<0||balls[a].vy<0)
+              ){
+                /*
+                cvs.ctx.strokeStyle = "red";
+                cvs.ctx.lineWidth = "3";
+                cvs.ctx.beginPath();
+                //cvs.ctx.arc(balls[a].x,balls[a].y,balls[a].r*2,0,2*Math.PI);
+                cvs.ctx.moveTo(paddle.x+paddle.w,paddle.y+paddle.h);
+                cvs.ctx.lineTo(balls[a].x,balls[a].y);
+                cvs.ctx.stroke();
+                */
+                let cos = (balls[a].x-paddle.x-paddle.w) / Math.sqrt((balls[a].x-paddle.x-paddle.w)**2+(balls[a].y-paddle.y-paddle.h)**2);
+                let sin = (balls[a].y-paddle.y-paddle.h) / Math.sqrt((balls[a].x-paddle.x-paddle.w)**2+(balls[a].y-paddle.y-paddle.h)**2);
+                let v = balls[a].vx*cos + balls[a].vy*sin;
+                paddle.hit();
+                streak = 0;
+                balls[a].vx -= v*cos*2;
+                balls[a].vy -= v*sin*2;
+              }
+            }
+            if(effect === 6){
+              balls[a].magnet = true;
+              balls[a].magnetX = balls[a].x-paddle.x;
+            }
+          }
+
+
+          //  壁
+          if(balls[a].x+balls[a].r > LEN*width && balls[a].vx > 0){
+            balls[a].vx *= -1;
+            if(balls[a].x > LEN*width){
+              balls[a].x = LEN*width*2-balls[a].x;
+            }
+          }
+          if(balls[a].y-balls[a].r < 0 && balls[a].vy < 0){
+            balls[a].vy *= -1;
+            if(balls[a].y < 0){
+              balls[a].y = -balls[a].y;
+            }
+          }
+          if(balls[a].x-balls[a].r < 0 && balls[a].vx < 0){
+            balls[a].vx *= -1;
+            if(balls[a].x < 0){
+              balls[a].x = -balls[a].x;
+            }
+          }
+          if(balls[a].y+balls[a].r > LEN*height && balls[a].vy > 0){
+            if(balls.length > 1){
+              balls.splice(a,1);
+            }else if(mode === "playing"/* && life > 1*/){
+              mode = "waiting";
+              life--;
+              effect = -1
+              death++;
+            }else{
+              /*
+              life--;
+              death++;
+              Gameover();
+              */
+            }
+          }
+
+        }
+
+        for(let i=0; i<items.length; i++){
+          if(
+            paddle.y-items[i].r < items[i].y
+            && items[i].y < paddle.y+paddle.h+items[i].r
+            && paddle.x-items[i].r < items[i].x
+            && items[i].x < paddle.x+paddle.w+items[i].r
+          ){
+            items[i].affect(i);
+          }
+        }
+
+        for(let i=0; i<lazers.length; i++){
+          for(let b=0; b<blocks.length; b++){
+            if(
+              blocks[b].y < lazers[i].y
+              && lazers[i].y < blocks[b].y+blocks[b].h
+              && blocks[b].x < lazers[i].x
+              && lazers[i].x < blocks[b].x+blocks[b].w
+            )blocks[b].hit(b,-1);
+          }
+
+          if(lazers[i].y < -LEN){
+            lazers.splice(i,1);
+          }
+        }
+      }
+
+
+
+      //  描画
+      function Render(dt){
+        menu.draw();
+        for(let i=0; i<blocks.length; i++){
+          blocks[i].draw(cvs.ctx);
+        }
+        for(let i=0; i<balls.length; i++){
+          balls[i].draw(cvs.ctx);
+        }
+        for(let i=0; i<items.length; i++){
+          items[i].draw(cvs.ctx);
+        }
+        for(let i=0; i<lazers.length; i++){
+          lazers[i].draw(cvs.ctx);
+        }
+        if(mode === "waiting"){
+          cvs.ctx.fillStyle = "red";
+          //cvs.ctx.lineWidth = "2";
+          /*
+          (xcosθ+ysinθ, +xsinθ-ycosθ)
+          bx, by => 原点(0,0)
+          +cos, -abssin => 頂点(1,0)
+          (0.8,0.2) <= 0.8cos+0.2sin, 0.8sin-0.2cos
+          (0.8,-0.2) <= 0.8cos-0.2sin, 0.8sin+0.2cos
+          */
+          cvs.ctx.beginPath();
+          cvs.ctx.moveTo(balls[0].x+Math.cos(angle)*LEN*2, balls[0].y-Math.abs(Math.sin(angle)*LEN*2));
+          cvs.ctx.lineTo(balls[0].x+(0.6*Math.cos(angle)+0.1*Math.abs(Math.sin(angle)))*LEN*2, balls[0].y-(0.6*Math.abs(Math.sin(angle))-0.1*Math.cos(angle))*LEN*2);
+          cvs.ctx.lineTo(balls[0].x+(0.6*Math.cos(angle)-0.1*Math.abs(Math.sin(angle)))*LEN*2, balls[0].y-(0.6*Math.abs(Math.sin(angle))+0.1*Math.cos(angle))*LEN*2);
+          cvs.ctx.closePath();
+          cvs.ctx.fill();
+        }
+        paddle.draw(cvs.ctx);
+      }
+
+      //  ループ
+      function Main(){
+        let crntFrame = performance.now();
+        let dt = Math.min(crntFrame - prevFrame, 1000/60)/4;
+
+        if(mode !== "clear" && mode !== "gameover"){
+          if(effect===11 && count%25===0)lazers.push(new Lazer(paddle.x+paddle.w/2, paddle.y))
+
+          cvs.ctx.clearRect(0,0,LEN*width,LEN*height);
+          Update(dt);
+          Render(dt);
+          CheckCollision();
+        }
+
+        prevFrame = crntFrame;
+
+        requestAnimationFrame(Main);
+        count = (count+1)%100;
+      }
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+  </body>
+</html>

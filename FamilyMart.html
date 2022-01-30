@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no"/>
+    <title>Piano</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        overflow: hidden;
+      }
+      #btn{
+        width: 300px;
+        height: 300px;
+        background: white;
+        font-size: 100px;
+      }
+    </style>
+  </head>
+  <body>
+    <input id="btn" type="button" value="play!">
+  </body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.26/Tone.js"></script>
+  <script type="text/javascript">
+    //
+
+
+
+
+    //  参考
+    //  ピアノ鍵盤作成
+    //  https://paiza.hatenablog.com/entry/2017/03/01/%E5%88%9D%E5%BF%83%E8%80%85%E3%81%A7%E3%82%82%E9%9F%B3%E6%A5%BD%E3%82%A2%E3%83%97%E3%83%AA%E3%81%8C%E4%BD%9C%E3%82%8C%E3%82%8B%EF%BC%81Web_Audio_API%E3%82%92%E7%B0%A1%E7%95%A5%E5%8C%96%E3%81%97%E3%81%9FJS
+    //  公式
+    //  https://tonejs.github.io/docs/14.8.26/
+    //  一夜漬け 音楽理論
+    //  https://riron.sitefactory.info/0401.html
+    //  Partについて
+    //  https://www.i-ryo.com/entry/2019/06/03/201728
+    //  簡易サンプラー
+    //  https://blog.splout.co.jp/10653/
+
+
+
+    let synth0 = new Tone.Synth().toDestination();
+    let synth1 = new Tone.Synth().toDestination();
+    //  [小節:拍:半拍,音程]
+    let melodyLine0 = [
+      {time:"0:0.0:0",note:"F#5", dur:"8n"},
+      {time:"0:0.5:0",note:"D5", dur:"8n"},
+      {time:"0:1.0:0",note:"A4", dur:"8n"},
+      {time:"0:1.5:0",note:"D5", dur:"8n"},
+      {time:"0:2.0:0",note:"E5", dur:"8n"},
+      {time:"0:2.5:0",note:"A5", dur:"4n"},
+      {time:"0:3.5:0",note:"A4", dur:"8n"},
+      {time:"1:0.0:0",note:"E5", dur:"8n"},
+      {time:"1:0.5:0",note:"F#5", dur:"8n"},
+      {time:"1:1.0:0",note:"E5", dur:"8n"},
+      {time:"1:1.5:0",note:"A4", dur:"8n"},
+      {time:"1:2.0:0",note:"D5", dur:"4n"}
+    ];
+    let melodyLine1 = [
+      {time:"0:1.0:0",note:"F#4", dur:"8n"},
+      {time:"0:2.0:0",note:"C#5", dur:"6n"},
+      {time:"1:0.0:0",note:"A4", dur:"8n"},
+      {time:"1:1.0:0",note:"A4", dur:"8n"},
+      {time:"1:2.0:0",note:"F#4", dur:"4n"}
+    ];
+    let melody0 = new Tone.Part((time,value)=>{
+      synth0.triggerAttackRelease(value.note,value.dur,time);
+    },melodyLine0).start(0);
+    melody0.loop = false;
+    let melody1 = new Tone.Part((time,value)=>{
+      synth1.triggerAttackRelease(value.note,value.dur,time,.5);
+    },melodyLine1).start(0);
+    melody0.loop = false;
+    Tone.Transport.bpm.value = 90;
+    document.querySelector("#btn").onclick = ()=>{
+      if (Tone.context.state !== 'running') {
+        Tone.context.resume();
+      }
+      //  ファ#レラレミラ　ラ　ミファ#ミラレ
+      Tone.Transport.toggle();
+    };
+
+
+
+
+
+
+
+
+
+  </script>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no"/>
+    <title>Piano</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+  </body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.26/Tone.js"></script>
+  <script type="text/javascript">
+    //
+
+
+
+
+    //  参考
+    //  ピアノ鍵盤作成
+    //  https://paiza.hatenablog.com/entry/2017/03/01/%E5%88%9D%E5%BF%83%E8%80%85%E3%81%A7%E3%82%82%E9%9F%B3%E6%A5%BD%E3%82%A2%E3%83%97%E3%83%AA%E3%81%8C%E4%BD%9C%E3%82%8C%E3%82%8B%EF%BC%81Web_Audio_API%E3%82%92%E7%B0%A1%E7%95%A5%E5%8C%96%E3%81%97%E3%81%9FJS
+    //  公式
+    //  https://tonejs.github.io/docs/14.8.26/
+    //  一夜漬け 音楽理論
+    //  https://riron.sitefactory.info/0401.html
+    //  Partについて
+    //  https://www.i-ryo.com/entry/2019/06/03/201728
+    //  簡易サンプラー
+    //  https://blog.splout.co.jp/10653/
+    //  ピアノ鍵盤設計
+    //  https://komoriss.com/reduced-size-piano4/
+
+
+
+
+    let cvs = document.querySelector("#canvas");
+    let number_of_keys = 12;
+    let prevtouches = [];
+    let mouse_down;
+    let keys = [
+      {note:"C4",down:false,key:"a",keydown:false},
+      {note:"C#4",down:false,key:"w",keydown:false},
+      {note:"D4",down:false,key:"s",keydown:false},
+      {note:"D#4",down:false,key:"e",keydown:false},
+      {note:"E4",down:false,key:"d",keydown:false},
+
+      {note:"F4",down:false,key:"f",keydown:false},
+      {note:"F#4",down:false,key:"t",keydown:false},
+      {note:"G4",down:false,key:"g",keydown:false},
+      {note:"G#4",down:false,key:"y",keydown:false},
+      {note:"A4",down:false,key:"h",keydown:false},
+      {note:"A#4",down:false,key:"u",keydown:false},
+      {note:"B4",down:false,key:"j",keydown:false},
+
+      {note:"C5",down:false,key:"k",keydown:false},
+      {note:"C#5",down:false,key:"o",keydown:false},
+      {note:"D5",down:false,key:"l",keydown:false},
+      {note:"D#5",down:false,key:"p",keydown:false},
+      {note:"E5",down:false,key:";",keydown:false},
+
+      {note:"F5",down:false,key:":",keydown:false},
+      {note:"F#5",down:false,key:"[",keydown:false},
+      {note:"G5",down:false,key:"]",keydown:false},
+      {note:"G#5",down:false,key:"\\",keydown:false}
+    ];
+    let mm = Math.min(window.innerWidth/(22.5*number_of_keys),window.innerHeight/150)*.9;
+    cvs.width = 22.5*number_of_keys*mm;
+    cvs.height = 150*mm;
+    cvs.style.border = `solid ${1*mm}px #a00`;
+    let ctx = cvs.getContext("2d");
+    let synths = [];
+    for(let i=0; i<keys.length; i++){
+      synths.push(new Tone.Synth().toDestination());
+    }
+
+
+
+    function Draw(){
+      for(let i=0; i<number_of_keys; i++){
+        ctx.fillStyle = keys[[0,2,4,5,7,9,11,12,14,16,17,19,21][i]].down ? "#c0c0c0" : "white";
+        ctx.fillRect(22.5*i*mm,0,22.5*mm,150*mm);
+      }
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 1*mm;
+      for(let i=0; i<=number_of_keys; i++){
+        ctx.beginPath();
+        ctx.moveTo(22.5*i*mm,0*mm);
+        ctx.lineTo(22.5*i*mm,150*mm);
+        ctx.stroke();
+      }
+      for(let i=0; i<2; i++){
+        ctx.fillStyle = keys[1+i*12]&&keys[1+i*12].down ? "#202020" : "black";
+        ctx.fillRect(( 13.0+157.5*i)*mm,0*mm,14*mm,95*mm);
+        ctx.fillStyle = keys[3+i*12]&&keys[3+i*12].down ? "#202020" : "black";
+        ctx.fillRect(( 40.0+157.5*i)*mm,0*mm,14*mm,95*mm);
+        ctx.fillStyle = keys[6+i*12]&&keys[6+i*12].down ? "#202020" : "black";
+        ctx.fillRect(( 79.5+157.5*i)*mm,0*mm,14*mm,95*mm);
+        ctx.fillStyle = keys[8+i*12]&&keys[8+i*12].down ? "#202020" : "black";
+        ctx.fillRect((105.5+157.5*i)*mm,0*mm,14*mm,95*mm);
+        ctx.fillStyle = keys[10+i*12]&&keys[10+i*12].down ? "#202020" : "black";
+        ctx.fillRect((131.5+157.5*i)*mm,0*mm,14*mm,95*mm);
+      }
+    }
+
+
+
+    window.onload = () => {
+      Draw();
+    };
+
+
+
+    cvs.onmousedown = (e) => {
+      let i = GetKeyAt(e.offsetX/mm,e.offsetY/mm);
+      mouse_down = true;
+      prevtouches[0] = i;
+      Down(i);
+    };
+    cvs.onmousemove = (e) => {
+      let i = GetKeyAt(e.offsetX/mm,e.offsetY/mm);
+      if(mouse_down){
+        if(prevtouches[0] !== i){
+          Up(prevtouches[0]);
+          prevtouches[0] = i;
+          Down(i);
+        }
+      }
+    }
+    cvs.onmouseup = (e) => {
+      mouse_down = false;
+      Up(GetKeyAt(e.offsetX/mm,e.offsetY/mm));
+    }
+    cvs.onmouseout = () => {
+      if(mouse_down){
+        mouse_down = false;
+        Up(prevtouches[0]);
+      }
+    }
+
+    window.ontouchstart = (e) => {
+      for(let k=0; k<e.changedTouches.length; k++){
+        let x = e.changedTouches[k].clientX-cvs.getBoundingClientRect().left;
+        let y = e.changedTouches[k].clientY-cvs.getBoundingClientRect().top;
+        if(x<0||cvs.width<x||y<0||cvs.height<y)return false;
+        let i = GetKeyAt(x/mm,y/mm);
+        prevtouches[k] = i;
+        Down(i);
+      }
+    }
+    window.ontouchmove = (e) => {
+      for(let k=0; k<e.changedTouches.length; k++){
+        let x = e.changedTouches[k].clientX-cvs.getBoundingClientRect().left;
+        let y = e.changedTouches[k].clientY-cvs.getBoundingClientRect().top;
+        if(x<0||cvs.width<x||y<0||cvs.height<y){
+          Up(prevtouches[k]);
+        }
+        let i = GetKeyAt(x/mm,y/mm);
+        if(prevtouches[k] !== i){
+          Up(prevtouches[k]);
+          prevtouches[k] = i;
+          Down(i);
+        }
+      }
+    }
+    window.ontouchend = (e) => {
+      for(let k=0; k<e.changedTouches.length; k++){
+        let x = e.changedTouches[k].clientX-cvs.getBoundingClientRect().left;
+        let y = e.changedTouches[k].clientY-cvs.getBoundingClientRect().top;
+        if(x<0||cvs.width<x||y<0||cvs.height<y)return false;
+        let i = GetKeyAt(x/mm,y/mm);
+        Up(i);
+      }
+    }
+
+    window.onkeydown = (e) => {
+      for(let i=0; i<keys.length; i++){
+        if(e.key === keys[i].key){
+          keys[i].keydown = true;
+          Down(i);
+          break;
+        }
+      }
+    }
+    window.onkeyup = (e) => {
+      for(let i=0; i<keys.length; i++){
+        if(e.key === keys[i].key){
+          keys[i].keydown = false;
+          Up(i);
+          break;
+        }
+      }
+    }
+
+    //  座標から鍵盤を特定(長い)
+    function GetKeyAt(x,y){
+      //  黒鍵
+      if(
+        13.0+157.5*0<x&&x<13.0+157.5*0+14
+        &&0<y&&y<0+95
+      )return 1;
+      else if(
+        40.0+157.5*0<x&&x<40.0+157.5*0+14
+        &&0<y&&y<0+95
+      )return 3;
+      else if(
+        79.5+157.5*0<x&&x<79.5+157.5*0+14
+        &&0<y&&y<0+95
+      )return 6;
+      else if(
+        105.5+157.5*0<x&&x<105.5+157.5*0+14
+        &&0<y&&y<0+95
+      )return 8;
+      else if(
+        131.5+157.5*0<x&&x<131.5+157.5*0+14
+        &&0<y&&y<0+95
+      )return 10;
+      else if(
+        13.0+157.5*1<x&&x<13.0+157.5*1+14
+        &&0<y&&y<0+95
+      )return 13;
+      else if(
+        40.0+157.5*1<x&&x<40.0+157.5*1+14
+        &&0<y&&y<0+95
+      )return 15;
+      else if(
+        79.5+157.5*1<x&&x<79.5+157.5*1+14
+        &&0<y&&y<0+95
+      )return 18;
+      else if(
+        105.5+157.5*1<x&&x<105.5+157.5*1+14
+        &&0<y&&y<0+95
+      )return 20;
+
+      //  白鍵
+      else if(
+        22.5*0<x&&x<22.5*1
+      )return 0;
+      else if(
+        22.5*1<x&&x<22.5*2
+      )return 2;
+      else if(
+        22.5*2<x&&x<22.5*3
+      )return 4;
+      else if(
+        22.5*3<x&&x<22.5*4
+      )return 5;
+      else if(
+        22.5*4<x&&x<22.5*5
+      )return 7;
+      else if(
+        22.5*5<x&&x<22.5*6
+      )return 9;
+      else if(
+        22.5*6<x&&x<22.5*7
+      )return 11;
+      else if(
+        22.5*7<x&&x<22.5*8
+      )return 12;
+      else if(
+        22.5*8<x&&x<22.5*9
+      )return 14;
+      else if(
+        22.5*9<x&&x<22.5*10
+      )return 16;
+      else if(
+        22.5*10<x&&x<22.5*11
+      )return 17;
+      else if(
+        22.5*11<x&&x<22.5*12
+      )return 19;
+      else return 0;//  エラー?
+    }
+
+    function Down(i){
+      if(keys[i].down)return 0;
+      keys[i].down = true;
+      synths[i].triggerAttack(keys[i].note);
+      Draw();
+    }
+
+    function Up(i){
+      if(!keys[i].down)return 0;
+      if(keys[i].keydown)return 0;
+      keys[i].down = false;
+      synths[i].triggerRelease();
+      Draw();
+    }
+
+
+
+
+
+
+
+
+
+  </script>
+</html>

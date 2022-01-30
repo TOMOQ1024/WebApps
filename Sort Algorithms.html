@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no">
+    <title>Sort Algorithms</title>
+    <link rel="stylesheet" href="Style.css">
+  </head>
+  <body>
+    <div id="wrapper">
+    </div>
+    <script type="text/javascript">
+      //
+
+
+
+      const WRAPPER = document.querySelector("#wrapper");
+      const LEN = Math.round(Math.min(window.innerWidth/2,window.innerHeight)*0.9);
+      WRAPPER.style.width = LEN*2+"px";
+      WRAPPER.style.height = LEN+"px";
+      let cvs = {
+        ele: document.createElement("canvas"),
+        w: LEN*2,
+        h: LEN
+      };
+      cvs.ctx = cvs.ele.getContext("2d");
+      cvs.ele.width = cvs.w;
+      cvs.ele.height = cvs.h;
+      WRAPPER.append(cvs.ele);
+
+
+
+      let mode = "pause";
+      let iv = {h:{},o:{}};
+      const N0 = 30;//  標準
+      const Nmax = 500;//  最大値
+      const alg0 = 2;//  標準
+      let interval = 50;//  ms
+      let N,list,alg;
+
+      if(false){
+        do{
+          N = prompt(
+            "データの総数を入力(1~"+Nmax+")\n何も入力しない場合は標準("+N0+")"
+          ) || String(N0);
+        }while(!N.match(/[1-9]/) || N.match(/[^0-9]/));
+        SetN(Math.min(Number(N),Nmax));
+
+        do{
+          alg = prompt(
+            "アルゴリズムを入力(0~1)\n"+
+            "0 : Bogo Sort\n"+
+            "1 : Selection Sort\n"+
+            "2 : Bubble Sort\n"+
+            "何も入力しない場合は標準("+alg0+")"
+          ) || String("1");
+        }while(!alg.match(/[1-1]/) || alg.match(/[^0-9]/));
+        alg = Math.min(Number(N),alg0);
+        //console.log("alg = "+alg);
+      }else{
+        SetN(N0);
+        alg = alg0;
+      }
+
+
+
+      Init();
+
+
+
+
+
+      function Init(){
+        Main();
+        cvs.ele.addEventListener("click",(e)=>{
+          if(e.offsetX<LEN){
+            if(mode !== "shuffle"){
+              mode = "shuffle";
+              iv.h.i = N;
+            }else{
+              mode = "pause";
+            }
+          }else{
+            if(mode !== "sort"){
+              mode = "sort";
+              if(alg === 1 || alg === 2){
+                iv.o.i = N;
+                iv.o.j = 0;
+                iv.o.maxid = 0;
+              }
+            }else{
+              mode = "pause";
+            }
+
+
+
+
+            i=N
+          }
+        });
+      }
+
+
+      function Main(){
+        if(mode === "shuffle"){
+          if(0<=iv.h.i){
+            iv.h.a = Math.floor(Math.random()*iv.h.i);
+            list.push(list.splice(iv.h.a,1)[0]);
+            iv.h.i--;
+          }else{
+            mode = "pause";
+          }
+        }else if(mode === "sort"){
+          if(alg === 1){
+            if(0<iv.o.i){
+              if(iv.o.j<iv.o.i){
+                if(list[iv.o.j]>list[iv.o.maxid]){
+                  iv.o.maxid = iv.o.j;
+                }
+                iv.o.j++;
+              }else{
+                list.splice(iv.o.i-1,0,list.splice(iv.o.maxid,1)[0]);
+                iv.o.i--;
+                iv.o.j = 0;
+                iv.o.maxid = 0;
+              }
+            }else{
+              mode = "pause";
+            }
+          }else if(alg === 2){
+            if(0<iv.o.i){
+              if(iv.o.j<iv.o.i-1){
+                if(list[iv.o.j]>list[iv.o.j+1]){
+                  list.splice(iv.o.j+1,0,list.splice(iv.o.j,1)[0]);
+                }else{
+                  iv.o.j++;
+                }
+              }else{
+                iv.o.j = 0;
+                iv.o.i--;
+              }
+            }else{
+              mode = "pause";
+            }
+          }
+        }
+
+        Draw();
+        if(mode === "sort"){
+          cvs.ctx.fillStyle = "black";
+          cvs.ctx.beginPath();
+          if(alg === 1){
+            cvs.ctx.arc((iv.o.j+.5)*LEN*2/N,cvs.h-.5*LEN/N,.5*LEN/N,0,Math.PI*2);
+            cvs.ctx.arc((iv.o.maxid+.5)*LEN*2/N,cvs.h-.5*LEN/N,.5*LEN/N,0,Math.PI*2);
+            //cvs.ctx.strokeRect((iv.o.j-1)*LEN*2/N,cvs.h-list[iv.o.j-1]*LEN/N,LEN*2/N,cvs.h);
+            //cvs.ctx.strokeRect(iv.o.maxid*LEN*2/N,cvs.h-list[iv.o.maxid]*LEN/N,LEN*2/N,cvs.h);
+          }else if(alg === 2){
+            cvs.ctx.arc((iv.o.j+.5)*LEN*2/N,cvs.h-.5*LEN/N,.5*LEN/N,0,Math.PI*2);
+            cvs.ctx.arc((iv.o.j+1.5)*LEN*2/N,cvs.h-.5*LEN/N,.5*LEN/N,0,Math.PI*2);
+            //cvs.ctx.strokeRect(iv.o.j*LEN*2/N,cvs.h-list[iv.o.j]*LEN/N,LEN*2/N,cvs.h);
+            //cvs.ctx.strokeRect((iv.o.j+1)*LEN*2/N,cvs.h-list[iv.o.j+1]*LEN/N,LEN*2/N,cvs.h);
+          }
+          cvs.ctx.fill();
+        }
+
+        //requestAnimationFrame(Main);
+        setTimeout(function(){
+          Main();
+        },interval);
+      }
+
+
+
+
+
+
+      function SetN(n){
+        N = n;
+        list = [];
+        for(let i=0; i<N;)list.push(++i);
+      }
+
+      function Draw(){
+        cvs.ctx.clearRect(0,0,cvs.w,cvs.h);
+        for(let i=0; i<N; i++){
+          cvs.ctx.fillStyle = GetColor(list[i]/N);
+          cvs.ctx.fillRect(i*LEN*2/N,cvs.h-list[i]*LEN/N,LEN*2/N,cvs.h);
+          //cvs.ctx.fillRect(i*LEN*2/N,0,LEN*2/N,cvs.h);
+        }
+      }
+
+      function GetColor(v){
+        if(true){
+          let med = (x) => Math.max(0,Math.min(1,x));
+          let rtn = 0;
+          rtn += Math.floor(med(Math.abs(v*6-3)-1)*0xff)*0x010000;
+          rtn += Math.floor(med(2-Math.abs(v*6-4))*0xff)*0x000100;
+          rtn += Math.floor(med(2-Math.abs(v*6-2))*0xff)*0x000001;
+          //console.log("#"+rtn.toString(16).padStart(6,"0"));
+          return "#"+rtn.toString(16).padStart(6,"0");
+        }else{
+          let rtn = 0;
+          rtn += Math.floor(v*0xff)*0x010000;
+          rtn += Math.floor(v*0xff)*0x000100;
+          rtn += Math.floor(v*0xff)*0x000001;
+          //console.log("#"+rtn.toString(16).padStart(6,"0"));
+          return "#"+rtn.toString(16).padStart(6,"0");
+        }
+      }
+
+      function Shuffle(){
+        let a;
+        for(let i=N; 0<=i; i--){
+          a = Math.floor(Math.random()*i);
+          list.push(list.splice(a,1)[0]);
+        }
+      }
+
+      function Sort(n){
+        if(n === 0){
+          //  Bogo
+          if(N === 1)return false;
+          for(let i=0; i<1000; i++){
+            for(let j=0; j<N-1; j++){
+              if(list[j]>list[j+1]){
+                Shuffle();
+                break;
+              }
+              if(j === N-2)return false;
+            }
+            if(i === 999)console.log("(;w;)");
+          }
+          return false;
+        }
+        if(n === 1){
+          //  Selection
+          let maxid;
+          for(let i=N; 0<i; i--){
+            maxid = 0;
+            for(let j=0; j<i; j++){
+              if(list[j]>list[maxid]){
+                maxid = j;
+              }
+            }
+            list.splice(i-1,0,list.splice(maxid,1)[0]);
+          }
+          return false;
+        }
+        if(n === 2){
+          //  Bubble
+          for(let i=N; 0<i; i--){
+            for(let j=0; j<i-1; j++){
+              if(list[j]>list[j+1]){
+                list.splice(j+1,0,list.splice(j,1)[0]);
+              }
+            }
+          }
+          return false;
+        }
+        if(n === 3){
+          //  Shaker
+          for(let i=N; 0<i; i--){
+            for(let j=0; j<i-1; j++){
+              if(list[j]>list[j+1]){
+                list.splice(j+1,0,list.splice(j,1)[0]);
+              }
+            }
+          }
+          return false;
+        }
+      }
+
+/*
+
+51423
+i=4,3,2,1,0
+j=1,2,...,i-1
+
+14235   0...4で最大を[4]に
+12345   0...3で最大を[3]に
+12345   0...2
+12345   0...1
+12345   0...0で最大を[0]に
+
+*/
+
+
+
+
+
+
+
+
+
+
+    </script>
+  </body>
+</html>

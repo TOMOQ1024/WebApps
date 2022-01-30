@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no"/>
+    <title>Tower of Hanoi</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+  </body>
+  <script type="text/javascript">
+    //
+
+
+
+
+
+
+
+
+    let width = 6;
+    let height = 4;
+    let len = Math.round(Math.min(window.innerWidth/width,window.innerHeight/height)*.9);
+    let cvs = document.querySelector("#canvas");
+    let ctx = cvs.getContext("2d");
+    cvs.width = len*width;
+    cvs.height = len*height;
+    //cvs.style.background = "green";//"#0E9E18";
+
+    let N = Number(prompt("段数を入力(無記入 : 7)")) || 7;
+    if(N<1)N=1;
+    let towers;//  タワーの情報
+    let selected = -1;
+    let ctrl;
+    let time = [0,0,[]];
+    let moves;
+
+
+    Init();
+
+
+
+
+
+    //  ゲーム初期化
+    function Init(){
+      //タワー初期化
+      towers = [];
+      for(let i=0; i<3; i++){
+        towers.push([]);
+      }
+      for(let j=N; 0<j; j--){
+        towers[0].push(j);
+      }
+      moves = 0;
+
+      Draw();
+
+      //  クリック時の動作
+      cvs.onclick = (e)=>{
+        if(!ctrl)return false;
+        let x = Math.min(Math.floor(e.offsetX/len/2),2);
+
+        if(selected < 0){
+          //  未選択
+          if(towers[x].length){
+            if(!time[0])time[0] = Number(String(new Date().getTime()));
+            selected = x;
+          }
+        }else if(selected === x){
+          //  取り消し
+          selected = -1;
+        }else{
+          //  移動
+          ctrl = 0;
+          Move(selected,x);
+        }
+        Draw();
+      };
+      ctrl = 1;
+    }
+
+    //  全体の描画
+    function Draw(){
+      //  初期化
+      ctx.clearRect(0,0,cvs.width,cvs.height);
+
+      let gradient;
+
+      //  メイン
+      for(let i=0; i<3; i++){
+        //  ディスク
+        for(let j=0; j<towers[i].length; j++){
+          gradient = ctx.createLinearGradient(len*(1+i*2)-len*(.1+1.8*towers[i][j]/N)/2,0,len*(1+i*2)+len*(.1+1.8*towers[i][j]/N)/2,0);
+          gradient.addColorStop(0.0,"hsl("+360*towers[i][j]/N+",100%,50%)");
+          gradient.addColorStop(0.3,"hsl("+360*towers[i][j]/N+",100%,75%)");
+          gradient.addColorStop(0.7,"hsl("+360*towers[i][j]/N+",100%,50%)");
+          gradient.addColorStop(1.0,"hsl("+360*towers[i][j]/N+",100%,25%)");
+          ctx.fillStyle = gradient;
+          ctx.scale(1,.25);
+          ctx.beginPath();
+          ctx.arc(len*(i*2+1),len*12-len*8/(N+3)*j,len*(.1+1.8*towers[i][j]/N)/2,0,Math.PI*2);
+          ctx.fill();
+          ctx.scale(1,4);
+          ctx.fillRect(len*(1+i*2)-len*(.1+1.8*towers[i][j]/N)/2,len*3-len*2/(N+3)*(j+1),len*(.1+1.8*towers[i][j]/N),len*2/(N+3));
+          ctx.scale(1,.25);
+          ctx.fillStyle = "hsl("+360*towers[i][j]/N+",100%,20%)";
+          ctx.beginPath();
+          ctx.arc(len*(i*2+1),len*12-len*8/(N+3)*(j+1),len*(.1+1.8*towers[i][j]/N)/2,0,Math.PI*2);
+          ctx.fill();
+          ctx.scale(1,4);
+        }
+
+        //  棒
+        gradient = ctx.createLinearGradient(len*(i*2+.95),0,len*(i*2+1.05),0);
+        gradient.addColorStop(0.0,"#c0a050");
+        gradient.addColorStop(0.3,"#f0c090");
+        gradient.addColorStop(0.7,"#a07030");
+        gradient.addColorStop(1.0,"#704020");
+        ctx.fillStyle = gradient;
+        ctx.scale(1,.25);
+        ctx.beginPath();
+        ctx.arc(len*(i*2+1),len*12-len*8*towers[i].length/(N+3),len*.05,0,Math.PI*2);
+        ctx.fill();
+        ctx.scale(1,4);
+        ctx.fillRect(len*(i*2+.95),len,len*.1,len*2*(1-towers[i].length/(N+3)));
+        ctx.scale(1,.25);
+        ctx.fillStyle = i===selected ? "#ffe0a0" : "#604020";
+        ctx.beginPath();
+        ctx.arc(len*(i*2+1),len*4,len*.05,0,Math.PI*2);
+        ctx.fill();
+        ctx.scale(1,4);
+      }
+    }
+
+    //  ディスクの移動
+    function Move(d0,d1){
+      if(!towers[d0].length)return false;
+
+      let disc = towers[d0].pop();
+      if((towers[d1].length?towers[d1][towers[d1].length-1]:Infinity) < disc){
+        ctrl = 1;
+        towers[d0].push(disc);
+        return false;
+      }
+      let t = 0;
+      let itv = setInterval(()=>{
+        Draw();
+        gradient = ctx.createLinearGradient(len*(1+d0*2)-len*(.1+1.8*disc/N)/2 + len*2*(d1-d0)*t,0,len*(1+d0*2)+len*(.1+1.8*disc/N)/2 + len*2*(d1-d0)*t,0);
+        gradient.addColorStop(0.0,"hsl("+360*disc/N+",100%,50%)");
+        gradient.addColorStop(0.3,"hsl("+360*disc/N+",100%,75%)");
+        gradient.addColorStop(0.7,"hsl("+360*disc/N+",100%,50%)");
+        gradient.addColorStop(1.0,"hsl("+360*disc/N+",100%,25%)");
+        ctx.fillStyle = gradient;
+        ctx.scale(1,.25);
+        ctx.beginPath();
+        ctx.arc(len*(d0*2+1) + len*2*(d1-d0)*t,len*12-len*8/(N+3)*towers[d0].length - len*8/(N+3)*(towers[d1].length-towers[d0].length)*t,len*(.1+1.8*disc/N)/2,0,Math.PI*2);
+        ctx.fill();
+        ctx.scale(1,4);
+        ctx.fillRect(len*(1+d0*2)-len*(.1+1.8*disc/N)/2 + len*2*(d1-d0)*t,len*3-len*2/(N+3)*(towers[d0].length+1) - len*2/(N+3)*(towers[d1].length-towers[d0].length)*t,len*(.1+1.8*disc/N),len*2/(N+3));
+        ctx.scale(1,.25);
+        ctx.fillStyle = "hsl("+360*disc/N+",100%,20%)";
+        ctx.beginPath();
+        ctx.arc(len*(d0*2+1) + len*2*(d1-d0)*t,len*12-len*8/(N+3)*(towers[d0].length+1) - len*8/(N+3)*(towers[d1].length-towers[d0].length)*t,len*(.1+1.8*disc/N)/2,0,Math.PI*2);
+        ctx.fill();
+        ctx.scale(1,4);
+
+        if(1 < t){
+          clearInterval(itv);
+          towers[d1].push(disc);
+          selected = -1;
+          Draw();
+          moves++;
+          ctrl = 1;
+
+          Check();
+        }
+        t += .05;
+      }, 10);
+    }
+
+    //  クリア判定
+    function Check(){
+      if(towers[2].length === N){
+        //  クリア
+        time[1] = Number(String(new Date().getTime()));
+        time[2][0] = time[1] - time[0];
+        time[2][1] = time[2][0] % 1000;//cs
+        time[2][2] = (time[2][0]-time[2][1])/1000 % 60//sec
+        time[2][3] = (time[2][0]-time[2][1]-time[2][2]*1000)/60000//min
+
+        setTimeout(function(){
+          if(confirm(
+            "Congratulations!\n"+
+            "Disks : "+N+"\n"+
+            "Moves : "+moves+" (This is"+(moves===2**N-1 ? "":"n\'t")+" minimum!)\n"+
+            "Time : "+
+            time[2][3]+"分"+
+            String(time[2][2]).padStart(2,'0')+'.'+String(time[2][1]).padStart(3,'0')+"秒"
+          )){
+            Init();
+          }
+          time = [0,0,[]];
+        }, 100);
+      }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </script>
+</html>

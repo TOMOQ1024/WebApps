@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Langton's Ant</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        /* overflow: hidden; */
+        /* font-size: 0; */
+      }
+      body{
+        position: relative;
+      }
+      #menu_wrapper{
+        position: fixed;
+        display: inline-block;
+        top: 0;
+        left: 0;
+        width: calc(100% / 3);
+        height: 100%;
+        font-size: 70%;
+        color: #00ffffc0;
+        background-color: #202020c0;
+        transition: 0.3s;
+      }
+      #menubtn{
+        width: 20%;
+        position: absolute;
+        top: 0;
+        left: 100%;
+      }
+      #pausebtn{
+        width: 20%;
+      }
+      span{
+        font-size: calc(1000% / 7);
+        color: #00ffff;
+        font-weight: bold;
+      }
+      span:hover{
+        cursor: pointer;
+      }
+      .tiles{
+        width: 15%;
+        margin: 5% 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="menu_wrapper">
+      <input id="menubtn" type="image" src="buttons/l1.png">
+      <div style="margin-top:15%;">
+        <span id="step"></span> STEP
+        PER
+        <span id="tick"></span> TICK
+      </div>
+      <div style="margin-top:10%;">
+        STEP : <span id="crntstep">0</span>
+      </div>
+      <div style="margin-top:8%;">
+        <input id="pausebtn" type="image" src="buttons/r1.png">
+      </div>
+      <div style="margin-top:8%;">
+        LOOP : <span id="loop"></span>
+      </div>
+      <div style="margin-top:10%;">
+        <button class="tiles"><img></button>
+        <button class="tiles"><img></button>
+        <button class="tiles"><img></button>
+        <button class="tiles"><img></button>
+        <button class="tiles"><img></button>
+        <br>
+        <button class="tiles"><img></button>
+        <button class="tiles"><img></button>
+        <button class="tiles"><img></button>
+        <button class="tiles"><img></button>
+        <button class="tiles"><img></button>
+        <br>
+        <button class="tiles"><img></button>
+        <button class="tiles"><img></button>
+        <button class="tiles"><img></button>
+        <button class="tiles"><img></button>
+        <button class="tiles"><img></button>
+      </div>
+    </div>
+    <div id="cvs_wrapper"></div>
+    <script type="text/javascript">
+      //
+
+
+
+
+
+
+
+
+      //
+      let px = 8;
+      let width = 123;  //  odd
+      let height = 123;
+      let step = 1;
+      let crntstep = 0;;
+      let count = 0;
+      let tick = 1;
+      let loop = 2;
+      let stop = 1;
+      let pause = 1;
+      let tiles = [
+        //以下[loop]個を使用する
+        [1,"dimgray"],//  背景
+        [1,"red"],
+        [1,"orange"],
+        [1,"violet"],
+        [1,"blue"],
+
+        [1,"yellowgreen"],
+        [1,"green"],
+        [1,"cyan"],
+        [1,"rebeccapurple"],
+        [1,"darkgoldenrod"],
+
+        [1,"cadetblue"],
+        [1,"brown"],
+        [1,"chartreuse"],
+        [1,"tomato"],
+        [1,"springgreen"]
+        // saddlebrown
+      ];
+      let ant;
+      let cvs;
+      let map = [];
+      let prevFrame;
+
+      let menu = {
+        wr: document.querySelector("#menu_wrapper"),
+        ipt: document.querySelector("#menubtn"),
+        step: document.querySelector("#step"),
+        tick: document.querySelector("#tick"),
+        crntstep: document.querySelector("#crntstep"),
+        pausebtn: document.querySelector("#pausebtn"),
+        loop: document.querySelector("#loop"),
+        tiles: document.querySelectorAll(".tiles"),
+        bool: 1
+      }
+      menu.ipt.onclick = ()=>{
+        if(menu.bool){
+          //  閉める
+          menu.ipt.src = "buttons/r1.png";
+          menu.wr.style.transform = "translateX(-100%)";
+        }else{
+          //  開ける
+          menu.ipt.src = "buttons/l1.png";
+          menu.wr.style.transform = "";
+        }
+        menu.bool = 1 - menu.bool;
+      }
+      menu.step.onclick = ()=>{
+        let i = parseInt(prompt("数値を入力(現在"+step+")"));
+        if(i)step = i;
+        menu.step.innerText = step;
+      }
+      menu.tick.onclick = ()=>{
+        let i = parseInt(prompt("数値を入力(現在"+tick+")"));
+        if(i)tick = i;
+        menu.tick.innerText = tick;
+      }
+      menu.crntstep.onclick = ()=>{
+        let i = parseInt(prompt("数値を入力(現在"+crntstep+")"));
+        if(!i)return 0;
+        pause = 1;
+        menu.pausebtn.src = "buttons/r1.png";
+        Init();
+        setTimeout(function(){
+          Update(i);
+          menu.crntstep.innerText = crntstep;
+        }, 100);
+      }
+      menu.pausebtn.onclick = ()=>{
+        if(pause){
+          //  再生
+          menu.pausebtn.src = "buttons/pause.png";
+        }else{
+          //  一時停止
+          menu.pausebtn.src = "buttons/r1.png";
+        }
+        pause = 1 - pause;
+      }
+      menu.loop.onclick = ()=>{
+        let i = parseInt(prompt("数値を入力(現在"+loop+")"));
+        if(i)loop = i;
+        menu.loop.innerText = loop;
+        ColorTiles();
+        stop = 1;
+        setTimeout(function(){
+          Init();
+        }, 100);
+      }
+      for(let i=0; i<tiles.length; i++){
+        menu.tiles[i].style.background = tiles[i][1];
+        menu.tiles[i].firstElementChild.src = "buttons/"+(tiles[i][0]>0 ? "l" : "r")+"1.png";
+        menu.tiles[i].onclick = () => {
+          tiles[i][0] *= -1;
+          menu.tiles[i].firstElementChild.src = "buttons/"+(tiles[i][0]>0 ? "l" : "r")+"1.png";
+          stop = 1;
+          setTimeout(function(){
+            Init();
+          }, 100);
+        }
+      }
+      function ColorTiles(){
+        menu.tiles.forEach((v,i) => {
+          v.style.filter = "brightness("+(i<loop ? 1 : .4)+")";
+        });
+      }
+
+
+
+
+      window.onload = () => {
+        Init();
+      }
+
+
+      function Init(){
+        stop = 1;
+        crntstep = 0;
+        pause = 1;
+        menu.pausebtn.src = "buttons/r1.png";
+        ant = {
+          x: Math.ceil(width/2),
+          y: Math.ceil(height/2),
+          d: 1
+        };
+        ant.move = ()=>{
+          if(ant.d === 0)ant.x=(ant.x+1)%width;
+          if(ant.d === 1)ant.y=(ant.y-1+height)%height;
+          if(ant.d === 2)ant.x=(ant.x-1+width)%width;
+          if(ant.d === 3)ant.y=(ant.y+1)%height;
+        }
+        cvs = {
+          ele: document.createElement("canvas"),
+          wr: document.querySelector("#cvs_wrapper"),
+          w: px*width,
+          h: px*height
+        };
+        /* about cvs */
+        {
+          cvs.ctx = cvs.ele.getContext("2d");
+          cvs.ele.width = cvs.w;
+          cvs.ele.height = cvs.h;
+          cvs.wr.innerHTML = "";
+          cvs.wr.append(cvs.ele);
+        }
+        document.body.style.fontSize = window.innerWidth/30 + "px";
+        menu.step.innerText = step;
+        menu.tick.innerText = tick;
+        menu.crntstep.innerText = crntstep;
+        menu.loop.innerText = loop;
+        ColorTiles();
+
+        map = [];
+        for(let y=0; y<height; y++){
+          map.push([]);
+          for(let x=0; x<width; x++){
+            map[y].push(0);
+          }
+        }
+        setTimeout(function(){
+          stop = 0;
+          cvs.ctx.fillStyle = tiles[0][1];
+          cvs.ctx.fillRect(0,0,px*width,px*height);
+          Main();
+        },100);
+      }
+
+      function Update(N){
+        if(stop)return 0;
+        for(let n=0; n<(N||step); n++){
+          map[ant.y][ant.x] = (map[ant.y][ant.x] + 1) % loop;
+          Draw(ant.x,ant.y,tiles[map[ant.y][ant.x]][1]);
+          ant.d = (ant.d+tiles[map[ant.y][ant.x]][0]+4)%4;
+          ant.move();
+          crntstep++;
+        }
+      }
+
+      function Draw(x,y,c){
+        cvs.ctx.fillStyle = c;
+        cvs.ctx.fillRect(x*px,y*px,px,px);
+      }
+
+      function Main(){
+        if(!pause){
+          if(!count)Update();
+          menu.crntstep.innerText = crntstep;
+
+          count = (count+1)%tick;
+        }
+        if(stop)return 0;
+        requestAnimationFrame(Main);
+      }
+
+
+
+
+    </script>
+  </body>
+</html>

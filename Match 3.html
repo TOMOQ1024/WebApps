@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no"/>
+    <title>Match 3</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        overflow: hidden;
+      }
+      #wrapper{
+        position: relative;
+      }
+      #cwr{
+        display: inline-block;
+        position: absolute;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      #cvs{
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: initial;
+      }
+      #hvs{
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      #iwr{
+        display: inline-block;
+        position: absolute;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <canvas id="mvs"></canvas>
+      <div id="cwr">
+        <canvas id="cvs"></canvas>
+        <canvas id="hvs"></canvas>
+      </div>
+      <div id="iwr"></div>
+    </div>
+  </body>
+  <script type="text/javascript">
+    //
+
+
+
+
+    const width = 8;
+    const height = 8;
+    let img = new Image();
+    img.src = "Match 3.png";
+    let bgimg = new Image();
+    bgimg.src = "tiles/202020-o.png";
+    let mvs,mtx,cvs,ctx,cwr,iwr;
+    let cells;
+    let select;
+    let touch = [0,0,0,0];
+    let dt = 270;//  ms
+    let mousedown;
+    let ctrl;
+    let GEMS;
+    let countall;
+    let count;
+    const countmax = 10;
+    let score;
+    const time0 = 60;
+    let time;
+    let combo;
+    let maxcombo;
+    let effect = [];
+    let effectcount = [];
+    let effectcount0 = [5,8,5,5,5,5,5,40];
+    const skilltext = [
+      "灰ジェムのマッチが可能になった！",
+      "ヒントが表示されるようになった！",
+      "手に入るスコアが10倍になった！",
+      "赤・青・紫ジェムが出やすくなった！",
+      "爆弾ジェムが出るようになった！",
+      "時間回復ジェムが出るようになった！",
+      "自由な入れ替えが可能になった！",
+      "タイマーが10秒間動かなくなった！"
+    ];
+    /*
+    effect
+    0灰 ; 石回収許可
+    1緑 : ヒント表示
+    2橙 : スコア10倍
+    3紫 : 色を減らす
+    4赤 : 爆弾ジェム追加
+    5水 : タイム回復ジェム追加
+    6黄 ; 自由スワップ
+    7青 : タイマー減速
+    */
+    const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+    let len = Math.round(Math.min(window.innerWidth/width,window.innerHeight/(height+3))*0.225)*4;
+    //  canvas定義(まとめるためにif1)
+    if(1){
+      //  menu_canvas  全体を覆い, スコア, canvas, スキル, タイマーがこの上に描画される。
+      mvs = document.querySelector("#mvs");
+      mtx = mvs.getContext("2d");
+      mvs.width = len*(width+.5);
+      mvs.height = len*(height+3);
+      mvs.style.backgroundImage = "url(tiles/808080-c.png)";
+      mvs.style.backgroundSize = `calc(100%/${(width+.5)*4}) calc(100%/${(height+3)*4})`;
+      mtx.textAlign = "center";
+      mtx.textBaseline = "middle";
+      mtx.font = `bold ${len/2}px consolas`;
+
+      //  main_canvas  ジェムの描画をする。
+      cvs = document.querySelector("#cvs");
+      ctx = cvs.getContext("2d");
+      cvs.width = len*width;
+      cvs.height = len*height;
+      cvs.style.backgroundImage = "url(tiles/202020-o.png)";
+      cvs.style.backgroundSize = `calc(100%/${width}) calc(100%/${height})`;
+
+      //  hint_canvas  ヒントを描画する。
+      hvs = document.querySelector("#hvs");
+      htx = hvs.getContext("2d");
+      hvs.width = len*width;
+      hvs.height = len*height;
+
+      //  canvas_wrapper  メインキャンバスを含む(+ fade-out,fall)。
+      cwr = document.querySelector("#cwr");
+      cwr.style.left = `${len*.25}px`;
+      cwr.style.top = `${len}px`;
+      cwr.style.width = `${len*width}px`;
+      cwr.style.height = `${len*height}px`;
+      cwr.style.transition = `${dt}ms`;
+
+      //  canvas_wrapper  メインキャンバスを含む(+ fade-out,fall)。
+      iwr = document.querySelector("#iwr");
+      iwr.style.left = `${len*.25}px`;
+      iwr.style.top = `${len*10}px`;
+      iwr.style.width = `${len*8}px`;
+      iwr.style.height = `${len*.75}px`;
+      iwr.style.transition = `${dt}ms`;
+    }
+
+
+
+
+
+    window.onload = function(){
+      Init();
+
+      mvs.onclick = async (e)=>{
+        let x = e.offsetX/len;
+        let y = e.offsetY/len;
+        //mtx.fillRect(len*.35,len*9.1,len*.8,len*.8);
+        for(let i=0; i<8; i++){
+          if(countmax<=count[i] && !effect[i]){
+            if((x-.75-i)**2 + (y-9.5)**2 < .5**2){
+              effect[i] = 1;
+              count[i] -= countmax;
+              await sleep(10000);
+              effect[i] = 0;
+              break;
+            }
+          }
+        }
+      }
+      if(window.ontouchstart === null){
+        //  cvsタッチ操作
+        cvs.ontouchstart = async (e) => {
+          console.log(e);
+          if(!ctrl)return 0;
+          ctrl = 0;
+          let x = e.touches[0].clientX-cvs.getBoundingClientRect().left;
+          let y = e.touches[0].clientY-cvs.getBoundingClientRect().top;
+          touch[0] = x;
+          touch[1] = y;
+          if(Math.floor(x/len)===select[0] && Math.floor(y/len)===select[1]){
+            //  selectedをクリックしたとき
+            select = [-1,-1];
+            for(let b=Math.max(0,Math.floor(y/len)-1); b<Math.min(height,Math.floor(y/len)+2); b++){
+              for(let a=Math.max(0,Math.floor(x/len)-1); a<Math.min(width,Math.floor(x/len)+2); a++){
+                Draw(cells[b][a],a,b);
+              }
+            }
+            ctrl = 1;
+          }else if(
+            (Math.floor(x/len)+1===select[0] && Math.floor(y/len)===select[1])
+            ||(Math.floor(x/len)===select[0] && Math.floor(y/len)+1===select[1])
+            ||(Math.floor(x/len)-1===select[0] && Math.floor(y/len)===select[1])
+            ||(Math.floor(x/len)===select[0] && Math.floor(y/len)-1===select[1])
+          ){
+            //  selectedに隣接するマス
+            //  selectの光を消す
+            x = select[0];
+            y = select[1];
+            select = [-1,-1];
+            for(let b=Math.max(0,y-1); b<Math.min(height,y+2); b++){
+              for(let a=Math.max(0,x-1); a<Math.min(width,x+2); a++){
+                Draw(cells[b][a],a,b);
+              }
+            }
+            //  Swap
+            Swap(1,x,y,Math.floor(touch[0]/len),Math.floor(touch[1]/len));
+            await sleep(dt+20);
+            //  Swap不可 => 戻す
+            if(!(GetRemovableGems(0,0,width,height).length-1)){
+              console.log("Swap取消");
+              Swap(1,x,y,Math.floor(touch[0]/len),Math.floor(touch[1]/len));
+              await sleep(dt+20);
+            }
+            Check(1);
+          }else{
+            //  関係のないマス
+            x = select[0];
+            y = select[1];
+            if(effect[6] && 0<=select[0]){
+              effectcount[6] -= 1;
+              if(!effectcount[6])effect[6] = 0;
+              select = [-1,-1];
+              for(let b=Math.max(0,y-1); b<Math.min(height,y+2); b++){
+                for(let a=Math.max(0,x-1); a<Math.min(width,x+2); a++){
+                  Draw(cells[b][a],a,b);
+                }
+              }
+              //  Swap
+              Swap(1,x,y,Math.floor(touch[0]/len),Math.floor(touch[1]/len));
+              await sleep(dt+20);
+              //  Swap不可 => 戻す
+              if(!(GetRemovableGems(0,0,width,height).length-1)){
+                console.log("Swap取消");
+                Swap(1,x,y,Math.floor(touch[0]/len),Math.floor(touch[1]/len));
+                await sleep(dt+20);
+              }
+              Check(1);
+            }else{
+              select = [Math.floor(touch[0]/len),Math.floor(touch[1]/len)];
+              for(let b=Math.max(0,y-1); b<Math.min(height,y+2); b++){
+                for(let a=Math.max(0,x-1); a<Math.min(width,x+2); a++){
+                  Draw(cells[b][a],a,b);
+                }
+              }
+              Draw(cells[select[1]][select[0]],select[0],select[1]);
+              ctrl = 1;
+            }
+          }
+        }
+        cvs.ontouchmove = async (e) => {
+          if(!ctrl)return 0;
+          if(select[0]<0)return 0;
+          ctrl = 0;
+          let x = e.touches[0].clientX-cvs.getBoundingClientRect().left;
+          let y = e.touches[0].clientY-cvs.getBoundingClientRect().top;
+          touch[2] = x;
+          touch[3] = y;
+          //  selected上でmousemove => pass
+          if(Math.floor(x/len)===select[0] && Math.floor(y/len)===select[1]){
+            ctrl = 1;
+            return 0;
+          }
+          let angle = Math.atan2(y-touch[1],x-touch[0])/(2*Math.PI)*360;
+          console.log(angle);
+          x = Math.floor(x/len);
+          y = Math.floor(y/len);
+          //  条件外の角度を除外
+          if(Math.abs(Math.abs(Math.abs(angle)-90)-45)-15<0){
+            ctrl = 1;
+            return 0;
+          }
+          //  Swapが確定したため, selectの光を消す
+          x = select[0];
+          y = select[1];
+          select = [-1,-1];
+          for(let b=Math.max(0,y-1); b<Math.min(height,y+2); b++){
+            for(let a=Math.max(0,x-1); a<Math.min(width,x+2); a++){
+              Draw(cells[b][a],a,b);
+            }
+          }
+          //  angleによってSwap先を決定
+          let X,Y;
+          if(Math.abs(angle)<=45){
+            //  >
+            X = x+1;
+            Y = y;
+          }else if(Math.abs(angle+90)<=45){
+            //  ^
+            X = x;
+            Y = y-1;
+          }else if(Math.abs(angle-90)<=45){
+            //  ^
+            X = x;
+            Y = y+1;
+          }else{
+            //  ^
+            X = x-1;
+            Y = y;
+          }
+          //  端を超えた場合, pass
+          if(Math.min(X,Y,width-X-1,height-Y-1)<0){
+            ctrl = 1;
+            return 0;
+          }
+          Swap(1,x,y,X,Y);
+          await sleep(dt+20);
+          //  Swap不可 => 戻す
+          if(!(GetRemovableGems(0,0,width,height).length-1)){
+            console.log("Swap取消");
+            Swap(1,x,y,X,Y);
+            await sleep(dt+20);
+          }
+          Check(1);
+        }
+      }else{
+        //  cvsマウス操作
+        window.onmousedown = ()=>{mousedown=1;};
+        window.onmouseup = ()=>{mousedown=0;};
+        cvs.onmousedown = async (e) => {
+          if(!ctrl)return 0;
+          ctrl = 0;
+          let x = e.offsetX;
+          let y = e.offsetY;
+          touch[0] = x;
+          touch[1] = y;
+          if(Math.floor(x/len)===select[0] && Math.floor(y/len)===select[1]){
+            //  selectedをクリックしたとき
+            select = [-1,-1];
+            for(let b=Math.max(0,Math.floor(y/len)-1); b<Math.min(height,Math.floor(y/len)+2); b++){
+              for(let a=Math.max(0,Math.floor(x/len)-1); a<Math.min(width,Math.floor(x/len)+2); a++){
+                Draw(cells[b][a],a,b);
+              }
+            }
+            ctrl = 1;
+          }else if(
+            (Math.floor(x/len)+1===select[0] && Math.floor(y/len)===select[1])
+            ||(Math.floor(x/len)===select[0] && Math.floor(y/len)+1===select[1])
+            ||(Math.floor(x/len)-1===select[0] && Math.floor(y/len)===select[1])
+            ||(Math.floor(x/len)===select[0] && Math.floor(y/len)-1===select[1])
+          ){
+            //  selectedに隣接するマス
+            //  selectの光を消す
+            x = select[0];
+            y = select[1];
+            select = [-1,-1];
+            for(let b=Math.max(0,y-1); b<Math.min(height,y+2); b++){
+              for(let a=Math.max(0,x-1); a<Math.min(width,x+2); a++){
+                Draw(cells[b][a],a,b);
+              }
+            }
+            //  Swap
+            Swap(1,x,y,Math.floor(touch[0]/len),Math.floor(touch[1]/len));
+            await sleep(dt+20);
+            //  Swap不可 => 戻す
+            if(!(GetRemovableGems(0,0,width,height).length-1)){
+              console.log("Swap取消");
+              Swap(1,x,y,Math.floor(touch[0]/len),Math.floor(touch[1]/len));
+              await sleep(dt+20);
+            }
+            Check(1);
+          }else{
+            //  関係のないマス
+            x = select[0];
+            y = select[1];
+            if(effect[6] && 0<=select[0]){
+              effectcount[6] -= 1;
+              if(!effectcount[6])effect[6] = 0;
+              select = [-1,-1];
+              for(let b=Math.max(0,y-1); b<Math.min(height,y+2); b++){
+                for(let a=Math.max(0,x-1); a<Math.min(width,x+2); a++){
+                  Draw(cells[b][a],a,b);
+                }
+              }
+              //  Swap
+              Swap(1,x,y,Math.floor(touch[0]/len),Math.floor(touch[1]/len));
+              await sleep(dt+20);
+              //  Swap不可 => 戻す
+              if(!(GetRemovableGems(0,0,width,height).length-1)){
+                console.log("Swap取消");
+                Swap(1,x,y,Math.floor(touch[0]/len),Math.floor(touch[1]/len));
+                await sleep(dt+20);
+              }
+              Check(1);
+            }else{
+              select = [Math.floor(touch[0]/len),Math.floor(touch[1]/len)];
+              for(let b=Math.max(0,y-1); b<Math.min(height,y+2); b++){
+                for(let a=Math.max(0,x-1); a<Math.min(width,x+2); a++){
+                  Draw(cells[b][a],a,b);
+                }
+              }
+              Draw(cells[select[1]][select[0]],select[0],select[1]);
+              ctrl = 1;
+            }
+          }
+        }
+        cvs.onmousemove = async (e) => {
+          if(!ctrl)return 0;
+          if(!mousedown)return 0;
+          if(select[0]<0)return 0;
+          ctrl = 0;
+          let x = e.offsetX;
+          let y = e.offsetY;
+          touch[2] = x;
+          touch[3] = y;
+          //  selected上でmousemove => pass
+          if(Math.floor(x/len)===select[0] && Math.floor(y/len)===select[1]){
+            ctrl = 1;
+            return 0;
+          }
+          let angle = Math.atan2(y-touch[1],x-touch[0])/(2*Math.PI)*360;
+          x = Math.floor(x/len);
+          y = Math.floor(y/len);
+          //  条件外の角度を除外
+          if(Math.abs(Math.abs(Math.abs(angle)-90)-45)-15<0){
+            ctrl = 1;
+            return 0;
+          }
+          //  Swapが確定したため, selectの光を消す
+          x = select[0];
+          y = select[1];
+          select = [-1,-1];
+          for(let b=Math.max(0,y-1); b<Math.min(height,y+2); b++){
+            for(let a=Math.max(0,x-1); a<Math.min(width,x+2); a++){
+              Draw(cells[b][a],a,b);
+            }
+          }
+          //  angleによってSwap先を決定
+          let X,Y;
+          if(Math.abs(angle)<=45){
+            //  >
+            X = x+1;
+            Y = y;
+          }else if(Math.abs(angle+90)<=45){
+            //  ^
+            X = x;
+            Y = y-1;
+          }else if(Math.abs(angle-90)<=45){
+            //  ^
+            X = x;
+            Y = y+1;
+          }else{
+            //  ^
+            X = x-1;
+            Y = y;
+          }
+          //  端を超えた場合, pass
+          if(Math.min(X,Y,width-X-1,height-Y-1)<0){
+            ctrl = 1;
+            return 0;
+          }
+          Swap(1,x,y,X,Y);
+          await sleep(dt+20);
+          //  Swap不可 => 戻す
+          if(!(GetRemovableGems(0,0,width,height).length-1)){
+            console.log("Swap取消");
+            Swap(1,x,y,X,Y);
+            await sleep(dt+20);
+          }
+          Check(1);
+        }
+      }
+    }
+
+
+    //  初期化
+    async function Init(){
+      //  cellsはマスごとのデータを持つ三次配列
+      //  cells[y][x] = [id];
+      //  id : -1空 0緑 1橙 2紫 3赤 4水 5黄 6青
+      mtx.clearRect(0,0,mvs.width,mvs.height);
+      cells = [];
+      for(let y=0; y<height; y++){
+        cells.push([]);
+        for(let x=0; x<width; x++){
+          cells[y].push(-1);
+        }
+      }
+      select = [-1,-1];
+      mousedown = 0;
+      ctrl = 0;
+      count = [0,0,0,0,0,0,0,0];
+      countall = [0,0,0,0,0,0,0,0];
+      score = 0;
+      effect = [0,0,0,0,0,0,0,0];
+      time = {
+        crnt : time0,//  s
+        delta : .25,//  per 250ms
+        dec : ()=>{time.crnt=Math.max(0,time.crnt-time.delta*(1-effect[7]))}
+      }
+      GEMS = [1,2,3,4,5,6,7];
+      cwr.style.filter = "grayscale(1)";
+      Check(1);
+      while(!ctrl){
+        await sleep(20);
+      }
+      count = [0,0,0,0,0,0,0,0];
+      countall = [0,0,0,0,0,0,0,0];
+      score = 0;
+      combo = 0;
+      maxcombo = 0;
+      effect = [0,0,0,0,0,0,0,0];
+      effectcount = [0,0,0,0,0,0,0,0];
+      cwr.style.filter = "grayscale(0)";
+      Timer();
+    }
+
+    //  宝石描画
+    function Draw(i,x,y){
+      let j = Math.floor(i/10);
+      i = i%10;
+      ctx.clearRect(len*x,len*y,len,len);
+      if(i!==-1){
+        if(select[0]===x&&select[1]===y){
+          ctx.shadowColor = effect[6] ? "gold" : "white";
+          ctx.shadowBlur = len/4;
+          ctx.drawImage(img,64*(i%4),64*Math.floor(i/4+j*2),64,64,len*x,len*y,len,len);
+          ctx.shadowColor = "transparent";
+        }else{
+          ctx.drawImage(img,64*(i%4),64*Math.floor(i/4+j*2),64,64,len*x,len*y,len,len);
+        }
+      }
+    }
+
+    function DrawAll(){
+      ctx.clearRect(0,0,cvs.width,cvs.height);
+      for(let y=0; y<height; y++){
+        for(let x=0; x<width; x++){
+          Draw(cells[y][x],x,y);
+        }
+      }
+    }
+
+    //  score, timer, gems
+    function DrawMenu(){
+      mtx.clearRect(0,0,mvs.width,mvs.height);
+
+      //  画面構築
+      for(let y=1; y<3; y++){
+        for(let x=1; x<17; x++){
+          mtx.drawImage(bgimg,0,0,64,64,len/4*x,len/4*y,len/4,len/4);
+        }
+        for(let x=18; x<33; x++){
+          mtx.drawImage(bgimg,0,0,64,64,len/4*x,len/4*y,len/4,len/4);
+        }
+      }
+      for(let y=40; y<43; y++){
+        for(let x=1; x<33; x++){
+          mtx.drawImage(bgimg,0,0,64,64,len/4*x,len/4*y,len/4,len/4);
+        }
+      }
+
+
+      //  timer
+      mtx.fillStyle = effect[7] ? "#000080" : "#800000";
+      mtx.fillRect(len*4.5,len*.25,Math.max(0,len*3.75*Math.min(time.crnt,time0)/time0),len*.5);
+
+      //  gems
+      for(let i=0; i<8; i++){
+        mtx.globalAlpha = .2;
+        mtx.drawImage(img,64*(i%4),64*Math.floor(i/4),64,64,len*(.75+i-.4),len*(9.5-.4),len*.8,len*.8);
+        mtx.globalAlpha = 1;
+        mtx.save();
+        //mtx.shadowBlur = len/6;
+        if(count[i]<countmax){
+          mtx.beginPath();
+          mtx.moveTo(len*(.75+i),len*9.5);
+          mtx.arc(len*(.75+i),len*9.5,len*.5,-Math.PI*.5,Math.PI*(2*(count[i]%countmax)/countmax-.5));
+          mtx.clip();
+          //mtx.shadowColor = effect[i] ? "white" : "black";
+          mtx.drawImage(img,64*(i%4),64*Math.floor(i/4),64,64,len*(.75+i-.4),len*(9.5-.4),len*.8,len*.8);
+        }else{
+          //  スキル発動可能
+          //mtx.shadowColor = "white";
+          mtx.drawImage(img,64*(i%4),64*Math.floor(i/4),64,64,len*(.75+i-.4),len*(9.5-.4),len*.8,len*.8);
+          //  !!!  スキル自動発動
+          if(!effect[i] || 1){
+            CreateInfoText(i,skilltext[i]);
+            effect[i] = 1;
+            count[i] -= countmax;
+            effectcount[i] = effectcount0[i];
+            /*
+            setTimeout(function(){
+              effect[i] = 0;
+            }, 10000);
+            */
+          }
+        }
+        //  描画設定の初期化
+        mtx.restore();
+        mtx.save();
+
+        //  残りの数の表示
+        if(effect[i]){
+          mtx.fillStyle = "white";
+          mtx.shadowBlur = len*.1;
+          mtx.shadowColor = "black";
+          mtx.font = `${len*.4}px consolas`;
+          mtx.fillText(
+            Math.ceil(effectcount[i]/(i===7 ? 4 : 1)),
+            len*(.75+i),len*9.75
+          );
+        }
+
+        //  描画設定の初期化
+        mtx.restore();
+      }
+
+
+      //  timer
+      mtx.fillStyle = "#00ff00";
+      mtx.fillText("TIME:"+String(Math.min(Math.floor(time.crnt),99999999)).padStart(8),len*6.375,len*.5);
+      //  score
+      if(effect[2])mtx.fillStyle = "#ff8000";
+      mtx.fillText("SCORE:"+String(Math.min(score,99999999)).padStart(8),len*2.25,len*.5);
+    }
+
+    //  ヒント表示
+    function DrawHint(){
+      htx.clearRect(0,0,htx.width,htx.height);
+      htx.lineCap = "round";
+      let cmbs = CanMakeMatch();
+      for(let i=0; i<cmbs.length; i++){
+        htx.beginPath();
+        htx.moveTo(len*(cmbs[i][0]+.5),len*(cmbs[i][1]+.5));
+        htx.lineTo(len*(cmbs[i][2]+.5),len*(cmbs[i][3]+.5));
+        htx.strokeStyle = "#000000";
+        htx.lineWidth = len*.1;
+        htx.stroke();
+        htx.strokeStyle = "#00e000";
+        htx.lineWidth = len*.05;
+        htx.stroke();
+
+        htx.clearRect(
+          len*(cmbs[i][0]+.2),len*(cmbs[i][1]+.2),
+          len*.6,len*.6
+        );
+        htx.clearRect(
+          len*(cmbs[i][2]+.2),len*(cmbs[i][3]+.2),
+          len*.6,len*.6
+        );
+
+        /*
+        htx.beginPath();
+        htx.arc(len*(cmbs[i][0]+.5),len*(cmbs[i][1]+.5),len/12,0,Math.PI*2);
+        htx.fillStyle = "#000000";
+        htx.fill();
+        htx.beginPath();
+        htx.arc(len*(cmbs[i][0]+.5),len*(cmbs[i][1]+.5),len/20,0,Math.PI*2);
+        htx.fillStyle = "#00ff00";
+        htx.fill();
+
+        htx.beginPath();
+        htx.arc(len*(cmbs[i][2]+.5),len*(cmbs[i][3]+.5),len/12,0,Math.PI*2);
+        htx.fillStyle = "#000000";
+        htx.fill();
+        htx.beginPath();
+        htx.arc(len*(cmbs[i][2]+.5),len*(cmbs[i][3]+.5),len/20,0,Math.PI*2);
+        htx.fillStyle = "#00ff00";
+        htx.fill();
+        */
+      }
+    }
+
+    /*  没案
+    async function Purple(){
+      let dy;
+      while(!ctrl){
+        await sleep(200);
+      }
+      for(let y=0; y<height; y++){
+        for(let x=0; x<width; x++){
+          if(cells[y][x]%10!==3&&cells[y][x]%10!==4&&cells[y][x]%10!==7){
+            CreateFadingGem(x,y);
+            //  スコア加算
+            score += 1;
+          }
+          await sleep(10)
+        }
+      }
+      await sleep(dt+10*width*height);
+      for(let y=0; y<height; y++){
+        for(let x=0; x<width; x++){
+          dy = 0;
+          for(let k=y+1; k<height; k++){
+            if(cells[k][x]%10!==3&&cells[k][x]%10!==4&&cells[k][x]%10!==7){
+              dy += 1;
+            }
+          }
+          CreateFallingCell(x,y,dy);
+          await sleep(10)
+        }
+      }
+      await sleep(dt+10*width+30);
+      htx.clearRect(0,0,hvs.width,hvs.height);
+      DrawAll();
+      Check(1);
+    }
+    */
+
+    //  Swap後の処理
+    async function Check(b){
+      if(b){
+        //  アニメーションあり
+        let gems = GetRemovableGems(0,0,width,height);
+        if(gems[gems.length-1]){
+          effectcount[0] -= 1;
+          if(!effectcount[0])effect[0] = 0;
+        }
+        gems = gems.slice(0,-1);
+        let add = [...Array(width)].map(()=>0);//  新たに落ちてくる宝石の数の配列
+        let fall = [];//  落ちるマス数の二次元配列
+        for(let y=0; y<height; y++){
+          fall.push([]);
+          for(let x=0; x<width; x++){
+            fall[y].push(0);
+          }
+        }
+        if(gems.length){
+          //  マッチが存在する
+          combo += 1;
+          //  fade
+          for(let i=0; i<gems.length; i++){
+            //  fadeアニメーションを作成
+            CreateFadingGem(gems[i][0],gems[i][1]);
+            //  落ち方に関わる変数を決定
+            add[gems[i][0]] += 1;
+            for(let y=0; y<gems[i][1]; y++)fall[y][gems[i][0]] += 1;
+            if(0<=cells[gems[i][1]][gems[i][0]]){
+              count[cells[gems[i][1]][gems[i][0]]%10] += 1;
+              countall[cells[gems[i][1]][gems[i][0]]%10] += 1;
+            }
+            if(Math.floor(cells[gems[i][1]][gems[i][0]]/10)===2)time.crnt += 1;
+          }
+          //  スコア計算
+          score += (2 + ((gems.length)-2)**2)*(combo+1)*(effect[2] ? 10 : 1);
+          //  スコア加算の表示
+          if(combo)CreateSmallText(len*4,len/2,`${combo}COMBO`);
+          //  消すジェムは落とさない
+          for(let i=0; i<gems.length; i++){
+            fall[gems[i][1]][gems[i][0]] = 0;
+          }
+          await sleep(dt);
+          //  fall
+          for(let y=height-1; 0<=y; y--){
+            for(let x=width-1; 0<=x; x--){
+              if(fall[y][x]){
+                CreateFallingCell(x,y,fall[y][x]);
+                await sleep(20);
+              }
+            }
+          }
+          for(let i=0; i<add.length; i++){
+            for(let j=1; j<=add[i]; j++){
+              CreateFallingCell(i,-j,add[i]);
+              await sleep(20);
+            }
+          }
+          await sleep(dt+30);
+          Check(1);
+        }else{
+          combo = 0;
+          ctrl = 1;
+          if(!CanMakeMatch()){
+            //  マッチが作成不能になったため, クリアする
+            ctrl = 0;
+            console.log("can't swap");
+            CreateInfoText(-1,"入れ替えができなくなった！");
+            for(let y=0; y<height; y++){
+              for(let x=0; x<width; x++){
+                CreateFadingGem(x,y);
+                await sleep(10)
+              }
+            }
+            await sleep(dt+10*width*height);
+            for(let x=0; x<width; x++){
+              for(let j=1; j<=height; j++){
+                CreateFallingCell(x,-j,height);
+                await sleep(10);
+              }
+            }
+            await sleep(dt+10*width+30);
+            htx.clearRect(0,0,hvs.width,hvs.height);
+            Check(1);
+          }else{
+            //  チェック終了
+            if(effect[1]){
+              effectcount[1] -= 1;
+              if(!effectcount[1])effect[1] = 0;
+              DrawHint();
+            }
+            if(effect[2]){
+              effectcount[2] -= 1;
+              if(!effectcount[2])effect[2] = 0;
+            }
+            if(effect[3]){
+              effectcount[3] -= 1;
+              if(!effectcount[3])effect[3] = 0;
+            }
+          }
+        }
+      }else{
+        //  アニメーションなし
+        let gems = GetRemovableGems(0,0,width,height).slice(0,-1);
+        let x;
+        if(gems.length){
+          for(let i=0; i<gems.length; i++){
+            x = gems[i][0];
+            for(let y=gems[i][1]; y>0; y--){
+              cells[y][x] = cells[y-1][x];
+            }
+            cells[0][x] = Math.floor(Math.random()*7+1);
+          }
+          DrawAll();
+          setTimeout(()=>{
+            Check(0);
+          }, dt);
+        }else if(!CanMakeMatch()){
+          console.log("can't swap");
+          cells = [];
+          for(let y=0; y<height; y++){
+            cells.push([]);
+            for(let x=0; x<width; x++){
+              cells[y].push(-1);
+            }
+          }
+          select = [-1,-1];
+          mousedown = 0;
+          GEMS = [1,2,3,4,5,6,7];
+          RemoveMatch();
+          DrawAll();
+        }
+      }
+    }
+
+    //
+    async function CreateFadingGem(x,y){
+      let i = cells[y][x]%10;
+      let j = Math.floor(cells[y][x]/10);
+      Draw(-1,x,y);
+      let C = document.createElement("canvas");
+      c = C.getContext("2d");
+      cwr.appendChild(C);
+      C.width = len;
+      C.height = len;
+      C.style.position = "absolute";
+      C.style.pointerEvents = "initial";
+      C.style.left = `${len*x}px`;
+      C.style.top = `${len*y}px`;
+      C.style.opacity = "1";
+      C.style.transition = `${dt-20}ms`;
+      c.drawImage(img,64*(i%4),64*Math.floor(i/4+j*2),64,64,0,0,len,len);
+      await sleep(20);
+      C.style.opacity = "0";
+      await sleep(dt-20);
+      cwr.removeChild(C);
+    }
+
+    //
+    async function CreateFallingCell(x,y,dy){
+      let i;
+      let j;
+      let s = 0;
+      Draw(-1,x,y);
+      let C = document.createElement("canvas");
+      c = C.getContext("2d");
+      cwr.appendChild(C);
+      C.width = len;
+      C.height = len;
+      C.style.position = "absolute";
+      C.style.left = `${len*x}px`;
+      C.style.top = `${len*y}px`;
+      C.style.transition = `${dt-20}ms`;
+      if(y<0){
+        //  ランダム
+        //let i = Math.floor(Math.random()*8);
+        //let i = Math.floor(Math.random()*3+1);
+        GEMS = effect[3] ? [1,2,3,3,3,4,4,4,5,6,7,7,7] : [1,2,3,4,5,6,7];
+        for(let k=0; k<8; k++){
+          s += countall[k];
+        }
+        for(let k=0; k<s/100; k++){
+          if(.5<Math.random())GEMS.push(0);
+        }
+        i = GEMS[Math.floor(Math.random()*GEMS.length)];
+        //  特殊ジェムの生成
+        if(effect[5] && Math.random()*8<1 && i){
+          i = i%10 + 20;
+          effectcount[5] -= 1;
+          if(!effectcount[5])effect[5] = 0;
+        }
+        if(effect[4] && Math.random()*8<1 && i){
+          i = i%10 + 10;
+          effectcount[4] -= 1;
+          if(!effectcount[4])effect[4] = 0;
+        }
+        cells[y+dy][x] = i;
+        i = cells[y+dy][x]%10;
+        j = Math.floor(cells[y+dy][x]/10);
+        c.drawImage(img,64*(i%4),64*Math.floor(i/4+j*2),64,64,0,0,len,len);
+      }else{
+        cells[y+dy][x] = cells[y][x];
+        i = cells[y+dy][x]%10;
+        j = Math.floor(cells[y+dy][x]/10);
+        c.drawImage(img,64*(i%4),64*Math.floor(i/4+j*2),64,64,0,0,len,len);
+      }
+      await sleep(20);
+      C.style.left = `${len*x}px`;
+      C.style.top = `${len*(y+dy)}px`;
+      await sleep(dt-20);
+      Draw(cells[y+dy][x],x,y+dy);
+      cwr.removeChild(C);
+    }
+
+    //  画面上面に文字や画像を表示する
+    async function CreateInfoText(i,txt){
+      let C = document.createElement("canvas");
+      c = C.getContext("2d");
+      iwr.appendChild(C);
+      C.width = len*width;
+      C.height = len*.75;
+      C.style.position = "absolute";
+      C.style.pointerEvents = "initial";
+      C.style.left = `${len*width}px`;
+      C.style.top = `${0}px`;
+      C.style.transition = `${dt-20}ms`;
+      C.style.opacity = "1";
+      c.fillStyle = "#00ff00";
+      c.font = `${len*.4}px consolas`;
+      c.textAlign = "left";
+      c.textBaseline = "middle";
+      for(let y=0; y<3; y++){
+        for(let x=0; x<32; x++){
+          c.drawImage(bgimg,0,0,64,64,len/4*x,len/4*y,len/4,len/4);
+        }
+      }
+      if(0 <= i){
+        c.drawImage(img,64*(i%4),64*Math.floor(i/4),64,64,0,0,len*.75,len*.75);
+      }
+      c.fillText(txt,len,len*.375);
+      await sleep(20);
+      C.style.left = `${0}px`;
+      await sleep(10000-20);
+      C.style.opacity = "0";
+      await sleep(dt);
+      if(iwr.hasChildNodes())iwr.removeChild(C);
+    }
+
+    //
+    async function CreateSmallText(x,y,txt){
+      let C = document.createElement("canvas");
+      c = C.getContext("2d");
+      cwr.appendChild(C);
+      C.width = len*4;
+      C.height = len*4;
+      C.style.position = "absolute";
+      C.style.pointerEvents = "initial";
+      C.style.left = `${x-len*2}px`;
+      C.style.top = `${y-len*2}px`;
+      C.style.opacity = "1";
+      c.textAlign = "center";
+      c.textBaseline = "middle";
+      c.fillStyle = "#000000";
+      c.font = `bold ${len*.62}px consolas`;
+      c.fillText(txt,len,len);
+      c.fillStyle = "#ffff00";
+      c.font = `${len*.6}px consolas`;
+      c.fillText(txt,len*2,len*2);
+      C.style.transition = `${1000-20}ms`;
+      await sleep(20);
+      C.style.top = `${y-len*2.25}px`;
+      C.style.opacity = "0";
+      await sleep(1000-20);
+      cwr.removeChild(C);
+    }
+
+    //  マッチの除去(アニメーションなし)
+    function RemoveMatch(){
+      let rem = GetRemovableGems(0,0,width,height).slice(0,-1);
+      while(rem.length){
+        for(let i=0; i<rem.length; i++){
+          cells[rem[i][1]][rem[i][0]] = Math.floor(Math.random()*7+1);
+        }
+        rem = GetRemovableGems(0,0,width,height).slice(0,-1);
+      }
+    }
+
+    //  マッチが作れるかどうかのbool(作れるとき全swap情報)
+    function CanMakeMatch(){
+      let rtn = [];
+      //  縦方向swap
+      for(let y=0; y<height-1; y++){
+        for(let x=0; x<width; x++){
+          Swap(0,x,y,x,y+1);
+          if(GetRemovableGems(x-2,y-2,x+3,y+4).length-1){
+            rtn.push([x,y,x,y+1]);
+          }
+          Swap(0,x,y,x,y+1);
+        }
+      }
+      //  横方向swap
+      for(let y=0; y<height; y++){
+        for(let x=0; x<width-1; x++){
+          Swap(0,x,y,x+1,y);
+          if(GetRemovableGems(x-2,y-2,x+4,y+3).length-1){
+            rtn.push([x,y,x+1,y]);
+          }
+          Swap(0,x,y,x+1,y);
+        }
+      }
+      if(!rtn.length)return 0;
+      return rtn;
+    }
+
+    //  (x0,y0),(x1,y1)による長方形内にある消去可能gemの配列 + del0
+    function GetRemovableGems(x0,y0,x1,y1){
+      let gems = CopyArr(cells);//  探索済は-1
+      let rtn = [];
+      let del0 = 0;
+      //  3個の探索
+      for(let y=Math.max(0,y0); y<Math.min(height,y1); y++){
+        for(let x=Math.max(0,x0); x<Math.min(width,x1); x++){
+          if(x<width-2 && cells[y][x]%10===cells[y][x+1]%10 && cells[y][x+1]%10===cells[y][x+2]%10 && (effect[0] ? 1 : cells[y][x])){
+            if(effect[0] && !cells[y][x]){
+              del0 = 1;
+            }
+            for(let i=0; i<3; i++){
+              rtn.push([x+i,y]);
+              //  爆弾ジェム
+              if(Math.floor(cells[y][x+i]/10)===1){
+                for(let p=Math.max(0,y-1); p<Math.min(height,y+2); p++){
+                  for(let q=Math.max(0,x+i-1); q<Math.min(width,x+i+2); q++){
+                    rtn.push([q,p]);
+                  }
+                }
+              }
+            }
+          }
+          if(y<height-2 && cells[y][x]%10===cells[y+1][x]%10 && cells[y+1][x]%10===cells[y+2][x]%10  && (effect[0] ? 1 : cells[y][x])){
+            if(effect[0] && !cells[y][x]){
+              del0 = 1;
+            }
+            for(let i=0; i<3; i++){
+              rtn.push([x,y+i]);
+              //  爆弾ジェム
+              if(Math.floor(cells[y+i][x]/10)===1){
+                for(let p=Math.max(0,y+i-1); p<Math.min(height,y+i+2); p++){
+                  for(let q=Math.max(0,x-1); q<Math.min(width,x+2); q++){
+                    rtn.push([q,p]);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      //  取り除けるマスをgemsに記録
+      for(let i=0; i<rtn.length; i++){
+        gems[rtn[i][1]][rtn[i][0]] = -1;
+      }
+      //  お邪魔ジェムの探索
+      for(let y=0; y<height; y++){
+        for(let x=0; x<width; x++){
+          if(gems[y][x] === -1){
+            if(x+1<width && gems[y][x+1]===0){
+              gems[y][x+1] = -2;
+            }
+            if(0<=y-1 && gems[y-1][x]===0){
+              gems[y-1][x] = -2;
+            }
+            if(0<=x-1 && gems[y][x-1]===0){
+              gems[y][x-1] = -2;
+            }
+            if(y+1<height && gems[y+1][x]===0){
+              gems[y+1][x] = -2;
+            }
+          }
+        }
+      }
+      //  かぶりのないrtnにする
+      rtn = [];
+      for(let y=0; y<height; y++){
+        for(let x=0; x<width; x++){
+          if(gems[y][x] < 0){
+            rtn.push([x,y]);
+          }
+        }
+      }
+      return rtn.concat(del0);
+    }
+
+    // (x0,y0),(x1,y1)の交換
+    async function Swap(b,x0,y0,x1,y1){
+      htx.clearRect(0,0,hvs.width,hvs.height);
+      if(b){
+        //  アニメーション
+        let i0 = cells[y0][x0]%10;
+        let j0 = Math.floor(cells[y0][x0]/10);
+        let i1 = cells[y1][x1]%10;
+        let j1 = Math.floor(cells[y1][x1]/10);
+        Draw(-1,x0,y0);
+        Draw(-1,x1,y1);
+        let C0 = document.createElement("canvas");
+        c0 = C0.getContext("2d");
+        cwr.appendChild(C0);
+        C0.width = len;
+        C0.height = len;
+        C0.style.position = "absolute";
+        C0.style.left = `${len*x0}px`;
+        C0.style.top = `${len*y0}px`;
+        C0.style.transition = `${dt-10}ms`;
+        c0.drawImage(img,64*(i0%4),64*Math.floor(i0/4+j0*2),64,64,0,0,len,len);
+
+        let C1 = document.createElement("canvas");
+        c1 = C1.getContext("2d");
+        cwr.appendChild(C1);
+        C1.width = len;
+        C1.height = len;
+        C1.style.position = "absolute";
+        C1.style.left = `${len*x1}px`;
+        C1.style.top = `${len*y1}px`;
+        C1.style.transition = `${dt-20}ms`;
+        c1.drawImage(img,64*(i1%4),64*Math.floor(i1/4+j1*2),64,64,0,0,len,len);
+
+        await sleep(20);
+        C0.style.left = `${len*x1}px`;
+        C0.style.top = `${len*y1}px`;
+        C1.style.left = `${len*x0}px`;
+        C1.style.top = `${len*y0}px`;
+        await sleep(dt-20);
+        cwr.removeChild(C0);
+        cwr.removeChild(C1);
+        let tmp = cells[y0][x0];
+        cells[y0][x0] = cells[y1][x1];
+        cells[y1][x1] = tmp;
+        Draw(cells[y0][x0],x0,y0);
+        Draw(cells[y1][x1],x1,y1);
+      }else{
+        let tmp = cells[y0][x0];
+        cells[y0][x0] = cells[y1][x1];
+        cells[y1][x1] = tmp;
+      }
+    }
+
+    //  多次元配列のコピー
+    function CopyArr(arg){
+      return Array.isArray(arg) ? arg.map(i=>CopyArr(i)) : arg;
+    }
+
+    //  ループ
+    async function Timer(){
+      while(0 < time.crnt){
+        if(effect[7]){
+          effectcount[7] -= 1;
+          if(!effectcount[7])effect[7] = 0;
+        }else{
+          time.dec();
+        }
+        DrawMenu();
+        await sleep(250);
+      }
+      while(!ctrl){
+        DrawMenu();
+        await sleep(250);
+      }
+      if(confirm(
+        "TIME UP!\n"+
+        `SCORE : ${score}\n`+
+        `GEMS : ${
+          countall[0]+countall[1]+countall[2]+countall[3]+
+          countall[4]+countall[5]+countall[6]+countall[7]
+        }\n`+
+        "Retry?"
+      )){
+        htx.clearRect(0,0,hvs.width,hvs.height);
+        Init();
+      }else{
+        ctrl = 0;
+      }
+    }
+
+
+
+
+
+
+
+    /*  参考URL
+
+    Sleep関数
+    https://qiita.com/asa-taka/items/888bc5a1d7f30ee7eda2
+
+    */
+
+
+
+
+
+
+
+  </script>
+</html>

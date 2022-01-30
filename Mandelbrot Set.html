@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Fractal</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        font-size: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper" style="transition:0s;">
+      <canvas id="cvs" width="900" height="900"></canvas>
+      <canvas id="cursor" width="900" height="900"></canvas>
+    </div>
+    <script type="text/javascript">
+      //alert("This will take tens of seconds!\nWait for a while plz(*´ω｀*)");
+
+
+
+      let Sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+      //wrapper
+      const WRAPPER = document.querySelector("#wrapper");
+      //  cvs
+      let cvs = document.querySelector("#cvs");
+      cvs.style.width = "100%";
+      cvs.style.cursor = "none";
+      let ctx = cvs.getContext("2d");
+      let cursorcvs = document.querySelector("#cursor");
+      cursorcvs.style.pointerEvents = "none";
+      cursorcvs.style.position = "absolute";
+      cursorcvs.style.left = 0;
+      cursorcvs.style.width = "100%";
+      let cursorctx = cursorcvs.getContext("2d");
+      //  graph
+      let graph = {
+        x0 : 0,
+        y0 : 0,
+        r : 2,
+        limit : 50,
+        scale : 10,
+        type : 0
+      };
+      let Z;
+      {
+        //  ネットから
+        //Z = [-3,10,-63,100];  //  ～型
+        //Z = [32,100,43,1000];  //  S型
+        //Z = [-15652,100000,103225,100000];  //  I型円含み
+        //Z = [-11,100,67,100];  //  S型丸み帯び
+        //Z = [-39054,100000,-58679,100000];  //  Z型デコボコ
+        //Z = [11031,100000,-67037,100000];  //  Z型白なし
+        //Z = [-74543,100000,11031,100000];  //  斜めH型かなり良い白なし
+        //Z = [-8,10,156,1000];  //  S横連結白なし
+        //Z = [285,1000,1,100];  //  S型白なし
+        //Z = [-7269,10000,1888,10000]  //  横連結たぶん白なし
+
+        //  自分から
+        //Z = [1,3,1,20];  //  S型
+        //Z = [-5,10,6,10];  //  S型スパイラル
+        //Z = [123,1000,654,1000];  //  S型白なしスパイラル
+        //Z = [1,1000,67,100];  //  S型かなり良い白なしスパイラル
+        //Z = [20,100,58,100];  //  ２銀河型かなり良い白なし
+        //Z = [0,1,0,1];
+        Z = [350,1000,20,1000];
+      }
+
+
+      WRAPPER.style.width = `${Math.min(window.innerWidth,window.innerHeight)*.9}px`;
+
+
+
+      window.onload = () => {
+        Draw();
+
+        window.onresize = () => {
+          WRAPPER.style.width = `${Math.min(window.innerWidth,window.innerHeight)*.9}px`;
+        };
+        cvs.onmousemove = (e) => {
+          let x = (e.offsetX)/cvs.offsetWidth*cvs.width;
+          let y = (e.offsetY)/cvs.offsetWidth*cvs.width;
+
+          cursorctx.clearRect(0,0,cvs.width,cvs.width);
+          cursorctx.save();
+          cursorctx.translate(x,y);
+          cursorctx.fillStyle = "red";
+          cursorctx.fillRect(-.5*cvs.width/graph.scale-2,-.5*cvs.width/graph.scale-2,cvs.width/graph.scale+4,cvs.width/graph.scale+4);
+          cursorctx.clearRect(-.5*cvs.width/graph.scale,-.5*cvs.width/graph.scale,cvs.width/graph.scale,cvs.width/graph.scale);
+          cursorctx.fillRect(-2,-20,4,40);
+          cursorctx.fillRect(-20,-2,40,4);
+          cursorctx.clearRect(-6,-6,12,12);
+          cursorctx.restore();
+        }
+        cvs.onmouseleave = () => {
+          cursorctx.clearRect(0,0,cvs.width,cvs.width);
+        }
+        cvs.onclick = (e) => {
+          let x = (e.offsetX)/cvs.offsetWidth*cvs.width;
+          let y = (e.offsetY)/cvs.offsetWidth*cvs.width;
+          graph.x0 += (x-cvs.width/2)/cvs.width*2*graph.r;
+          graph.y0 += (y-cvs.width/2)/cvs.width*2*graph.r;
+          graph.r /= graph.scale;
+          Draw();
+        }
+      }
+
+
+
+      async function Draw(){
+        let n = 300;
+        let cells = [];
+        let min = Infinity;
+        for(let y=0; y<n; y++){
+          cells.push([]);
+          for(let x=0; x<n; x++){
+            cells[y].push(Get(graph.x0+graph.r*(2*x/n-1),graph.y0+graph.r*(2*y/n-1)));
+            if(cells[y][x]<min)min = cells[y][x];
+          }
+        }
+        for(let y=0; y<n; y++){
+          for(let x=0; x<n; x++){
+            ctx.fillStyle = GetColor(cells[y][x],min,0);
+            ctx.fillRect(cvs.width/n*x,cvs.width/n*y,cvs.width,cvs.width);
+          }
+          await Sleep(10);
+        }
+      }
+
+      function Get(cr,ci){
+        let zr=0,zi=0,tmp;
+        for(let t=0; t<graph.limit; t++){
+          tmp = zr;
+          zr = zr*zr-zi*zi+cr;
+          zi = 2*tmp*zi+ci;
+          if(4 < zr*zr+zi*zi)return t;
+        }
+        return -1;
+      }
+
+      function GetColor(x,min,type){
+        if(type===0){
+          //  minで輝度1% , limitで輝度50%
+          if(x<0)return "white";
+          return `hsl(${120},100%,${1+49/(graph.limit-min)*(x-min)}%)`;
+        }
+        else if(type===1){
+          if(x<0)return "white";
+          //  循環1
+          let y = x/20%6;
+          return `rgb(
+            ${Math.max(0,Math.min(2-Math.abs(y-4),1)*200)},
+            ${Math.max(0,Math.min(2-Math.abs(y-3),1)*200)},
+            ${Math.max(0,Math.min(2-Math.abs(y-2),1)*200)}
+          )`;
+        }
+        else if(type===2){
+          if(x<0)return "white";
+          //  循環2
+          return `rgb(
+            ${Math.min(Math.max(1-(limit-x)/(limit-min),0)*0,1)*255},
+            ${Math.min(Math.max(1-(limit-x)/(limit-min),0)*3,1)*255},
+            ${Math.min(Math.max(1-(limit-x)/(limit-min),0)*0,1)*255}
+          )`;
+        }
+      }
+
+
+
+
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no"/>
+    <title>Flip Puzzle</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        overflow: hidden;
+      }
+      body{
+        position: relative;
+      }
+      #canvas{
+        transition: .15s;
+        background-image: url(tiles\\202020-o.png);
+        background-size: calc(100%/3) calc(100%/3);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <canvas id="canvas" onclick="OnClick(event)"></canvas>
+    </div>
+  </body>
+  <script type="text/javascript">
+    //
+
+
+
+
+
+    let width = 3;
+    let height = 3;
+    let img = new Image();
+    img.src = "Flip Puzzle.png";
+    let cells;
+    let ctrl;
+    let time;
+    let FlipH = x => 1+x%2+Math.floor((x-1)/2)*2;
+    let FlipV = x => 3+(x-1)%2-Math.floor((x-1)/2)*2;
+    const Sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+    let len = 128;
+    let cvs = document.querySelector("#canvas");
+    cvs.width = len*4;
+    cvs.height = len*4;
+    cvs.style.width = `${Math.min(window.innerWidth,window.innerHeight)*.9}px`;
+    let ctx = cvs.getContext("2d");
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "black";
+    ctx.shadowOffsetX = len/16;
+    ctx.shadowOffsetY = len/16;
+    ctx.shadowBlur = len/8;
+
+
+
+
+    window.onload = () => {
+      Draw();
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    async function OnClick(e){
+      let x = e.offsetX/cvs.offsetWidth*4;
+      let y = e.offsetY/cvs.offsetHeight*4;
+      let rr = (a,b) => a*a+2*b*b+a*Math.abs(a)-.2;
+      let i;
+
+      if(.625 < y && y < 1.375){
+        //  width
+        i = width + Math.round(.601345*Math.sin(Math.PI*(1-x/2)));
+        if(i < 2)width = height-1 ? 1 : 2;
+        else width = i;
+      }else if(2.125 < y && y < 2.875){
+        //  height
+        i = height + Math.round(.601345*Math.sin(Math.PI*(1-x/2)));
+        if(i < 2)height = width-1 ? 1 : 2;
+        else height = i;
+      }else if(rr(Math.abs(x-2)-1,y-3.5) < 0){
+        //  start
+        cvs.width = len*width;
+        cvs.height = len*height;
+        cvs.style.background = "none";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        await Sleep(100);
+        OnClick = () => 0;
+        Init();
+        return false;
+      }
+
+      Draw();
+      cvs.style.backgroundSize = ""+100/width+"% "+100/height+"%";
+    }
+
+    function Draw(){
+      ctx.clearRect(0,0,cvs.width,cvs.height);
+      ctx.fillStyle = "#d040ff";
+      ctx.font = "bold "+len*.5+"px serif";
+      ctx.fillText("WIDTH",len*2,len*.25);
+      ctx.drawImage(img,0,0,64,64,len*.625,len*.625,len*.75,len*.75);
+      ctx.drawImage(img,0,0,64,64,len*.625,len*2.125,len*.75,len*.75);
+      ctx.globalAlpha = 2 < Math.sign((height-1)**2)+width ? 1 : .5;
+      ctx.drawImage(img,0,64,64,64,len*2.625,len*.625,len*.75,len*.75);
+      ctx.globalAlpha = 2 < Math.sign((width-1)**2)+height ? 1 : .5;
+      ctx.drawImage(img,0,64,64,64,len*2.625,len*2.125,len*.75,len*.75);
+      ctx.globalAlpha = 1;
+      ctx.fillText("HEIGHT",len*2,len*1.75);
+
+      ctx.font = "bold "+len*.75**Math.floor(Math.log10(width))+"px serif";
+      ctx.fillText(width,len*2,len);
+      ctx.font = "bold "+len*.75**Math.floor(Math.log10(height))+"px serif";
+      ctx.fillText(height,len*2,len*2.5);
+
+      ctx.fillStyle = "#e0e0e0";
+      ctx.beginPath();
+      ctx.arc(len*3,len*3.5,len*.35,Math.PI/2,-Math.PI/2,true);
+      ctx.arc(len*1,len*3.5,len*.35,-Math.PI/2,Math.PI/2,true);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#808080";
+      ctx.beginPath();
+      ctx.arc(len*3,len*3.5,len*.3,Math.PI/2,-Math.PI/2,true);
+      ctx.arc(len*1,len*3.5,len*.3,-Math.PI/2,Math.PI/2,true);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#d040ff";
+      ctx.font = "bold "+len*.5+"px serif";
+      ctx.fillText("START",len*2,len*3.5);
+    }
+
+
+    //  -1:DrawAll, 1:指定描画, 0:指定クリア
+    async function Init(){
+      ctx.font = "bold "+100+"px serif";
+      Draw = (i,x,y,dontsave,donttoggle) => {
+        if(i === -1){
+          ctx.clearRect(0,0,cvs.width,cvs.height);
+          for(y=0; y<height; y++){
+            for(x=0; x<width; x++){
+              Draw(cells[y][x],x,y);
+            }
+          }
+        }else if(i === 0){
+          ctx.clearRect(len*x,len*y,len,len);
+        }else{
+          if(!dontsave)ctx.save();
+          ctx.translate(len*x,len*y);
+          ctx.fillStyle = !donttoggle?"#e0b000":"#c07000";
+          if(i%2===0){
+            ctx.scale(-1,1);
+            ctx.translate(-len,0);
+            ctx.fillStyle = !donttoggle?"#c07000":"#e0b000";
+          }
+          if(2<i){
+            ctx.scale(1,-1);
+            ctx.translate(0,-len);
+            ctx.fillStyle = !donttoggle?"#c07000":"#e0b000";
+          }
+          ctx.beginPath();
+          ctx.arc(64,64,60,0,Math.PI*2);
+          ctx.clip();
+          ctx.beginPath();
+          ctx.arc(64,64,56,0,Math.PI*2);
+          ctx.fill();
+          ctx.shadowBlur = len/8;
+          //ctx.shadowColor = "#b06020";
+          ctx.shadowColor = "#a05020";
+          ctx.strokeStyle = "#e0c040";//ffe060
+          ctx.lineWidth = 8;
+          ctx.beginPath();
+          ctx.arc(64,64,58,0,Math.PI*2);
+          ctx.stroke();
+          ctx.fillStyle = "#f0d050";
+          ctx.fillText("P",len/2,len/2);
+          if(!dontsave)ctx.restore();
+        }
+      };
+      OnClick = (e) => {
+        if(!time[0])time[0] = Number(String(new Date().getTime()));
+        if(!ctrl)return 0;
+        let x = Math.floor(e.offsetX/cvs.offsetWidth*width);
+        let y = Math.floor(e.offsetY/cvs.offsetHeight*height);
+
+        if(x<width-1 && !cells[y][x+1])Move(x,y,0);
+        if(0<y && !cells[y-1][x])Move(x,y,1);
+        if(0<x && !cells[y][x-1])Move(x,y,2);
+        if(y<height-1 && !cells[y+1][x])Move(x,y,3);
+      };
+
+      cells = [];
+      for(let y=0; y<height; y++){
+        cells.push([]);
+        for(let x=0; x<width; x++){
+          cells[y].push(1);
+        }
+      }
+      cells[height-1][width-1] = 0;
+      ctrl = 1;
+      time = [0,0,[]];
+
+      Shuffle();
+      Draw(-1);
+    }
+
+    function Shuffle(){
+      let pick = {};
+      for(let y=0; y<height; y++){
+        for(let x=0; x<width; x++){
+          if(!cells[y][x]){
+            pick.x = x;
+            pick.y = y;
+            y = height;
+            break;
+          }
+        }
+      }
+      if(1<width && 1<height){
+        for(let t=0; t<Math.max(width,height)*0+1; t++){
+          //  空白の移動
+          for(let y=pick.y+1; y<height; y++){
+            cells[pick.y][pick.x] = FlipV(cells[y][pick.x]);
+            cells[y][pick.x] = 0;
+            pick.y = y;
+          }
+          for(let x=pick.x+1; x<width; x++){
+            cells[pick.y][pick.x] = FlipH(cells[pick.y][x]);
+            cells[pick.y][x] = 0;
+            pick.x = x;
+          }
+
+          //シャッフル
+          let list=[],x,y,tmp;
+          for(let i=0; i<(width-1)*(height-1); i++){
+            list.push(i);
+            i = i-Math.floor(Math.random()*1.1);
+          }
+          for(let i=list.length-1; 0<=i; i--){
+            list.push(list.splice(Math.floor(Math.random()*i),1)[0]);
+          }
+          for(let i=0; i<list.length; i++){
+            x = list[i]%(width-1);
+            y = Math.floor(list[i]/(width-1));
+            tmp = cells[y][x];
+            cells[y][x] = FlipH(cells[y][x+1]);
+            cells[y][x+1] = 5-cells[y+1][x];//  FlipHV
+            cells[y+1][x] = FlipV(tmp);
+          }
+
+          //  空白の移動
+          pick.x = Math.floor(Math.random()*width);
+          pick.y = Math.floor(Math.random()*height);
+          for(let y=height-1; pick.y<y; y--){
+            cells[y][width-1] = FlipV(cells[y-1][width-1]);
+            cells[y-1][width-1] = 0;
+          }
+          for(let x=width-1; pick.x<x; x--){
+            cells[pick.y][x] = FlipH(cells[pick.y][x-1]);
+            cells[pick.y][x-1] = 0;
+          }
+        }
+      }
+    }
+
+    async function Move(x,y,d){
+      ctrl = 0;
+      let t = 8;
+      let pick = {
+        x:x+(1-d%2)*(d<2?1:-1),
+        y:y+(d%2)*(d<2?-1:1)
+      }
+      while(-8<=t){
+        Draw(0,x,y);
+        Draw(0,pick.x,pick.y);
+        ctx.save();
+        ctx.translate(len*(x+(d===0?1:0)),len*(y+(d===3?1:0)));
+        ctx.scale(
+          (1-d%2)?t/8:1,
+          d%2?t/8:1
+        );
+        if(t<0&&((d%2?FlipV(cells[y][x]):FlipH(cells[y][x]))===1)^(cells[y][x]===1)){
+          Draw(cells[y][x],d===0?-1:0,d===3?-1:0,1,1);
+        }else{
+          Draw(cells[y][x],d===0?-1:0,d===3?-1:0,1,0);
+        }
+        ctx.restore();
+        t -= 1;
+        await Sleep(10);
+      }
+      cells[pick.y][pick.x] = d%2?FlipV(cells[y][x]):FlipH(cells[y][x]);
+      cells[y][x] = 0;
+      Draw(cells[pick.y][pick.x],pick.x,pick.y);
+      ctrl = 1;
+      Check();
+    }
+
+    function Check(){
+      let b = 1;
+      for(let y=0; y<height; y++){
+        for(let x=0; x<width; x++){
+          if(1 < cells[y][x])b = 0;
+        }
+      }
+      if(b){
+        //  clear
+        ctrl = 0;
+        time[1] = Number(String(new Date().getTime()));
+        time[2][0] = time[1] - time[0];
+        time[2][1] = time[2][0] % 1000;//cs
+        time[2][2] = (time[2][0]-time[2][1])/1000 % 60//sec
+        time[2][3] = (time[2][0]-time[2][1]-time[2][2]*1000)/60000//min
+
+        setTimeout(function(){
+          if(confirm(
+            "Congratulations!\n"+
+            "Size : "+width+"*"+height+"\n"+
+            "Time : "+
+              time[2][3]+"分"+
+              String(time[2][2]).padStart(2,'0')+'.'+String(time[2][1]).padStart(3,'0')+"秒\n"+
+            "Retry?"
+          )){
+            Init();
+          }
+          time = [0,0,[]];
+        }, 200);
+      }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+  </script>
+</html>

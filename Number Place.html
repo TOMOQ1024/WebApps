@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no"/>
+    <title>Number Place</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <canvas id="canvas" onclick="OnClickC(event)"></canvas>
+      <canvas id="ghost" onclick="OnClickG(event)"></canvas>
+    </div>
+    <script type="text/javascript">
+      //
+
+
+
+
+      let N = 3;
+      const NMAX = 3;
+      let aells;//  解答
+      let bells;//  問題
+      let cells;//  入力用
+      let selected = {b:0,x:-1,y:-1};
+      const dt = 270;//  ms
+      const Sleep = ms => new Promise(r=>setTimeout(r,ms));
+      let len = Math.round(Math.min(window.innerWidth,window.innerHeight)*0.1);
+      let cvs = document.querySelector("#canvas");
+      cvs.width = len*9;
+      cvs.height = len*9;
+      let ctx = cvs.getContext("2d");
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      let gvs = document.querySelector("#ghost");
+      gvs.width = len*3;
+      gvs.height = len*3;
+      gvs.style.display = "none";
+      gvs.style.position = "absolute";
+      gvs.style.background = "white";
+      gvs.style.borderStyle = "double";
+      gvs.style.borderColor = "springgreen";
+      gvs.style.borderWidth = ""+len/8+"px";
+      gtx = gvs.getContext("2d");
+      gtx.strokeStyle = "black";
+      gtx.lineWidth = len/20;
+
+
+      window.onload = () => {
+        Draw();
+      }
+
+
+      function Draw(){
+        let len1 = len*3*3/N/N;
+        ctx.fillStyle = "white";
+        ctx.fillRect(0,0,cvs.width,cvs.height);
+        ctx.strokeStyle = "#c0c0c0";
+        for(let i=1; i<N*N; i++){
+          ctx.lineWidth = i%N ? len/20 : len/10;
+          ctx.beginPath();
+          ctx.moveTo(0,len1*i);
+          ctx.lineTo(cvs.width,len1*i);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(len1*i,0);
+          ctx.lineTo(len1*i,cvs.width);
+          ctx.stroke();
+        }
+
+        ctx.font = `bold ${len*3}px consolas`;
+        ctx.fillStyle = "black";
+        ctx.fillText("SIZE",len*4.5,len*1.5);
+        ctx.fillText(N,len*4.5,len*4.5);
+        if(NMAX<=N)ctx.globalAlpha = .5;
+        ctx.beginPath();
+        ctx.moveTo(len*1.5,len*3.5);
+        ctx.lineTo(len*2.5,len*5.5);
+        ctx.lineTo(len*.5,len*5.5);
+        ctx.closePath();
+        ctx.fill();
+        if(NMAX<=N)ctx.globalAlpha = 1;
+        if(N<=1)ctx.globalAlpha = .5;
+        ctx.beginPath();
+        ctx.moveTo(len*7.5,len*5.5);
+        ctx.lineTo(len*6.5,len*3.5);
+        ctx.lineTo(len*8.5,len*3.5);
+        ctx.closePath();
+        ctx.fill();
+        if(N<=1)ctx.globalAlpha = 1;
+        ctx.fillStyle = "white";
+        ctx.fillRect(len*.5,len*6.5,len*8,len*2);
+        ctx.strokeStyle = "#c0c0c0";
+        ctx.lineWidth = len/10;
+        ctx.strokeRect(len*.5,len*6.5,len*8,len*2);
+        ctx.fillStyle = "black";
+        ctx.font = `bold ${len*2}px consolas`;
+        ctx.fillText("START",len*4.5,len*7.5);
+      }
+
+      function OnClickC(e){
+        let x = e.offsetX/len;
+        let y = e.offsetY/len;
+        if(3.5 <= y && y <= 5.5){
+          if(Math.abs(x*4-6)+7 <= y*2){
+            N = Math.min(NMAX,N+1);
+          }else if(y*2 <= 11-Math.abs(x*4-30)){
+            N = Math.max(1,N-1);
+          }
+          Draw();
+        }else if(6.5 <= y && y <= 8.5){
+          if(.5 <= x && x <= 8.5){
+            Init();
+          }
+        }
+      }
+
+      async function OnClickG(e){
+        let x = Math.floor(e.offsetX/(len*3/N));
+        let y = Math.floor(e.offsetY/(len*3/N));
+        if(!(0<=x&&x<3 && 0<=y&&y<3))return 0;
+        cells[selected.y][selected.x] = x+y*N+1;
+        selected.b = 0;
+        gvs.style.display = "none";
+        Draw();
+
+        await Sleep(10);
+
+        Check();
+      }
+
+      function Check(){
+        for(let i=0; i<N*N; i++){
+          for(let j=0; j<N*N; j++){
+            if((bells[i][j]||cells[i][j]) !== aells[i][j]){
+              return 0;
+            }
+          }
+        }
+
+        if(confirm(
+          "Congratulations!\n\n"+
+          "Retry?"
+        )){
+          Init();
+        }
+      }
+
+      async function Init(){
+        Draw = () => {
+          let len1 = len*3*3/N/N;
+          ctx.fillStyle = "white";
+          ctx.fillRect(0,0,cvs.width,cvs.height);
+          ctx.strokeStyle = "black";
+          for(let i=1; i<N*N; i++){
+            ctx.lineWidth = i%N ? len/20 : len/10;
+            ctx.beginPath();
+            ctx.moveTo(0,len1*i);
+            ctx.lineTo(cvs.width,len1*i);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(len1*i,0);
+            ctx.lineTo(len1*i,cvs.width);
+            ctx.stroke();
+          }
+          ctx.font = `bold ${len1}px consolas`;
+          ctx.fillStyle = "black";
+          for(let y=0; y<N*N; y++){
+            for(let x=0; x<N*N; x++){
+              if(bells[y][x]){
+                ctx.fillText(bells[y][x],len1*(x+.5),len1*(y+.5));
+              }
+            }
+          }
+          ctx.fillStyle = "#808080";
+          for(let y=0; y<N*N; y++){
+            for(let x=0; x<N*N; x++){
+              if(!bells[y][x]&&cells[y][x]){
+                ctx.fillText(cells[y][x],len1*(x+.5),len1*(y+.5));
+              }
+            }
+          }
+        };
+        OnClickC = (e) => {
+          Draw();
+          let len1 = len*3*3/N/N;
+          let x = e.offsetX;
+          let y = e.offsetY;
+
+          if(
+            (gvs.style.display === "")
+            &&(Math.floor(x/len1) === selected.x)
+            &&(Math.floor(y/len1) === selected.y)
+          ){
+            cells[selected.y][selected.x] = 0;
+            selected.b = 0;
+            gvs.style.display = "none";
+            Draw();
+            return 0;
+          }
+          selected = {
+            b:1,
+            x:Math.floor(x/len1),
+            y:Math.floor(y/len1)
+          }
+          if(bells[selected.y][selected.x] !== 0){
+            return false;
+          }
+
+          gvs.style.display = "";
+          if(x < len*4.5){
+            gvs.style.left = `${Math.min(x,cvs.width-gvs.width)}px`;
+          }else{
+            gvs.style.left = `${Math.max(x-gvs.width-len/4,0)}px`;
+          }
+          if(y < len*4.5){
+            gvs.style.top = `${Math.min(y,cvs.height-gvs.height)}px`;
+          }else{
+            gvs.style.top = `${Math.max(y-gvs.height-len/4,0)}px`;
+          }
+
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = len/10;
+          ctx.strokeRect(selected.x*len1,selected.y*len1,len1,len1);
+        };
+
+        //  gvsの描画
+        for(let i=1; i<N; i++){
+          gtx.beginPath();
+          gtx.moveTo(len*3/N*i,0);
+          gtx.lineTo(len*3/N*i,len*3);
+          gtx.moveTo(0,len*3/N*i);
+          gtx.lineTo(len*3,len*3/N*i);
+          gtx.stroke();
+        }
+        gtx.fillStyle = "black";
+        gtx.textAlign = "center";
+        gtx.textBaseline = "middle";
+        gtx.font = `${len*3/N}px consolas`;
+        for(let i=0; i<N*N; i++){
+          gtx.fillText(i+1,len*3/N*(i%N+.5),len*3/N*(Math.floor(i/N)+.5));
+        }
+
+        //  bellsの初期化
+        bells = [];
+        for(let y=0; y<N*N; y++){
+          bells.push([]);
+          for(let x=0; x<N*N; x++){
+            bells[y].push(0);
+          }
+        }
+        //  ロード画面描画
+        ShowProgress(0);
+        await Sleep(10);
+
+        CreateProblem(1);
+      }
+
+      async function CreateProblem(b){
+
+        //  最初の1行のみをランダムに決め, それの持つ解を1つとる。
+        bells[0] = [];
+        for(let x=0; x<N*N; x++){
+          bells[0].push(x+1);
+        }
+        if(1){
+          let r;
+          for(let i=0; i<N*N; i++){
+            r = Math.floor(Math.random()*(N*N-i));
+            r = bells[0].splice(r,1)[0];
+            bells[0].push(r);
+          }
+        }
+        CanSolve();
+        ShowProgress(.4);
+        await Sleep(10);
+
+        //  数字をばらばらにする
+        let randnums = [];
+        for(let x=1; x<=N*N; x++){
+          randnums.push(x);
+        }
+        if(1){
+          let r;
+          for(let i=0; i<N*N; i++){
+            r = Math.floor(Math.random()*(N*N-i));
+            r = randnums.splice(r,1)[0];
+            randnums.push(r);
+          }
+        }
+        randnums.unshift(0);
+        for(let y=0; y<N*N; y++){
+          for(let x=0; x<N*N; x++){
+            aells[y][x] = randnums[aells[y][x]];
+          }
+        }
+        bells = CopyArr(aells);
+        cells = CopyArr(aells);//  a,bともに破壊されるため，コピーしておく
+        ShowProgress(.5);
+        await Sleep(10);
+
+        //  ランダムに取り除いていく
+        let rem;
+        let rems = GetRemovableCells();
+        ShowProgress(.5+.5*Math.max(0,1-rems.length/N/N/N/N));
+        await Sleep(10);
+        while(rems.length){
+          rem = rems[Math.floor(Math.random()*rems.length)];
+          //rem = rems[Math.floor(Math.random()*rems.length)];
+          bells[rem[1]][rem[0]] = 0;
+          rems = GetRemovableCells();
+          ShowProgress(.5+.5*Math.max(0,1-rems.length/N/N/N/N));
+          await Sleep(10);
+        }
+        aells = CopyArr(cells);
+        for(let y=0; y<N*N; y++){
+          for(let x=0; x<N*N; x++){
+            cells[y][x] = 0;
+          }
+        }
+        ShowProgress(1);
+        await Sleep(10);
+        console.log(bells);
+        if(b)Draw();
+      }
+
+      //  現在のbellsの状況のもつ解の個数(0:解なし,1:唯一解,2:多数の解)
+      function CanSolve(){
+        let nums;
+        let b,s;
+        let sol = 0;
+        for(let y=0; y<N*N; y++){
+          for(let x=0; x<N*N; x++){
+            if(bells[y][x]===0){
+              //  入れられる数字の配列を作成
+              nums = GetAvailableNumbersAt(x,y);
+              //  解なし
+              if(!nums.length)return 0;
+              //  それぞれを代入したときの再帰
+              b = 0;
+              for(let i=0; i<nums.length; i++){
+                bells[y][x] = nums[i];
+                s = CanSolve();
+                bells[y][x] = 0;
+                sol += s;
+                if(s)b = 1;
+                if(2<=sol)return 2;
+              }
+              if(!b)return 0;
+              y = N*N;
+              x = N*N;
+            }
+          }
+        }
+        //  唯一解
+        if(sol===0){
+          //  すべて埋まったので，そのときのbellsの状態をaellsにコピーする。
+          aells = CopyArr(bells);
+        }
+        //  唯一解またはその親
+        return 1;
+      }
+
+      //  明かさなくても解答が1つに定まるセルの配列
+      function GetRemovableCells(){
+        let n,rtn=[];
+        for(let y=0; y<N*N; y++){
+          for(let x=0; x<N*N; x++){
+            n = bells[y][x];
+            if(n===0)continue;
+            bells[y][x] = 0;
+            if(CanSolve()===1){
+              rtn.push([x,y]);
+            }
+            bells[y][x] = n;
+          }
+        }
+        return rtn;
+      }
+
+      //  進行状況の描画
+      function ShowProgress(x){
+        let len1 = len*3*3/N/N;
+        ctx.fillStyle = "white";
+        ctx.fillRect(0,0,cvs.width,cvs.height);
+        ctx.fillStyle = "#c0c0c0";
+        for(let i=0; i<N*N; i++){
+          for(let j=0; j<N*N; j++){
+            //if(bells[i][j])ctx.fillRect(len1*(j+.2),len1*(i+.2),len1*.6,len1*.6);
+            if(bells[i][j]){
+              ctx.fillRect(len1*j,len1*i,len1,len1);
+            }
+          }
+        }
+        ctx.fillStyle = "black";
+        ctx.font = `bold ${len}px consolas`;
+        ctx.fillText("Loading...",len*4.5,len*3.5);
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = len/10;
+        ctx.strokeRect(len*1.5,len*4.5,len*6,len);
+        ctx.fillRect(len*1.6,len*4.6,len*5.8*x,len*.8);
+      }
+
+      //  bells[y][x]に置くことのできる数字の配列
+      function GetAvailableNumbersAt(x,y){
+        let nums = [];
+        for(let i=0; i<=N*N; i++)nums.push(i);
+        for(let i=0; i<N*N; i++){
+          //  行探索
+          if(i!==x && bells[y][i]!==0){
+            nums[bells[y][i]] = 0;
+          }
+          //  列探索
+          if(i!==y && bells[i][x]!==0){
+            nums[bells[i][x]] = 0;
+          }
+          //  区画探索
+          if(i!==x%N+y%N*N && bells[Math.floor(y/N)*N+Math.floor(i/N)][Math.floor(x/N)*N+i%N]!==0){
+            nums[bells[Math.floor(y/N)*N+Math.floor(i/N)][Math.floor(x/N)*N+i%N]] = 0;
+          }
+        }
+        for(let i=0; i<nums.length;){
+          if(nums[i]){
+            i += 1;
+          }else{
+            nums.splice(i,1);
+          }
+        }
+        return nums;
+      }
+
+      function CopyArr(arg){
+        return Array.isArray(arg) ? arg.map(i=>CopyArr(i)) : arg;
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>2048</title>
+    <link rel="stylesheet" href="Style.css">
+    <style media="screen">
+      body{
+        overflow: hidden;
+      }
+      #cvs_bg{
+        border-radius: 1%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <canvas id="cvs_bg"></canvas>
+    </div>
+    <script type="text/javascript">
+      //
+
+
+
+      let width = 4;
+      let height = 4;
+      let bg = {};
+      let img = [];
+      let colors = [
+        "#80ff80",//  2
+          "#20a020",
+        "#40c040",//  4
+          "#806000",
+        "#208020",//  8
+          "#ffc0f0",
+        "#104010",//  16
+          "#e0a000",
+
+        "#80ffff",//  32
+          "#2020e0",
+        "#40c0ff",//  64
+          "#f0f0ff",
+        "#2080ff",//  128
+          "#ff4080",
+        "#1040ff",//  256
+          "#ffff40",
+
+        "#ffff80",//  512
+          "#802040",
+        "#ffc040",//  1024
+          "#ff2020",
+        "#ff8020",//  2048
+          "#20a040",
+        "#ff4010",//  4096
+          "#ffff40",
+
+        "#b040e0",//  8192
+          "#ff0040",
+        "#a030c0",//  16384
+          "#000000",
+        "#9020a0",//  32768
+          "#20e020",
+        "#801080", //  65536
+          "#ffffff"
+      ];
+      let fontsizes = [64,48,32,24,20];
+      let map = [];
+      let cvs = [];
+      let ctx = [];
+      let time = [0,0,[]];
+      let touch = [0,0,0,0];
+
+
+      const WRAPPER = document.querySelector("#wrapper");
+      let WIDTH,HEIGHT;
+      let LEN = Math.floor(Math.min(
+        window.innerWidth*0.9/(Math.max(width,height))/(Math.max(width,height)+1),
+        window.innerHeight*0.9/(Math.max(width,height))/(Math.max(width,height)+1)
+      ));
+      /*if(window.innerWidth/(width+1)/(width+1) < window.innerHeight/(height+1)/(height+1)){
+        LEN = window.innerWidth/(width+1)*0.9;
+      }else{
+        LEN = window.innerHeight/(height+1)*0.9;
+      }*/
+      WIDTH = LEN*(Math.max(width,height)*width+width+1);
+      HEIGHT = LEN*(Math.max(width,height)*height+height+1);
+      WRAPPER.style.width = WIDTH+"px";
+      WRAPPER.style.height = HEIGHT+"px";
+      document.body.style.fontSize = WIDTH/10 + "px";
+      bg.cvs = document.querySelector("#cvs_bg");
+      bg.cvs.width = WIDTH;
+      bg.cvs.height = HEIGHT;
+      bg.ctx = bg.cvs.getContext("2d");
+      bg.ctx.lineWidth = 1;
+      bg.ctx.strokeStyle = "#808080";//"#CDC1B4";
+      bg.ctx.fillStyle = "#606060";//"#BBADA0";
+      bg.ctx.fillRect(0,0,bg.cvs.width,bg.cvs.height);
+      bg.ctx.fillStyle = "#808080";//"#CDC1B4";
+      for(let y=0; y<height; y++){
+        for(let x=0; x<width; x++){
+          let X = LEN*(x*(Math.max(width,height)+1)+1);//LENGTH/(width+1)/(width+1)*(x*(width+2)+1);
+          let Y = LEN*(y*(Math.max(width,height)+1)+1);//LENGTH/(height+1)/(height+1)*(y*(height+2)+1);
+          let W = LEN*Math.max(width,height);
+          let H = LEN*Math.max(width,height);
+          let R = LEN*Math.max(width,height)/16;
+          //bg.ctx.fillRect(X,Y,W,H);
+          bg.ctx.beginPath();
+          bg.ctx.moveTo(X,Y+R);
+          bg.ctx.arc(  X+R, Y+H-R, R,     Math.PI, Math.PI*0.5, 1);
+          bg.ctx.arc(X+W-R, Y+H-R, R, Math.PI*0.5,           0, 1);
+          bg.ctx.arc(X+W-R,   Y+R, R,           0, Math.PI*1.5, 1);
+          bg.ctx.arc(  X+R,   Y+R, R, Math.PI*1.5,     Math.PI, 1);
+          bg.ctx.closePath();
+          bg.ctx.stroke();
+          bg.ctx.fill();
+        }
+      }
+
+
+      //  img
+      for(let i=0; i<colors.length/2; i++){
+        img.push(new Image());
+        let cv = document.createElement("canvas");
+        cv.width = 64;
+        cv.height = 64;
+        let ct = cv.getContext("2d");
+        let n = Math.pow(2,i+1);
+        ct.fillStyle = colors[i*2];
+        ct.fillRect(0,0,64,64);
+        ct.fillStyle = colors[i*2+1];
+        ct.font = "bold " + fontsizes[String(n).length-1] + "px serif";
+        ct.textAlign = "center";
+        ct.fillText(String(n),32,37+fontsizes[String(n).length-1]/3.4);//68-Math.sqrt(String(n).length)*12
+        img[i].src = cv.toDataURL();
+      }
+
+
+
+      //  map
+      for(let y=0; y<height; y++){
+        map.push([]);
+        for(let x=0; x<width; x++){
+          map[y].push(0);
+        }
+      }
+      //  cvs,ctx
+      for(let y=0; y<height; y++){
+        cvs.push([]);
+        ctx.push([]);
+        for(let x=0; x<width; x++){
+          WRAPPER.insertAdjacentHTML(
+            "beforeend",
+            "<canvas "+
+              "id='cvs_"+y+"_"+x+"' "+
+              "class='slide02' "+
+              "width="+LEN*Math.max(width,height)+" "+
+              "height="+LEN*Math.max(width,height)+" "+
+              "style='"+
+                "top: "+LEN*(y*(Math.max(width,height)+1)+1)+"px; "+
+                "left: "+LEN*(x*(Math.max(width,height)+1)+1)+"px; "+
+                "border-radius: 6.25%;"+
+              "' "+
+            ">"+
+            "</canvas>"
+          );
+          cvs[y].push(document.querySelectorAll(".slide02")[y*width+x]);
+          ctx[y].push(cvs[y][x].getContext("2d"));
+        }
+      }
+
+      /*
+      for(let y=0; y<height; y++){
+        for(let x=0; x<width; x++){
+          if(y*width+x < colors.length/2){
+            ctx[y][x].drawImage(img[y*width+x],0,0,LEN*Math.max(width,height),LEN*Math.max(width,height));
+          }
+        }
+      }
+      */
+
+
+      setTimeout(function(){
+        Rand(2);
+      }, 100);
+      function Rand(n){
+        let arr = [];
+        for(let y=0; y<height; y++){
+          for(let x=0; x<width; x++){
+            if(map[y][x] === 0)arr.push([y,x]);
+          }
+        }
+        if(arr.length < n)n = arr.length;
+        for(let i=0; i<n; i++){
+          let x = arr.splice(Math.floor(Math.random()*arr.length),1);
+          let y = x[0][0];
+          x = x[0][1];
+
+          if(true){
+            Draw(y,x,1);
+            map[y][x] = 1;
+            console.log("Add 2 tile at (y:"+y+",x:"+x+")");
+          }
+        }
+
+        //  22 2
+      }
+
+      function Slide(d){
+        //....1..
+        //..2...0
+        //....3..
+
+        //cvs[0][0].style.top = Number(cvs[0][0].style.top.slice(0,-2)) + LEN*(Math.max(width,height)+1) + "px"
+        let bool = false;
+        switch(d){
+          case 0:
+            //  x+
+            for(let y=0; y<height; y++){
+              let new_line=[],c=[],to,n;
+              //  new_lineは右から左
+              for(let x=width-1; x>=0; x--){
+                if(map[y][x] !== 0){
+                  n = map[y][x]
+                  if(!new_line[0]){
+                    new_line.push(n);
+                    //to.push(width-1);
+                    to = width-1;
+                  }else{
+                    if(new_line[new_line.length-1] === n){
+                      new_line[new_line.length-1] = -1;  //合成済みの数値は合成不可のため*=2ではなく=-1としている
+                      //to.push(width-new_line.length);
+                      to = width-new_line.length;
+                      c.push([y,to,n+1]);
+                    }else{
+                      new_line.push(n);
+                      //to.push(width-new_line.length-1);
+                      to = width-new_line.length;
+                    }
+                  }
+                  if(x !== to){
+                    Move(y,x,y,to);
+                    bool = true;
+                  }
+                }
+              }
+              for(let i=0; i<c.length; i++){
+                Create(c[i][0],c[i][1],c[i][2]);
+              }
+            }
+            break;
+          case 1:
+            //y-
+            for(let x=0; x<width; x++){
+              let new_line=[],c=[],to,n;
+              //  new_lineは上から下
+              for(let y=0; y<height; y++){
+                if(map[y][x] !== 0){
+                  n = map[y][x]
+                  if(!new_line[0]){
+                    new_line.push(n);
+                    to = 0;
+                  }else{
+                    if(new_line[new_line.length-1] === n){
+                      new_line[new_line.length-1] = -1;
+                      to = new_line.length-1;
+                      c.push([to,x,n+1]);
+                    }else{
+                      new_line.push(n);
+                      to = new_line.length-1;
+                    }
+                  }
+                  if(y !== to){
+                    Move(y,x,to,x);
+                    bool = true;
+                  }
+                }
+              }
+              for(let i=0; i<c.length; i++){
+                Create(c[i][0],c[i][1],c[i][2]);
+              }
+            }
+            break;
+          case 2:
+            //x-
+            for(let y=0; y<height; y++){
+              let new_line=[],c=[],to,n;
+              //  new_lineは左から右
+              for(let x=0; x<width; x++){
+                if(map[y][x] !== 0){
+                  n = map[y][x]
+                  if(!new_line[0]){
+                    new_line.push(n);
+                    to = 0;
+                  }else{
+                    if(new_line[new_line.length-1] === n){
+                      new_line[new_line.length-1] = -1;
+                      to = new_line.length-1;
+                      c.push([y,to,n+1]);
+                    }else{
+                      new_line.push(n);
+                      to = new_line.length-1;
+                    }
+                  }
+                  if(x !== to){
+                    Move(y,x,y,to);
+                    bool = true;
+                  }
+                }
+              }
+              for(let i=0; i<c.length; i++){
+                Create(c[i][0],c[i][1],c[i][2]);
+              }
+            }
+            break;
+          case 3:
+            //y+
+            for(let x=0; x<width; x++){
+              let new_line=[],c=[],to,n;
+              //  new_lineは下から上
+              for(let y=height-1; y>=0; y--){
+                if(map[y][x] !== 0){
+                  n = map[y][x]
+                  if(!new_line[0]){
+                    new_line.push(n);
+                    to = height-1;
+                  }else{
+                    if(new_line[new_line.length-1] === n){
+                      new_line[new_line.length-1] = -1;
+                      to = height-new_line.length;
+                      c.push([to,x,n+1]);
+                    }else{
+                      new_line.push(n);
+                      to = height-new_line.length;
+                    }
+                  }
+                  if(y !== to){
+                    Move(y,x,to,x);
+                    bool = true;
+                  }
+                }
+              }
+              for(let i=0; i<c.length; i++){
+                Create(c[i][0],c[i][1],c[i][2]);
+              }
+            }
+            break;
+        }
+
+        if(bool){
+          setTimeout(function(){
+            Rand(2);
+          }, 200);
+        }
+      }
+
+      function Draw(y,x,i){
+        if(i === 0){
+          //console.log("Clear ("+y+","+x+")");
+          ctx[y][x].clearRect(0,0,LEN*Math.max(width,height),LEN*Math.max(width,height));
+        }else{
+          ctx[y][x].drawImage(img[i-1],0,0,LEN*Math.max(width,height),LEN*Math.max(width,height));
+        }
+      }
+
+      function Move(y1,x1,y2,x2){
+        console.log("Move ("+y1+","+x1+") to ("+y2+","+x2+")");
+
+        let top0 = cvs[y1][x1].style.top;
+        let left0 = cvs[y1][x1].style.left;
+
+        cvs[y1][x1].style.top = LEN*(y2*(Math.max(width,height)+1)+1)+"px";
+        cvs[y1][x1].style.left = LEN*(x2*(Math.max(width,height)+1)+1)+"px";
+
+        setTimeout(function(){
+          cvs[y1][x1].style.transition = "0s";
+        },100);
+        setTimeout(function(){
+          map[y2][x2] = map[y1][x1];
+          map[y1][x1] = 0;
+          Draw(y2,x2,map[y2][x2]);
+          Draw(y1,x1,0);
+          cvs[y1][x1].style.top = top0;
+          cvs[y1][x1].style.left = left0;
+          setTimeout(function(){
+            cvs[y1][x1].style.transition = "0.2s";
+          }, 100);
+        }, 200);
+      }
+
+      function Create(y,x,i){
+        console.log("Create "+2**i+" at ("+y+","+x+")");
+
+        setTimeout(function(){
+          map[y][x] = i;
+          Draw(y,x,i);
+        }, 200);
+      }
+
+      //  https://dianxnao.com/javascript%E3%81%A7%E3%82%B9%E3%83%AF%E3%82%A4%E3%83%97%E5%87%A6%E7%90%86%E3%82%92%E3%81%99%E3%82%8B/
+      window.addEventListener("touchstart",function(e){
+        e.preventDefault();
+        touch[0] = e.touches[0].pageX;
+        touch[1] = e.touches[0].pageY;
+        touch[2] = e.touches[0].pageX;
+        touch[3] = e.touches[0].pageY;
+      });
+      window.addEventListener("touchmove",function(e){
+        e.preventDefault();
+        touch[2] = e.touches[0].pageX;
+        touch[3] = e.touches[0].pageY;
+      });
+      window.addEventListener("touchend",function(e){
+        console.log("touch");
+        console.log(touch);
+        if(Math.abs(touch[0]-touch[2])>30||30<Math.abs(touch[1]-touch[3])){
+          if(Math.abs(touch[0]-touch[2]) < Math.abs(touch[1]-touch[3])){
+            //上下操作
+            if(touch[1]<touch[3]){
+              Slide(3);
+            }else{
+              Slide(1);
+            }
+          }else{
+            //左右操作
+            if(touch[0]<touch[2]){
+              Slide(0);
+            }else{
+              Slide(2);
+            }
+          }
+        }
+        touch = [0,0,0,0];
+      });
+
+
+
+
+    </script>
+  </body>
+</html>
