@@ -797,6 +797,7 @@
         //  陽関数
 
         //  式の表示
+        let p = problems[level];
         let chars,x,y;
         x = 40;
         ctx.strokeStyle = "#ff0";
@@ -804,7 +805,7 @@
         ctx.textAlign = "left";
         ctx.textBaseline = "center";
         ctx.clearRect(20,20,40,80);
-        chars = problems[level].funcstr.match(/\^?./g);
+        chars = p.funcstr.match(/\^?./g);
         for(let i=0; i<chars.length; i++){
           if(chars[i].match(/\^/)){
             chars[i] = chars[i].replace("^","");
@@ -826,6 +827,8 @@
 
         //  グラフ
         //let x,y;  上記のものを使いまわす.
+
+        /*離散的描画法
         for(let i=0; i<920; i+=2){
           x = (i-graph.yaxis)/graph.scale;
 
@@ -858,6 +861,69 @@
             ctx.arc(x*graph.scale+graph.yaxis,-y*graph.scale+graph.xaxis,5,0,Math.PI*2);
             ctx.fill();
           }
+        }
+        */
+
+        /*折れ線描画法*/
+        let seq;
+        if(!problems[level].hide){
+          //  ヒント部分
+          seq = [];
+          ctx.strokeStyle = "#ff0";
+          ctx.lineWidth = 5;
+          ctx.setLineDash([15,15]);
+          for(let i=0; i<=920; i++){
+            x = (i-graph.yaxis)/graph.scale;
+            y = graph.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
+            //seq.push(-y*graph.scale+graph.xaxis);
+            seq.push(y);
+          }
+          ctx.beginPath();
+          ctx.moveTo(0,seq[0]);
+          for(let i=1; i<=920; i++){
+            y = -seq[i]*graph.scale+graph.xaxis;
+            ctx.lineTo(i,y);
+          }
+          ctx.stroke();
+        }
+        if(problems[level].tangent){
+          //  接線
+          seq = [];
+          ctx.strokeStyle = "#0ff";
+          ctx.lineWidth = 5;
+          ctx.setLineDash([15,15]);
+          for(let i=0; i<=920; i++){
+            x = (i-graph.yaxis)/graph.scale;
+            y = graph.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
+            //seq.push(-y*graph.scale+graph.xaxis);
+            seq.push(y);
+          }
+          ctx.beginPath();
+          ctx.moveTo(0,seq[0]);
+          for(let i=1; i<=920; i++){
+            y = -seq[i]*graph.scale+graph.xaxis;
+            ctx.lineTo(i,y);
+          }
+          ctx.stroke();
+        }
+        if(1){
+          //  可動グラフ部分
+          ctx.strokeStyle = "#ff0";
+          ctx.lineWidth = 5;
+          ctx.setLineDash([]);
+          for(let i=0; i<=920; i++){
+            x = (i-graph.yaxis)/graph.scale;
+            y = graph.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value);
+            //seq.push(-y*graph.scale+graph.xaxis);
+            seq.push(y);
+          }
+          ctx.beginPath();
+          ctx.moveTo(0,seq[0]);
+          for(let i=1; i<=920; i++){
+            y = -seq[i]*graph.scale+graph.xaxis;
+            ctx.lineTo(i,y);
+          }
+          ctx.stroke();
         }
 
         //  通過する点
