@@ -278,6 +278,28 @@
         max : [1,1,5,1],
         vscale : [0,0,0,0],
         answer : [.25,-.5,-3.75,0]
+      },
+      13 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        funcstr : "y=asin(x)+b",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(x)+b;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return -5;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [-5,-5,-5,-1],
+        value : [0,0,0,0],
+        max : [5,5,5,1],
+        vscale : [0,0,0,0],
+        answer : [3,2,-3.75,0]
       }
     };
 
@@ -418,6 +440,7 @@
       //  Resetによる初期化
       Resize();
       Reset();
+      UnlockAll();//  公開時は削除する
     }
 
     //  ボタン設定
