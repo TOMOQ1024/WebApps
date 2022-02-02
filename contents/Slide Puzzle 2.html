@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>Slide Puzzle 2</title>
-    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="../Style.css">
     <style>
       .no_space{
         font-size: 0;
@@ -30,7 +30,7 @@
         height: 100%;
         font-size: 1.5em;
         /*background: linear-gradient(135deg, #808080, #404040);*/
-        background-image: url(tiles\\808080-c.png);
+        background-image: url(images/808080-c.png);
         transition: 0.3s;
       }
       .SETTING{
@@ -57,7 +57,7 @@
         transition: 0.3s;
       }
       .BTN{
-        background-image: url(tiles\\808080-c.png);
+        background-image: url(images/808080-c.png);
         background-size: 100% 100%;
         opacity: 0.0;
       }
@@ -70,9 +70,9 @@
           <div class="SETTING">
             LEVEL<br>
             <span>
-              <input type="image" id="ULv" src="buttons\\u1.png" alt="△" onclick="IncLv()">
+              <input type="image" id="ULv" src="images/u1.png" alt="△" onclick="IncLv()">
                 <span id="LEVEL">3</span>
-              <input type="image" id="DLv" src="buttons\\d1.png" alt="▽" onclick="DecLv()">
+              <input type="image" id="DLv" src="images/d1.png" alt="▽" onclick="DecLv()">
             </span>
           </div>
           <br>
@@ -93,12 +93,12 @@
         new Image(),
         new Image()
       ];
-      ArrowImgs[0].src = "buttons\\l1.png";
-      ArrowImgs[1].src = "buttons\\u1.png";
-      ArrowImgs[2].src = "buttons\\r1.png";
-      ArrowImgs[3].src = "buttons\\d1.png";
+      ArrowImgs[0].src = "images/l1.png";
+      ArrowImgs[1].src = "images/u1.png";
+      ArrowImgs[2].src = "images/r1.png";
+      ArrowImgs[3].src = "images/d1.png";
       let Tile = new Image();
-      Tile.src = "tiles\\ffc000-c.png";//#ffc000:yellow
+      Tile.src = "images/ffc000-c.png";//#ffc000:yellow
 
 
 
@@ -255,7 +255,7 @@
                 " height: " + length/(level+1)/2 + "px;" +
                 " transform: translateY(" + (-length/(level+1)/2) + "px);" +
               "\"" +
-              " src=\"buttons\\d1.png\"" +
+              " src=\"images/d1.png\"" +
               " onclick=\"Slide()\"" +
               " onload=\"FadeIn()\"" +
             " >" +
@@ -269,7 +269,7 @@
                 " height: " + length/(level+1)/2 + "px;" +
                 " transform: translateY(" + length/(level+1)/2 + "px);" +
               "\"" +
-              " src=\"buttons\\u1.png\"" +
+              " src=\"images/u1.png\"" +
               " onclick=\"Slide()\"" +
               " onload=\"FadeIn()\"" +
             " >"
@@ -289,7 +289,7 @@
                 " width: " + length/(level+1)/2 + "px;" +
                 " transform: translateX(" + (-length/(level+1)/2) + "px);" +
               "\"" +
-              " src=\"buttons\\r1.png\"" +
+              " src=\"images/r1.png\"" +
               " onclick=\"Slide()\"" +
               " onload=\"FadeIn()\"" +
             " >" +
@@ -303,7 +303,7 @@
                 " width: " + length/(level+1)/2 + "px;" +
                 " transform: translateX(" + length/(level+1)/2 + "px);" +
               "\"" +
-              " src=\"buttons\\l1.png\"" +
+              " src=\"images/l1.png\"" +
               " onclick=\"Slide()\"" +
               " onload=\"FadeIn()\"" +
             " >"

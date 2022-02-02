@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="user-scalable=no"/>
     <title>Slide Puzzle</title>
-    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="../Style.css">
     <style>
       *{
         overflow: hidden;
@@ -14,7 +14,7 @@
       }
       #canvas{
         transition: .15s;
-        background-image: url(tiles\\202020-o.png);
+        background-image: url(images/202020-o.png);
         background-size: calc(100%/4) calc(100%/4);
       }
       #ghost{
@@ -44,7 +44,7 @@
     let width = 4;
     let height = 4;
     let img = new Image();
-    img.src = "Slide Puzzle.png";
+    img.src = "images/Slide Puzzle.png";
     let cells;
     let move;
     let pick;
