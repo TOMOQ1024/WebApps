@@ -4,14 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="user-scalable=no"/>
     <title>Maze</title>
-    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="../Style.css">
     <style>
       *{
         overflow: hidden;
       }
       #canvas{
         transition: .3s;
-        background-image: url(tiles\\202020-o.png);
+        background-image: url(images/202020-o.png);
         background-size: calc(100%/11) calc(100%/11);
         z-index: 10;
       }
@@ -37,7 +37,7 @@
     let player = {};
     let cells;//  0:壁, 1:未, 2:過, 3:既, 4:解, 5:始, 6:終
     const img = new Image();
-    img.src = "Maze.png";
+    img.src = "images/Maze.png";
 
 
     let len = Math.round(Math.min(window.innerWidth/(width*2+1),window.innerHeight/(height*2+1))*0.9);

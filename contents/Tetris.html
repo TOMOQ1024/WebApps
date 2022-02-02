@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="user-scalable=no"/>
     <title>Tetris+</title>
-    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="../Style.css">
     <style>
       *{
         overflow: hidden;
@@ -69,7 +69,7 @@
         let LEN = Math.round(Math.min(window.innerWidth/(6 + width+1 + 6), window.innerHeight/(height+1))*0.9);
         //  divの設定
         {
-          WR[0].style.backgroundImage = "url(tiles/e0e0e0-c.png)";
+          WR[0].style.backgroundImage = "url(images/e0e0e0-c.png)";
           WR[0].style.backgroundSize = 50/(6 + width+1 + 6)+"% "+50/(height+1)+"%";
           WR[0].style.width = LEN*(6 + width+1 + 6)+"px";
           WR[0].style.height = LEN*(height+1)+"px";
@@ -125,7 +125,7 @@
         for(let k in cvs){
           cvs[k].ctx = cvs[k].ele.getContext("2d");
           cvs[k].ele.style.margin = LEN/2 + "px";
-          cvs[k].ele.style.backgroundImage = "url(tiles/000020-o.png)";
+          cvs[k].ele.style.backgroundImage = "url(images/000020-o.png)";
           cvs[k].ele.style.backgroundSize = LEN/(k.match(/.[^0]/) ? 2 : 1) + "px";
           if(k.match(/[^c]0/))
             cvs[k].ele.style.backgroundPosition = LEN/2+"px " + LEN/2+"px";
@@ -288,7 +288,7 @@
         function Init(){
           count = 0;
           mode = "w";
-          img.src = "Tetris.png";
+          img.src = "images/Tetris.png";
           x0 = 5;
           y0 = -5;
           cells = [];

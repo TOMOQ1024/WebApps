@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="user-scalable=no"/>
     <title>Minesweeper</title>
-    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="../Style.css">
     <style>
       *{
         overflow: hidden;
@@ -18,7 +18,7 @@
       }
       #canvas{
         transition: .3s;
-        background-image: url(tiles\\808080-c.png);
+        background-image: url(images/808080-c.png);
         background-size: calc(100%/10) calc(100%/10);
         z-index: 1;
       }
@@ -45,7 +45,7 @@
       let cells;
       let tiles;
       const img = new Image();
-      img.src = "Minesweeper.png";
+      img.src = "images/Minesweeper.png";
 
       let len = Math.round(Math.min(window.innerWidth/width,window.innerHeight/height)*0.9);
       let cvs = document.querySelector("#canvas");
