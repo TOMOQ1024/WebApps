@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="user-scalable=no"/>
     <title>Breakout</title>
-    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="../Style.css">
     <style>
       *{
         overflow: hidden;
@@ -71,7 +71,7 @@
       cvs.ctx = cvs.ele.getContext("2d");
       cvs.ele.width = cvs.w;
       cvs.ele.height = cvs.h;
-      cvs.ele.style.backgroundImage = "url(tiles/202020-o.png)";
+      cvs.ele.style.backgroundImage = "url(images/202020-o.png)";
       cvs.ele.style.backgroundSize = 100/width+"% "+100/height+"%";
       cvs.wr.innerHTML = "";
       cvs.wr.append(cvs.ele);
@@ -84,14 +84,14 @@
       menu.ctx = menu.ele.getContext("2d");
       menu.ele.width = menu.w;
       menu.ele.height = menu.h;
-      menu.ele.style.backgroundImage = "url(tiles/808080-c.png)";
+      menu.ele.style.backgroundImage = "url(images/808080-c.png)";
       menu.ele.style.backgroundSize = 100/width/2+"% "+100/4/2+"%";
       menu.wr.innerHTML = "";
       menu.wr.append(menu.ele);
       menu.draw = function(){
         let ctx = menu.ctx;
         let bgimg = new Image();
-        bgimg.src = "tiles/202020-o.png";
+        bgimg.src = "images/202020-o.png";
         ctx.fillStyle = "#0000c0";
         ctx.font = LEN*1.25+"px serif";
         ctx.textAlign = "center";
@@ -170,7 +170,7 @@
         ctx.fillText(score, LEN*26.5, LEN*3.5);
       }
 
-      baseimg.src = "Breakout.png";
+      baseimg.src = "images/Breakout.png";
 
 
 

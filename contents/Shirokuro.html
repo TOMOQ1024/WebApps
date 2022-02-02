@@ -3,21 +3,21 @@
   <head>
     <meta charset="utf-8">
     <title>Shirokuro</title>
-    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="../Style.css">
   </head>
   <body>
     <div id="wrapper">
-      <div class="pop_up" style="background-image: url(tiles\\202020-c.png);">
+      <div class="pop_up" style="background-image: url(images/202020-c.png);">
         <div class="fs200 h20">LEVEL</div>
         <div class="setting h20">
-          <input type="image" class="btn_u h100" src="buttons\\u1.png" alt="△" onclick="Inc(0)">
+          <input type="image" class="btn_u h100" src="images/u1.png" alt="△" onclick="Inc(0)">
             <span class="width fs200">5</span>
-          <input type="image" class="btn_d h100" src="buttons\\d1.png" alt="▽" onclick="Dec(0)">
+          <input type="image" class="btn_d h100" src="images/d1.png" alt="▽" onclick="Dec(0)">
         </div>
         <div class="setting h20">
-          <input type="image" class="btn_u h100" src="buttons\\u1.png" alt="△" onclick="Inc(1)">
+          <input type="image" class="btn_u h100" src="images/u1.png" alt="△" onclick="Inc(1)">
             <span class="height fs200">5</span>
-          <input type="image" class="btn_d h100" src="buttons\\d1.png" alt="▽" onclick="Dec(1)">
+          <input type="image" class="btn_d h100" src="images/d1.png" alt="▽" onclick="Dec(1)">
         </div>
         <input id="btn_start" type="button" class="btn_start w80 h30 m5 fs150" value="START" onclick="Start()">
       </div>
@@ -31,8 +31,8 @@
     let height = 5;
     let map = [];
     let img = [new Image(),new Image()];
-    img[0].src = "tiles/202020-c.png";
-    img[1].src = "tiles/e0e0e0-c.png";
+    img[0].src = "images/202020-c.png";
+    img[1].src = "images/e0e0e0-c.png";
     let time = [0,0,[]];
 
 

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="user-scalable=no"/>
     <title>Flip Puzzle</title>
-    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="../Style.css">
     <style>
       *{
         overflow: hidden;
@@ -14,7 +14,7 @@
       }
       #canvas{
         transition: .15s;
-        background-image: url(tiles\\202020-o.png);
+        background-image: url(images/202020-o.png);
         background-size: calc(100%/3) calc(100%/3);
       }
     </style>
@@ -34,7 +34,7 @@
     let width = 3;
     let height = 3;
     let img = new Image();
-    img.src = "Flip Puzzle.png";
+    img.src = "images/Flip Puzzle.png";
     let cells;
     let ctrl;
     let time;
