@@ -1534,7 +1534,7 @@
         points : [-1,1],
         tangent : 1,
         tangent2 : 1,
-        funcstr : "y=ax^3-3ax+b",
+        funcstr : "y=F{#|x+|x+1|#|}{#|4^4|x|#|}",
         func : (x,a,b,c,d) => {
           return a*x**3-3*a*x+b;
         },
@@ -2090,7 +2090,7 @@
       else if(graph.type == "explicit"){
         //  陽関数
         let p = problems[level];
-        let chars,x,y;
+        let x,y;
 
         //  グラフ
 
@@ -2224,36 +2224,127 @@
         }
 
         //  式の表示
+        let strs0,strs1,chars,x0,w0,w1,w;
         x = 40;
         ctx.strokeStyle = "#ff0";
         ctx.setLineDash([]);
         ctx.lineWidth = 5;
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
-        ctx.clearRect(20,20,40,100);
-        chars = p.funcstr.match(/[\^\#]?./g);
-        for(let i=0; i<chars.length; i++){
-          if(chars[i].match(/\^/)){
-            chars[i] = chars[i].replace("^","");
-            y = 60;
-            ctx.font = "40px Inconsolata";
-          }else if(chars[i].match(/\#/)){
-            chars[i] = chars[i].replace("#","");
-            y = 70;
-            ctx.font = "80px Inconsolata";
-          }else{
-            y = 70;
-            ctx.font = "60px Inconsolata";
+        if(p.funcstr.match(/F/)){//  分数を含むとき
+          strs0 = p.funcstr.match(/F\{[^\}]*\}\{[^\}]*\}|[^F]+/g);//  分数部分または一般部分
+          ctx.clearRect(20,20,40,170);
+          for(let i=0; i<strs0.length; i++){
+            if(strs0[i].match(/F/)){//  分数部分
+              strs1 = strs0[i].match(/(?<={)[^\}]*(?=})/g);//  [分子,分母]
+              ctx.font = "60px Inconsolata";
+              w0 = ctx.measureText(strs1[0].replace(/\^./g,"")).width;
+              w1 = ctx.measureText(strs1[1].replace(/\^./g,"")).width;
+              ctx.font = "40px Inconsolata";
+              w0 += ctx.measureText(strs1[0].replace(/[^^]/g,"")).width;
+              w1 += ctx.measureText(strs1[1].replace(/[^^]/g,"")).width;
+              w = Math.max(w0,w1);
+              ctx.clearRect(x,20,w+40,170);
+              x0 = x+20;
+              ctx.beginPath();
+              ctx.moveTo(x+10,100);
+              ctx.lineTo(x+w+30,100);
+              ctx.stroke();
+              //  分子の描画
+              x = x0+(w-w0)/2;
+              chars = strs1[0].match(/[\^\#]?./g);
+              for(let j=0; j<chars.length; j++){
+                if(chars[j].match(/\^/)){
+                  chars[j] = chars[j].replace("^","");
+                  y = 60;
+                  ctx.font = "40px Inconsolata";
+                }else if(chars[j].match(/\#/)){
+                  chars[j] = chars[j].replace("#","");
+                  y = 65;
+                  ctx.font = "75px Inconsolata";
+                }else{
+                  y = 70;
+                  ctx.font = "60px Inconsolata";
+                }
+                ctx.fillStyle = "#ff0";
+                ctx.fillText(chars[j],x,y);
+                x += ctx.measureText(chars[j]).width;
+              }
+              //  分母の描画
+              x = x0+(w-w1)/2;
+              chars = strs1[1].match(/[\^\#]?./g);
+              for(let j=0; j<chars.length; j++){
+                if(chars[j].match(/\^/)){
+                  chars[j] = chars[j].replace("^","");
+                  y = 60+70;
+                  ctx.font = "40px Inconsolata";
+                }else if(chars[j].match(/\#/)){
+                  chars[j] = chars[j].replace("#","");
+                  y = 65+70;
+                  ctx.font = "75px Inconsolata";
+                }else{
+                  y = 70+70;
+                  ctx.font = "60px Inconsolata";
+                }
+                ctx.fillStyle = "#ff0";
+                ctx.fillText(chars[j],x,y);
+                x += ctx.measureText(chars[j]).width;
+              }
+              x = x0+w+20;
+            }
+            else{//  一般部分
+              chars = strs0[i].match(/[\^\#]?./g);
+              for(let j=0; j<chars.length; j++){
+                if(chars[j].match(/\^/)){
+                  chars[j] = chars[j].replace("^","");
+                  y = 60+35;
+                  ctx.font = "40px Inconsolata";
+                }else if(chars[j].match(/\#/)){
+                  chars[j] = chars[j].replace("#","");
+                  y = 65+35;
+                  ctx.font = "75px Inconsolata";
+                }else{
+                  y = 70+35;
+                  ctx.font = "60px Inconsolata";
+                }
+                ctx.clearRect(x,20,ctx.measureText(chars[j]).width,180);
+                ctx.fillStyle = "#ff0";
+                ctx.fillText(chars[j],x,y);
+                x += ctx.measureText(chars[j]).width;
+              }
+            }
           }
-          ctx.clearRect(x,20,ctx.measureText(chars[i]).width,100);
-          ctx.fillStyle = "#ff0";
-          ctx.fillText(chars[i],x,y);
-          x += ctx.measureText(chars[i]).width;
+          ctx.clearRect(x,20,20,170);
+          ctx.strokeRect(20,20,x,170);
+          ctx.fillStyle = "#ffff0040";
+          ctx.fillRect(20,20,x,170);
         }
-        ctx.clearRect(x,20,20,100);
-        ctx.strokeRect(20,20,x,100);
-        ctx.fillStyle = "#ffff0040";
-        ctx.fillRect(20,20,x,100);
+        else{//  分数を含まないとき
+          ctx.clearRect(20,20,40,100);
+          chars = p.funcstr.match(/[\^\#]?./g);
+          for(let i=0; i<chars.length; i++){
+            if(chars[i].match(/\^/)){
+              chars[i] = chars[i].replace("^","");
+              y = 60;
+              ctx.font = "40px Inconsolata";
+            }else if(chars[i].match(/\#/)){
+              chars[i] = chars[i].replace("#","");
+              y = 65;
+              ctx.font = "75px Inconsolata";
+            }else{
+              y = 70;
+              ctx.font = "60px Inconsolata";
+            }
+            ctx.clearRect(x,20,ctx.measureText(chars[i]).width,100);
+            ctx.fillStyle = "#ff0";
+            ctx.fillText(chars[i],x,y);
+            x += ctx.measureText(chars[i]).width;
+          }
+          ctx.clearRect(x,20,20,100);
+          ctx.strokeRect(20,20,x,100);
+          ctx.fillStyle = "#ffff0040";
+          ctx.fillRect(20,20,x,100);
+        }
       }
 
       //  クリアメッセージ
