@@ -2037,18 +2037,18 @@
         ctx.stroke();
         ctx.strokeStyle = 5<=Math.ceil(maxlevel/12)-1 ? "#ffff00" : "#888888";
         ctx.beginPath();
-        ctx.moveTo(130+220*1-40,150+220*1+40);//  6:斜
+        ctx.moveTo(130+220*2-40,150+220*1+0);//  6:分
+        ctx.lineTo(130+220*2+0,150+220*1+40);
+        ctx.moveTo(130+220*2+0,150+220*1-40);
+        ctx.lineTo(130+220*2+40,150+220*1+0);
+        ctx.stroke();
+        ctx.strokeStyle = 6<=Math.ceil(maxlevel/12)-1 ? "#ffff00" : "#888888";
+        ctx.beginPath();
+        ctx.moveTo(130+220*1-40,150+220*1+40);//  7:斜
         ctx.lineTo(130+220*1+0,150+220*1+40);
         ctx.lineTo(130+220*1+40,150+220*1-40);
         ctx.lineTo(130+220*1+0,150+220*1-40);
         ctx.lineTo(130+220*1-40,150+220*1+40);
-        ctx.stroke();
-        ctx.strokeStyle = 6<=Math.ceil(maxlevel/12)-1 ? "#ffff00" : "#888888";
-        ctx.beginPath();
-        ctx.moveTo(130+220*2-40,150+220*1+0);//  7:分
-        ctx.lineTo(130+220*2+0,150+220*1+40);
-        ctx.moveTo(130+220*2+0,150+220*1-40);
-        ctx.lineTo(130+220*2+40,150+220*1+0);
         ctx.stroke();
         ctx.strokeStyle = 7<=Math.ceil(maxlevel/12)-1 ? "#ffff00" : "#888888";
         ctx.beginPath();
