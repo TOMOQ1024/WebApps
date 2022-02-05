@@ -1527,7 +1527,6 @@
       }
     };
     let problems6 = {
-      //
       61 : {
         type : "explicit",
         hide : 0,
@@ -1546,13 +1545,91 @@
         },
         xaxis : 370,//370
         yaxis : 460,//460
-        gscale : 51,
+        gscale : 51,//  綺麗な値にしない．
         vars : [1,1,1,0],
         min : [-5,-5,-5,1],
         value : [0,0,0,3],
         max : [5,5,5,5],
         vscale : [0,0,0,0],
         answer : [-3,2,-2,2]
+      },
+      62 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{ax}{x^2+bx+c}",
+        func : (x,a,b,c,d) => {
+          return (a*x)/(x*x+b*x+c);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 51,//  綺麗な値にしない．
+        vars : [1,1,1,0],
+        min : [-5,-3,-3,1],
+        value : [0,0,0,3],
+        max : [5,3,3,5],
+        vscale : [0,0,0,0],
+        answer : [5,0,1,2]
+      },
+      63 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{a}{x-b}+cx+d",
+        func : (x,a,b,c,d) => {
+          return (a)/(x-b)+c*x+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 51,//  綺麗な値にしない．
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [1,1,1,-2]
+      },
+      64 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=$|F{a}{|x-b|}-c$|+d",
+        func : (x,a,b,c,d) => {
+          return (a)/(x-b)+c*x+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 51,//  綺麗な値にしない．
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [1,1,1,-2]
       }
     };
 
@@ -2353,24 +2430,30 @@
               x = x0+w+20;
             }
             else{//  一般部分
-              chars = strs0[i].match(/[\^\#]?./g);
+              chars = strs0[i].match(/[\^\#\$]?./g);
+              ctx.font = "60px Inconsolata";
+              w = ctx.measureText("|").width;//  普通のフォントの横幅
               for(let j=0; j<chars.length; j++){
                 if(chars[j].match(/\^/)){
                   chars[j] = chars[j].replace("^","");
                   y = 60+35;
-                  ctx.font = "40px Inconsolata";
+                  ctx.font = "40px Inconsolata";//  一回り小さい
                 }else if(chars[j].match(/\#/)){
                   chars[j] = chars[j].replace("#","");
                   y = 65+35;
-                  ctx.font = "75px Inconsolata";
+                  ctx.font = "75px Inconsolata";//  大きめ
+                }else if(chars[j].match(/\$/)){
+                  chars[j] = chars[j].replace("$","");
+                  y = 65+35;
+                  ctx.font = "150px Inconsolata";//  一回り大きい
                 }else{
                   y = 70+35;
-                  ctx.font = "60px Inconsolata";
+                  ctx.font = "60px Inconsolata";//  普通
                 }
                 ctx.clearRect(x,20,ctx.measureText(chars[j]).width,180);
                 ctx.fillStyle = "#ff0";
-                ctx.fillText(chars[j],x,y);
-                x += ctx.measureText(chars[j]).width;
+                ctx.fillText(chars[j],x,y,w);
+                x += Math.min(ctx.measureText(chars[j]).width,w);
               }
             }
           }
