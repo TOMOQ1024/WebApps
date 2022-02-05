@@ -39,6 +39,7 @@
 
 
     /*
+    参考資料等
 
     使用フォント:Inconsolata(Google fonts)
     https://fonts.google.com/specimen/Inconsolata?query=inconsola#standard-styles
@@ -50,6 +51,7 @@
 
 
     let Sleep = ms => new Promise(r=>setTimeout(r,ms));
+    Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
     let cvs,ctx,touches,buttons,vars,graph,ctrl,level,maxlevel,clear;
 
     //  難易度順に入れ替える!!!
@@ -1988,7 +1990,6 @@
       level = 0;//  0はタイトル画面
       maxlevel = 1;
       clear = 0;//  レベルごとに使用. 0:未, 1:済
-
       //  Resetによる初期化
       Resize();
       Reset();
@@ -2425,10 +2426,14 @@
           ctx.beginPath();
           for(let i=-10; i<=930; i+=3){
             x = (i-graph.yaxis)/graph.scale;
-            c = isContinuous(
-              (x)=>graph.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),
-              x,3/graph.scale,Infinity
-            );
+            if(Number.isNaN(graph.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]))){
+              c = {bool:false,x:x,d:3/graph.scale}
+            }else{
+              c = isContinuous(
+                (x)=>graph.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),
+                x,3/graph.scale
+              );
+            }
             if(c.bool){
               y = graph.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
               y = -y*graph.scale+graph.xaxis;
@@ -2458,10 +2463,14 @@
           ctx.beginPath();
           for(let i=-10; i<=930; i+=3){
             x = (i-graph.yaxis)/graph.scale;
-            c = isContinuous(
-              (x)=>p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),
-              x,3/graph.scale
-            );
+            if(Number.isNaN(p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]))){
+              c = {bool:false,x:x,d:3/graph.scale}
+            }else{
+              c = isContinuous(
+                (x)=>p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),
+                x,3/graph.scale
+              );
+            }
             if(c.bool){
               y = p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
               y = -y*graph.scale+graph.xaxis;
@@ -2491,10 +2500,14 @@
           ctx.beginPath();
           for(let i=-10; i<=930; i+=3){
             x = (i-graph.yaxis)/graph.scale;
-            c = isContinuous(
-              (x)=>p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),
-              x,3/graph.scale
-            );
+            if(Number.isNaN(p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]))){
+              c = {bool:false,x:x,d:3/graph.scale}
+            }else{
+              c = isContinuous(
+                (x)=>p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),
+                x,3/graph.scale
+              );
+            }
             if(c.bool){
               y = p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
               y = -y*graph.scale+graph.xaxis;
@@ -2526,10 +2539,14 @@
           ctx.beginPath();
           for(let i=-10; i<=930; i+=3){
             x = (i-graph.yaxis)/graph.scale;
-            c = isContinuous(
-              (x)=>graph.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value),
-              x,3/graph.scale
-            );
+            if(Number.isNaN(graph.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value))){
+              c = {bool:false,x:x,d:3/graph.scale}
+            }else{
+              c = isContinuous(
+                (x)=>graph.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value),
+                x,3/graph.scale
+              );
+            }
             if(c.bool){
               y = graph.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value);
               y = -y*graph.scale+graph.xaxis;
