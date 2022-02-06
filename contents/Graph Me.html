@@ -1990,6 +1990,7 @@
         cookies += `${k.replace("_","-")}=${encodeURIComponent(String(cdata[k]))};`;
       }
       cookies.replace(/;$/,"");
+      console.log(cookies);
       document.cookie = cookies;
     }
 
