@@ -55,19 +55,21 @@
     let cvs,ctx,touches,buttons,vars,graph,ctrl,level,maxlevel,clear;
 
     //  難易度順に入れ替える!!!
-    let problems1 = {
+    let problems0 = {
        0 : {
-        type : "title",
-        xaxis : 370,//  0...740
-        yaxis : 460,//  0...920
-        gscale : 175/2,//  グラフの目盛
-        vars : [0,0,1,0],//  各変数を使用するかどうか
-        min : [-1,-1,-1,-1],//  最小値
-        value : [0,0,-.7,0],//  初期値
-        max : [1,1,1,1],//  最大値
-        vscale : [0,0,0,0],//  変数値の目盛
-        answer : [0,0,0,0]//  各変数の解答値
-      },
+         type : "title",
+         xaxis : 370,//  0...740
+         yaxis : 460,//  0...920
+         gscale : 175/2,//  グラフの目盛
+         vars : [0,0,1,0],//  各変数を使用するかどうか
+         min : [-1,-1,0,-1],//  最小値
+         value : [0,0,.3,0],//  初期値
+         max : [1,1,1,1],//  最大値  いつか2にする!!!
+         vscale : [0,0,0,0],//  変数値の目盛
+         answer : [0,0,0,0]//  各変数の解答値
+       }
+    }
+    let problems1 = {
        1 : {
         type : "explicit",
         funcstr : "y=a",
@@ -1844,6 +1846,7 @@
     };
 
     let problems = {
+      ...problems0,
       ...problems1,
       ...problems2,
       ...problems3,
@@ -1898,13 +1901,13 @@
 
             //  ボタンの判定
             if(IsIn(x,y,40/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.prev.available){
-              Prev();
+              Prev(1);
             };
             if(IsIn(x,y,360/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.reset.available){
-              Reset();
+              Reset(1);
             };
             if(IsIn(x,y,680/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.next.available){
-              Next();
+              Next(1);
             };
 
             //  タッチ操作は一つのみ有効
@@ -1926,6 +1929,10 @@
               SetButtons();
             }
             DrawAll();
+
+            if(graph.type === "title"){
+              Check();
+            }
           }
           cvs.ontouchend = () => {
             buttons.slider = -1;
@@ -1959,7 +1966,7 @@
         },
         reset : {
           //down : 0,
-          available : 0
+          available : 1
         },
         next : {
           //down : 0,
@@ -1999,14 +2006,24 @@
 
     //  ボタン設定
     function SetButtons(){
-      if(graph.type === "stages"){
+      if(graph.type==="title"){
+        buttons.prev.available = 1;
+        buttons.reset.available = 1;
+      }
+      else if(graph.type === "stages"){
+        buttons.prev.available = 1;
         if(vars[0].value-1+(vars[1].value-1)*4<=Math.ceil(maxlevel/12)-1){
           //  nextボタン
           buttons.next.available = 1;
         }else{
           buttons.next.available = 0;
         }
-        buttons.reset.available = 0;
+        buttons.reset.available = 1;
+      }
+      else if(graph.type === "settings"){
+        buttons.prev.available = 1;
+        buttons.next.available = 0;
+        buttons.reset.available = 1;
       }
       else if(graph.type === "levels"){
         if(vars[0].value+(vars[1].value-1)*4<=maxlevel){
@@ -2015,17 +2032,27 @@
         }else{
           buttons.next.available = 0;
         }
-        buttons.reset.available = 0;
+        buttons.reset.available = 1;
       }
       else{
-        buttons.prev.available = graph.type==="title" ? 0 : 1;
-        buttons.reset.available = graph.type==="title" ? 0 : 1;
-        buttons.next.available = graph.type==="title" ? 0 : +(level<maxlevel);
+        buttons.prev.available = 1;
+        buttons.reset.available = 1;
+        buttons.next.available = +(level<maxlevel);
       }
     }
 
     //  クリア判定等
     function Check(){
+      if(graph.type === "title"){
+        //  タイトル画面スライド後の処理
+        if(Math.min(Math.abs(vars[2].value-0),Math.abs(vars[2].value-1),Math.abs(vars[2].value-2))<=2/30){
+          buttons.next.available = 1;
+        }else{
+          buttons.next.available = 0;
+        }
+        DrawAll();
+        return 0;
+      }
       if(graph.type === "stages")return 0;
       if(graph.type === "levels")return 0;
       let bool = 1;
@@ -2046,21 +2073,13 @@
       }
       if(clear)return 0;
       await Sleep(50);
-      if(level === 0){
-        //  タイトル画面クリア時の処理
-        graph.type = "stages";
-        buttons.prev.available = 1;
-        DrawSelect();
-      }
-      else{
-        //  レベルクリア時の処理
-        maxlevel = Math.min(level+1,Object.keys(problems).reduce((a,b)=>Math.max(+a,+b)));
-        SetButtons();
-        clear = 1;
-        DrawAll();
-      }
+      maxlevel = Math.min(level+1,Object.keys(problems).reduce((a,b)=>Math.max(+a,+b)));
+      SetButtons();
+      clear = 1;
+      DrawAll();
     }
 
+    //  レベルnの開放
     function Unlock(n){
       maxlevel = Math.min(n,Object.keys(problems).reduce((a,b)=>Math.max(+a,+b)));
       SetButtons();
@@ -2068,8 +2087,8 @@
       DrawAll();
     }
 
+    //  ステージ・レベル選択画面の描画
     function DrawSelect(b){
-      //
       graph.scale = 55;
       vars[0].available = 1;
       vars[0].min = 1;
@@ -2087,8 +2106,33 @@
       DrawAll();
     }
 
-    function Prev(){
-      if(graph.type === "stages"){
+    //  設定画面の描画
+    function DrawSettings(){
+      graph.scale = 55;
+      vars[0].available = 1;
+      vars[0].min = 1;
+      vars[0].max = 4;
+      vars[0].value = 1;
+      vars[1].available = 1;
+      vars[1].min = 1;
+      vars[1].max = 3;
+      vars[1].value = 1;
+      vars[2].available = 0;
+      vars[3].available = 0;
+      SetButtons();
+      DrawAll();
+    }
+
+    //  prevボタン押下時の処理
+    function Prev(b){
+      if(graph.type === "title"){
+        //  ホームページへ
+        location.href = "https://tomoq1024.github.io/WebApps/";
+      }
+      else if(graph.type === "settings"){
+        Init();
+      }
+      else if(graph.type === "stages"){
         Init();
       }
       else if(graph.type === "levels"){
@@ -2105,8 +2149,33 @@
       }
     }
 
+    //  resetボタン押下時の処理
     //  問題画面の初期化. 最初の表示にも用いる.
-    function Reset(){
+    function Reset(b){
+      if(b){
+        //  手動押下時
+        if(graph.type === "title"){
+          location.reload();
+          return 0;
+        }
+        else if(graph.type === "settings"){
+          DrawSettings();
+          return 0;
+        }
+        else if(graph.type === "stages"){
+          DrawSelect();
+          return 0;
+        }
+        else if(graph.type === "levels"){
+          DrawSelect();
+          return 0;
+        }
+        else if(graph.type === "settings"){
+          DrawSettings();
+          return 0;
+        }
+      }
+      //  自動押下時
       //  グラフの設定
       let p = problems[level];
       graph.type = p.type;
@@ -2129,8 +2198,26 @@
       DrawAll();
     }
 
-    function Next(){
-      if(graph.type === "stages"){
+    //  nextボタン押下時の処理
+    function Next(b){
+      if(graph.type === "title"){
+        if(Math.abs(vars[2].value-0)<=2/30){
+          //  ステージ選択へ
+          graph.type = "stages";
+          SetButtons();
+          DrawSelect();
+        }
+        else if(Math.abs(vars[2].value-1)<=2/30){
+          //  設定画面へ
+          graph.type = "settings";
+          SetButtons();
+          DrawSettings();
+        }
+        else if(Math.abs(vars[2].value-2)<=2/30){
+          //  砂場にする!!!
+        }
+      }
+      else if(graph.type === "stages"){
         graph.type = "levels";
         level = (vars[0].value-1+(vars[1].value-1)*4)*12+1;
         DrawSelect();
@@ -2207,10 +2294,11 @@
       //  グラフ
       if(graph.type == "title"){
         //  タイトル画面
-        //  さらなる複雑化!!!
+        //  quitはprevボタンで代用できるため，sandbox等に置き換えるべき!!!
         ctx.strokeStyle = "#ff0";
         ctx.lineWidth = 10;
 
+        /*
         ctx.beginPath();
         ctx.moveTo(460-175*2+60,370-175-140);//  G
         ctx.lineTo(460-175*2-60,370-175-140);
@@ -2267,6 +2355,201 @@
         ctx.moveTo(460-175*0.5+0,370+175-140);
         ctx.lineTo(460-175*0.5+0,370+175+140);
         ctx.stroke();
+        */
+
+        //  タイトル画面(改)
+        let t = vars[2].value;
+        for(let i=0; i<8; i++){
+          for(let j=0; j<2; j++){
+            ctx.save();
+            //ctx.translate(30+110*i,120+340*j);
+            ctx.translate(35+110*i,120+340*j);
+            ctx.scale(80/2,160/2);
+            switch(`${j}${i}`){
+              case "00":
+                //  G
+                ctx.beginPath();
+                ctx.moveTo(2,0);
+                ctx.lineTo(0,0);
+                ctx.lineTo(0,2);
+                ctx.lineTo(2,2);
+                ctx.lineTo(2,1);
+                ctx.lineTo(1,1);
+                break;
+              case "01":
+                //  R
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.lineTo(2,0);
+                ctx.lineTo(2,1);
+                ctx.lineTo(0,1);
+                ctx.moveTo(1,1);
+                ctx.lineTo(2,2);
+                break;
+              case "02":
+                //  A
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.lineTo(2,0);
+                ctx.lineTo(2,2);
+                ctx.moveTo(0,1);
+                ctx.lineTo(2,1);
+                break;
+              case "03":
+                //  P
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.lineTo(2,0);
+                ctx.lineTo(2,1);
+                ctx.lineTo(0,1);
+                break;
+              case "04":
+                //  H
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.moveTo(2,0);
+                ctx.lineTo(2,2);
+                ctx.moveTo(0,1);
+                ctx.lineTo(2,1);
+                break;
+              case "05":
+                //  _
+                ctx.moveTo(0,2);
+                ctx.lineTo(2,2);
+                break;
+              case "06":
+                //  M
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.lineTo(2,0);
+                ctx.lineTo(2,2);
+                ctx.moveTo(1,0);
+                ctx.lineTo(1,2);
+                break;
+              case "07":
+                //  E
+                ctx.beginPath();
+                ctx.moveTo(2,0);
+                ctx.lineTo(0,0);
+                ctx.lineTo(0,2);
+                ctx.lineTo(2,2);
+                ctx.moveTo(0,1);
+                ctx.lineTo(2,1);
+                break;
+
+              case "10":
+                //  _S_
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,2,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,2,0,2),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,0,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,0,2,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,0,2,0),Smooth(t,2,2,2));
+                break;
+              case "11":
+                //  _E_
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,0,2),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,0,0,0),Smooth(t,2,2,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,2,0,2),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,1,2));
+                break;
+              case "12":
+                //  PTQ
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,1,0),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,1,0),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,2,1,2),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,2,1,2),Smooth(t,1,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,0,0,0));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,1,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,1,0,2));
+                ctx.moveTo(Smooth(t,0,1,1),Smooth(t,1,0,1));
+                ctx.lineTo(Smooth(t,0,1,2),Smooth(t,2,2,2));
+                break;
+              case "13":
+                //  LTU
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,1,0),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,1,0),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,1,2),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,1,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                break;
+              case "14":
+                //  AII
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,1,1),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,1,1),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,2,1,1),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,2,1,1),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,0,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,0,0,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,1,2,0));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,1,2,0));
+                break;
+              case "15":
+                //  YNT
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,0,1),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,0,1),Smooth(t,1,2,2));
+                ctx.moveTo(Smooth(t,2,2,1),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,2,2,1),Smooth(t,1,2,2));
+                ctx.moveTo(Smooth(t,1,1,1),Smooth(t,1,0,0));
+                ctx.lineTo(Smooth(t,1,1,1),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,1,0,0));
+                ctx.lineTo(Smooth(t,1,1,1),Smooth(t,1,0,0));
+                ctx.moveTo(Smooth(t,1,1,1),Smooth(t,1,2,0));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,1,2,0));
+                break;
+              case "16":
+                //  _G_
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,2,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,1,1,1),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,2,0,2),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,0,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,1,2,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,1,2,0),Smooth(t,2,2,2));
+                break;
+              case "17":
+                //  _S_
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,2,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,0,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,0,2,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                break;
+            }
+            ctx.restore();
+            ctx.stroke();
+          }
+        }
       }
       else if(graph.type == "stages"){
         //  ステージ選択
@@ -2583,6 +2866,7 @@
         }
 
         //  式の表示
+        //  影を落とす!!!
         let strs0,strs1,chars,x0,w0,w1,w;
         x = 40;
         ctx.strokeStyle = "#ff0";
@@ -2851,6 +3135,19 @@
       return bool;
     }
 
+    //  滑らかに変化する値を返す
+    //  t=0 => a
+    //  t=1 => b
+    //  t=2 => c
+    function Smooth(t,a,b,c){
+      if(t<0 || 2<t){
+        console.error("Unexpected value");
+      }else if(t<1){
+        return a+(b-a)/2*(1-Math.cos(Math.PI*t));
+      }else{
+        return b+(c-b)/2*(1+Math.cos(Math.PI*t));
+      }
+    }
 
 
 
