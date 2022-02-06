@@ -52,28 +52,7 @@
 
     let Sleep = ms => new Promise(r=>setTimeout(r,ms));
     Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
-    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,maxlevel,clear,analog,colors;
-    colors = {
-      main : "#ffff00",
-      main_ : "#ffff0040",
-      hint : "#00ffff",
-      disabled : "#888888",
-      disabled_ : "#88888840",
-      message : "#ffffff",
-      message_ : "#ffffff40"
-    }
-    analog = 0;
-    graph = {
-      colors : {
-        get main(){return analog ? "#d0ffd0" : colors.main;},
-        get main_(){return analog ? "#d0ffd040" : colors.main_;},
-        get hint(){return analog ? "#d0ffd0" : colors.hint;},
-        get disabled(){return analog ? "#80a080" : colors.disabled;},
-        get disabled_(){return analog ? "#80a08040" : colors.disabled_;},
-        get message(){return analog ? "#d0ffd0" : colors.message;},
-        get message_(){return analog ? "#d0ffd040" : colors.message_;}
-      }
-    };
+    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,maxlevel,clear,analog,colors,cdata,cdata0;
 
     //  難易度順に入れ替える!!!
     let problems0 = {
@@ -1969,12 +1948,58 @@
       }
     });
 
+    function LoadCookie(){
+      if(!document.cookie.length){
+        //  初訪問
+        cdata0 = {
+          maxlevel : 1,
+          analog : 0,
+          color : 0,
+          weight : 10,
+          max_age : 60*60*24*365*10
+        };
+
+        cdata = {};
+        for(let k in cdata0){
+          cdata[k] = cdata0[k];
+        }
+      }
+      else{
+        let cookies = document.cookie.split(";");
+        cdata = {};
+        for(let i=0; i<cdata.length; i++){
+          cdata[cookies[i].split("=")[0].replace("-","_")] = +decodeURIComponent(cookies[i].split("=")[1]);
+        }
+      }
+      maxlevel = cdata.maxlevel;
+      analog = cdata.analog;
+      colors = {
+        main : ["#ffff00"][cdata.color],
+        main_ : ["#ffff0040"][cdata.color],
+        hint : ["#00ffff"][cdata.color],
+        disabled : ["#888888"][cdata.color],
+        disabled_ : ["#88888840"][cdata.color],
+        message : ["#ffffff"][cdata.color],
+        message_ : ["#ffffff40"][cdata.color]
+      }
+    }
+
+    function SaveCookie(){
+      let cookies = "";
+      for(let k in cdata){
+        cookies += `${k.replace("_","-")}=${encodeURIComponent(String(cdata[k]))};`;
+      }
+      cookies.replace(/;$/,"");
+      document.cookie = cookies;
+    }
+
     function Resize(){
       let len = Math.min(window.innerWidth/20,window.innerHeight/33)*.95;
       cvs.style.width = `${len*20}px`;
     }
 
     function Init(){
+      LoadCookie();
       cvs = document.querySelector("#main_canvas");
       ctx = cvs.getContext("2d");
       ctx.lineJoin = "round";
@@ -1996,6 +2021,17 @@
         },
         slider : -1
       };
+      graph = {
+        colors : {
+          get main(){return analog ? "#d0ffd0" : colors.main;},
+          get main_(){return analog ? "#d0ffd040" : colors.main_;},
+          get hint(){return analog ? "#d0ffd0" : colors.hint;},
+          get disabled(){return analog ? "#80a080" : colors.disabled;},
+          get disabled_(){return analog ? "#80a08040" : colors.disabled_;},
+          get message(){return analog ? "#d0ffd0" : colors.message;},
+          get message_(){return analog ? "#d0ffd040" : colors.message_;}
+        }
+      };
       vars = [];
       for(let i=0; i<4; i++){
         vars.push({});
@@ -2014,15 +2050,12 @@
           }
         });
       }
-      ctrl = 1;
+      ctrl = 1;//  使用した記憶なし．要確認!!!
       level = 0;//  0はタイトル画面
-      maxlevel = 1;
       clear = 0;//  レベルごとに使用. 0:未, 1:済
       //  Resetによる初期化
       Resize();
       Reset();
-      //Unlock(13);//  公開時は削除する
-      Unlock(Infinity);//  公開時は削除する
     }
 
     //  ボタン設定
@@ -2171,7 +2204,8 @@
     }
 
     //  resetボタン押下時の処理
-    //  問題画面の初期化. 最初の表示にも用いる.
+    //  問題画面の初期化. 最初の表示にも用いる
+    //  設定の初期化!!!
     function Reset(b){
       if(b){
         //  手動押下時
