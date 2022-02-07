@@ -1991,9 +1991,9 @@
       let cookies = "";
       for(let k in cdata){
         console.log(k,cdata[k]);
-        cookies += `${k.replace("_","-")}=${encodeURIComponent(String(cdata[k]))};`;
+        cookies += `${k.replace("_","-")}=${encodeURIComponent(String(cdata[k]))}; `;
       }
-      cookies.replace(/;$/,"");
+      cookies.replace(/;\s$/,"");
       console.log(cookies);
       document.cookie = cookies;
     }
