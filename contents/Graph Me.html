@@ -46,13 +46,18 @@
 
     フォントのロードの検知:Web Font Loader
     参考:http://ithat.me/2016/12/10/js-web-font-load-start-complete-detection-web-font-loader
+
+    音源 - フリー効果音素材 くらげ工匠
+      ボタン押下 - button68.mp3
+      スライダー移動 - button45.mp3
+
     */
 
 
 
     let Sleep = ms => new Promise(r=>setTimeout(r,ms));
     Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
-    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0;
+    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0,audio;
 
     //  難易度順に入れ替える!!!
     let problems0 = {
@@ -1924,8 +1929,14 @@
             //  スライダー操作
             if(0<=buttons.slider){
               v = vars[buttons.slider];
+              let d = Math.round(v.proportion*20)/20;
               v.value = (v.max-v.min)*Math.min(Math.max((x-200)/600,0),1)+v.min;
               v.adapt();
+              d = Math.round(v.proportion*20)/20-d;
+              console.log(d);
+              if(.04<Math.abs(d)){
+                audio.slider.PLAY();
+              }
               SetButtons();
             }
             DrawAll();
@@ -1953,7 +1964,8 @@
         maxlevel : 1,
         analog : 0,
         color : 0,
-        weight : 10
+        weight : 10,
+        sound : .5
       };
       if(!document.cookie.length){
         //  初訪問
@@ -1975,13 +1987,16 @@
         }
       }
       colors = {
-        main : ["#ffff00"][cdata.color],
-        main_ : ["#ffff0040"][cdata.color],
-        hint : ["#00ffff"][cdata.color],
-        disabled : ["#888888"][cdata.color],
-        disabled_ : ["#88888840"][cdata.color],
-        message : ["#ffffff"][cdata.color],
-        message_ : ["#ffffff40"][cdata.color]
+        get main(){return ["#ffff00"][cdata.color];},
+        get main_(){return ["#ffff0040"][cdata.color];},
+        get hint(){return ["#00ffff"][cdata.color];},
+        get disabled(){return ["#888888"][0];},
+        get disabled_(){return ["#88888840"][0];},
+        get message(){return ["#ffffff"][0];},
+        get message_(){return ["#ffffff40"][0];}
+      }
+      for(let a in audio){
+        audio[a].volume = cdata.sound;
       }
     }
 
@@ -2004,7 +2019,6 @@
     }
 
     function Init(){
-      LoadCookie();
       cvs = document.querySelector("#main_canvas");
       ctx = cvs.getContext("2d");
       ctx.lineJoin = "round";
@@ -2058,6 +2072,23 @@
       ctrl = 1;//  使用した記憶なし．要確認!!!
       level = 0;//  0はタイトル画面
       clear = 0;//  レベルごとに使用. 0:未, 1:済
+      audio = {
+        slider : new Audio("sounds/button45.mp3"),
+        button : new Audio("sounds/button68.mp3")
+      };
+      for(let a in audio){
+        audio[a].PLAY = ()=>{
+          audio[a].currentTime = 0;
+          audio[a].play();
+        };
+      }
+      /*
+      cvs.click();
+      //  再生阻害対策
+      */
+
+      //  クッキーがあれば，そのデータを代入する
+      LoadCookie();
       //  Resetによる初期化
       Resize();
       Reset();
@@ -2170,9 +2201,10 @@
     function DrawSettings(){
       graph.scale = 55;
       vars[0].available = 1;
-      vars[0].min = 1;
-      vars[0].max = 4;
-      vars[0].value = 1;
+      vars[0].min = 0;
+      vars[0].max = 1;
+      vars[0].value = 0;
+      vars[0].scale = 1;
       vars[1].available = 1;
       vars[1].min = 1;
       vars[1].max = 3;
