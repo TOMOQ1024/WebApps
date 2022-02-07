@@ -52,7 +52,7 @@
 
     let Sleep = ms => new Promise(r=>setTimeout(r,ms));
     Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
-    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,maxlevel,clear,analog,colors,cdata,cdata0;
+    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0;
 
     //  難易度順に入れ替える!!!
     let problems0 = {
@@ -1969,14 +1969,11 @@
           LoadCookie();
           return 0;
         }
-        console.log(cookies);
         cdata = {};
         for(let i=0; i<cookies.length; i++){
           cdata[cookies[i].split("=")[0].replace(/\s/g,"")] = +decodeURIComponent(cookies[i].split("=")[1]);
         }
       }
-      maxlevel = cdata.maxlevel;
-      analog = cdata.analog;
       colors = {
         main : ["#ffff00"][cdata.color],
         main_ : ["#ffff0040"][cdata.color],
@@ -1990,7 +1987,6 @@
 
     function SaveCookie(){
       for(let k in cdata){
-        console.log(k,cdata[k]);
         document.cookie =  `${k}=${encodeURIComponent(String(cdata[k]))};max_age=315360000;`;//  10年
       }
     }
@@ -2032,13 +2028,13 @@
       };
       graph = {
         colors : {
-          get main(){return analog ? "#d0ffd0" : colors.main;},
-          get main_(){return analog ? "#d0ffd040" : colors.main_;},
-          get hint(){return analog ? "#d0ffd0" : colors.hint;},
-          get disabled(){return analog ? "#80a080" : colors.disabled;},
-          get disabled_(){return analog ? "#80a08040" : colors.disabled_;},
-          get message(){return analog ? "#d0ffd0" : colors.message;},
-          get message_(){return analog ? "#d0ffd040" : colors.message_;}
+          get main(){return cdata.analog ? "#d0ffd0" : colors.main;},
+          get main_(){return cdata.analog ? "#d0ffd040" : colors.main_;},
+          get hint(){return cdata.analog ? "#d0ffd0" : colors.hint;},
+          get disabled(){return cdata.analog ? "#80a080" : colors.disabled;},
+          get disabled_(){return cdata.analog ? "#80a08040" : colors.disabled_;},
+          get message(){return cdata.analog ? "#d0ffd0" : colors.message;},
+          get message_(){return cdata.analog ? "#d0ffd040" : colors.message_;}
         }
       };
       vars = [];
@@ -2075,7 +2071,7 @@
       }
       else if(graph.type === "stages"){
         buttons.prev.available = 1;
-        if(vars[0].value-1+(vars[1].value-1)*4<=Math.ceil(maxlevel/12)-1){
+        if(vars[0].value-1+(vars[1].value-1)*4<=Math.ceil(cdata.maxlevel/12)-1){
           //  nextボタン
           buttons.next.available = 1;
         }else{
@@ -2089,7 +2085,7 @@
         buttons.reset.available = 1;
       }
       else if(graph.type === "levels"){
-        if(vars[0].value+(vars[1].value-1)*4<=maxlevel){
+        if(vars[0].value+(vars[1].value-1)*4<=cdata.maxlevel){
           //  nextボタン
           buttons.next.available = 1;
         }else{
@@ -2100,7 +2096,7 @@
       else{
         buttons.prev.available = 1;
         buttons.reset.available = 1;
-        buttons.next.available = +(level<maxlevel);
+        buttons.next.available = +(level<cdata.maxlevel);
       }
     }
 
@@ -2144,7 +2140,7 @@
 
     //  レベルnの開放
     function Unlock(n){
-      maxlevel = Math.max(maxlevel,Math.min(n,Object.keys(problems).reduce((a,b)=>Math.max(+a,+b))));
+      cdata.maxlevel = Math.max(cdata.maxlevel,Math.min(n,Object.keys(problems).reduce((a,b)=>Math.max(+a,+b))));
       SetButtons();
       clear = 0;
       DrawAll();
@@ -2323,7 +2319,7 @@
       ctx.translate(40,40);
 
       //  背景
-      if(analog){
+      if(cdata.analog){
         let gra = ctx.createRadialGradient(460,370,0,460,370,1000);
         gra.addColorStop(0.0,"#246347");
         gra.addColorStop(0.7,"#133828");
@@ -2338,7 +2334,7 @@
 
       //  グリッド
       //  レベル選択に戻ったとき，グリッドの設定を戻す!!!
-      ctx.strokeStyle = analog ? "#333" : "#444";
+      ctx.strokeStyle = cdata.analog ? "#333" : "#444";
       for(let i=Math.ceil(-graph.yaxis/graph.scale); i<=(920-graph.yaxis)/graph.scale; i++){
         ctx.lineWidth = i%5 ? 4 : 6;
         ctx.beginPath();
@@ -2355,7 +2351,7 @@
       }
       //  軸
       ctx.lineWidth = 8;
-      ctx.strokeStyle = analog ? "#333" : "#777";
+      ctx.strokeStyle = cdata.analog ? "#333" : "#777";
       ctx.beginPath();
       ctx.moveTo(graph.yaxis,0);
       ctx.lineTo(graph.yaxis,740);
@@ -2371,7 +2367,7 @@
         //  quitはprevボタンで代用できるため，sandbox等に置き換えるべき!!!
         ctx.strokeStyle = graph.colors.main;
         ctx.lineWidth = 10;
-        if(analog)ctx.shadowBlur = 10;
+        if(cdata.analog)ctx.shadowBlur = 10;
 
         //  タイトル画面(改)
         let t = vars[2].value;
@@ -2575,16 +2571,16 @@
         ctx.lineWidth = 15;
         for(let y=0; y<3; y++){
           for(let x=0; x<4; x++){
-            ctx.strokeStyle = x+y*4<=Math.ceil(maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
-            ctx.fillStyle = x+y*4<=Math.ceil(maxlevel/12)-1 ? graph.colors.main_ : graph.colors.disabled_;
+            ctx.strokeStyle = x+y*4<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+            ctx.fillStyle = x+y*4<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main_ : graph.colors.disabled_;
             ctx.fillRect(50+220*x,70+220*y,160,160);
-            if(analog)ctx.shadowBlur = 10;
+            if(cdata.analog)ctx.shadowBlur = 10;
             ctx.strokeRect(50+220*x,70+220*y,160,160);
             ctx.shadowBlur = 0;
             if(x+y*4 === vars[0].value-1+(vars[1].value-1)*4){
               ctx.fillRect(50+220*x,70+220*y,160,160);
               ctx.fillRect(50+220*x,70+220*y,160,160);
-              if(analog)ctx.shadowBlur = 10;
+              if(cdata.analog)ctx.shadowBlur = 10;
               ctx.strokeRect(50+220*x-10,70+220*y-10,160+20,160+20);
               ctx.shadowBlur = 0;
             }
@@ -2592,47 +2588,47 @@
         }
         //  ボタンのデザイン
         ctx.strokeStyle = graph.colors.main;
-        ctx.strokeStyle = 0<=Math.ceil(maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.strokeStyle = 0<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
         ctx.beginPath();
         ctx.moveTo(130+220*0-40,150+220*0-40);//  1:礎
         ctx.lineTo(130+220*0+0,150+220*0+40);
         ctx.lineTo(130+220*0+40,150+220*0-40);
         ctx.stroke();
-        ctx.strokeStyle = 1<=Math.ceil(maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.strokeStyle = 1<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
         ctx.beginPath();
         ctx.moveTo(130+220*1-40,150+220*0+40);//  2:三
         ctx.lineTo(130+220*1+40,150+220*0+40);
         ctx.lineTo(130+220*1+40,150+220*0-40);
         ctx.lineTo(130+220*1-40,150+220*0+40);
         ctx.stroke();
-        ctx.strokeStyle = 2<=Math.ceil(maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.strokeStyle = 2<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
         ctx.beginPath();
         ctx.moveTo(130+220*2-40,150+220*0+40);//  3:絶
         ctx.lineTo(130+220*2-40,150+220*0-40);
         ctx.moveTo(130+220*2+40,150+220*0+40);
         ctx.lineTo(130+220*2+40,150+220*0-40);
         ctx.stroke();
-        ctx.strokeStyle = 3<=Math.ceil(maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.strokeStyle = 3<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
         ctx.beginPath();
         ctx.moveTo(130+220*3-40,150+220*0+0);//  4:指
         ctx.lineTo(130+220*3+0,150+220*0-40);
         ctx.lineTo(130+220*3+40,150+220*0+0);
         ctx.stroke();
-        ctx.strokeStyle = 4<=Math.ceil(maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.strokeStyle = 4<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
         ctx.beginPath();
         ctx.moveTo(130+220*0-40,150+220*1+40);//  5:高
         ctx.lineTo(130+220*0-40,150+220*1+0);
         ctx.lineTo(130+220*0+40,150+220*1+0);
         ctx.lineTo(130+220*0+40,150+220*1-40);
         ctx.stroke();
-        ctx.strokeStyle = 5<=Math.ceil(maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.strokeStyle = 5<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
         ctx.beginPath();
         ctx.moveTo(130+220*1-40,150+220*1+0);//  6:分
         ctx.lineTo(130+220*1+0,150+220*1+40);
         ctx.moveTo(130+220*1+0,150+220*1-40);
         ctx.lineTo(130+220*1+40,150+220*1+0);
         ctx.stroke();
-        ctx.strokeStyle = 6<=Math.ceil(maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.strokeStyle = 6<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
         ctx.beginPath();
         ctx.moveTo(130+220*2-40,150+220*1+40);//  7:斜
         ctx.lineTo(130+220*2+0,150+220*1+40);
@@ -2640,14 +2636,14 @@
         ctx.lineTo(130+220*2+0,150+220*1-40);
         ctx.lineTo(130+220*2-40,150+220*1+40);
         ctx.stroke();
-        ctx.strokeStyle = 7<=Math.ceil(maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.strokeStyle = 7<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
         ctx.beginPath();
         ctx.moveTo(130+220*3-40,150+220*1+40);//  8:断
         ctx.lineTo(130+220*3+0,150+220*1+40);
         ctx.moveTo(130+220*3+0,150+220*1-40);
         ctx.lineTo(130+220*3+40,150+220*1-40);
         ctx.stroke();
-        ctx.strokeStyle = 8<=Math.ceil(maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.strokeStyle = 8<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
         ctx.beginPath();
         ctx.moveTo(130+220*0+40,150+220*2+40);//  9:極
         ctx.lineTo(130+220*0-40,150+220*2+40);
@@ -2663,21 +2659,21 @@
         ctx.textBaseline = "middle";
         for(let y=0; y<3; y++){
           for(let x=0; x<4; x++){
-            ctx.strokeStyle = x+y*4<=maxlevel-Math.floor((level-1)/12)*12-1 ? graph.colors.main : graph.colors.disabled;
-            ctx.fillStyle = x+y*4<=maxlevel-Math.floor((level-1)/12)*12-1 ? graph.colors.main_ : graph.colors.disabled_;
+            ctx.strokeStyle = x+y*4<=cdata.maxlevel-Math.floor((level-1)/12)*12-1 ? graph.colors.main : graph.colors.disabled;
+            ctx.fillStyle = x+y*4<=cdata.maxlevel-Math.floor((level-1)/12)*12-1 ? graph.colors.main_ : graph.colors.disabled_;
             ctx.fillRect(50+220*x,70+220*y,160,160);
-            if(analog)ctx.shadowBlur = 10;
+            if(cdata.analog)ctx.shadowBlur = 10;
             ctx.strokeRect(50+220*x,70+220*y,160,160);
             ctx.shadowBlur = 0;
             if(x+y*4 === vars[0].value-1+(vars[1].value-1)*4){
               ctx.fillRect(50+220*x,70+220*y,160,160);
               ctx.fillRect(50+220*x,70+220*y,160,160);
-              if(analog)ctx.shadowBlur = 10;
+              if(cdata.analog)ctx.shadowBlur = 10;
               ctx.strokeRect(50+220*x-10,70+220*y-10,160+20,160+20);
               ctx.shadowBlur = 0;
             }
-            ctx.fillStyle = x+y*4<=maxlevel-Math.floor((level-1)/12)*12-1 ? graph.colors.main : graph.colors.disabled;
-            if(analog)ctx.shadowBlur = 10;
+            ctx.fillStyle = x+y*4<=cdata.maxlevel-Math.floor((level-1)/12)*12-1 ? graph.colors.main : graph.colors.disabled;
+            if(cdata.analog)ctx.shadowBlur = 10;
             ctx.fillText((x+y*4+1).toString(16).toUpperCase(),130+220*x,150+220*y);
             ctx.shadowBlur = 0;
           }
@@ -2727,7 +2723,7 @@
         */
 
         /*折れ線描画法*/
-        if(analog)ctx.shadowBlur = 10;
+        if(cdata.analog)ctx.shadowBlur = 10;
         let c;
         if(!problems[level].hide){
           //  ヒント部分
@@ -3031,7 +3027,7 @@
 
       //  クリアメッセージ
       if(clear){
-        if(analog)ctx.shadowBlur = 10;
+        if(cdata.analog)ctx.shadowBlur = 10;
         ctx.fillStyle = "#000000c0";
         ctx.fillRect(-10,-10,940,760);
         let txt = "LEVEL ";
