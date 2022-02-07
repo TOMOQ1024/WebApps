@@ -47,7 +47,7 @@
     フォントのロードの検知:Web Font Loader
     参考:http://ithat.me/2016/12/10/js-web-font-load-start-complete-detection-web-font-loader
 
-    音源 - フリー効果音素材 くらげ工匠
+    音源 - フリー効果音素材 くらげ工匠 : http://www.kurage-kosho.info/
       ボタン押下 - button68.mp3
       スライダー移動 - button45.mp3
 
@@ -1884,6 +1884,7 @@
         if(window.ontouchstart === null){
           //  タッチ操作
           cvs.ontouchstart = (e) => {
+            cvs.click();
             if(!ctrl)return 0;
             e.preventDefault();
             let x = e.touches[0].clientX-cvs.getBoundingClientRect().left;//  canvas左上からのpx値
@@ -1929,11 +1930,10 @@
             //  スライダー操作
             if(0<=buttons.slider){
               v = vars[buttons.slider];
-              let d = Math.round(v.proportion*20)/20;
+              let d = Math.round(v.proportion*10)/10;
               v.value = (v.max-v.min)*Math.min(Math.max((x-200)/600,0),1)+v.min;
               v.adapt();
-              d = Math.round(v.proportion*20)/20-d;
-              console.log(d);
+              d = Math.round(v.proportion*10)/10-d;
               if(.04<Math.abs(d)){
                 audio.slider.PLAY();
               }
@@ -1965,7 +1965,7 @@
         analog : 0,
         color : 0,
         weight : 10,
-        sound : .5
+        sound : .15
       };
       if(!document.cookie.length){
         //  初訪問
@@ -1976,7 +1976,7 @@
       }
       else{
         let cookies = document.cookie.split(";");
-        if(cookies.length < 4){
+        if(cookies.length < Object.keys(cdata0).reduce((a,b)=>Math.max(+a,+b))){
           ClearCookie();
           LoadCookie();
           return 0;
@@ -2018,6 +2018,7 @@
       cvs.style.width = `${len*20}px`;
     }
 
+    //  最初にインタラクトさせる!!!
     function Init(){
       cvs = document.querySelector("#main_canvas");
       ctx = cvs.getContext("2d");
@@ -2082,10 +2083,6 @@
           audio[a].play();
         };
       }
-      /*
-      cvs.click();
-      //  再生阻害対策
-      */
 
       //  クッキーがあれば，そのデータを代入する
       LoadCookie();
