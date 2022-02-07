@@ -1,0 +1,3289 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+    <title>Graph Me</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="../Style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata&display=swap" rel="stylesheet">
+    <style>
+      *{
+        font-size: 0;
+        overflow: hidden;
+        display: inline-block;
+        text-align: center;
+      }
+
+      @font-face
+      {
+        font-family: 'Inconsolata';
+        font-style: normal;
+        font-weight: 100;
+        src: url('mplus1p-thin.eot');  /* IE9+ */
+        src: url('mplus1p-thin.eot?#iefix') format('embedded-opentype'),  /* IE8- */
+             url('mplus1p-thin.woff') format('woff'),     /* その他のブラウザ */
+             url('mplus1p-thin.ttf') format('truetype');  /* 古いiOS */
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <canvas id="main_canvas" width="1000" height="1650"></canvas>
+    </div>
+  </body>
+  <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+  <script type="text/javascript">
+    //
+
+
+    /*
+    参考資料等
+
+    使用フォント:Inconsolata(Google fonts)
+    https://fonts.google.com/specimen/Inconsolata?query=inconsola#standard-styles
+
+    フォントのロードの検知:Web Font Loader
+    参考:http://ithat.me/2016/12/10/js-web-font-load-start-complete-detection-web-font-loader
+
+    音源
+    ・フリー効果音素材 くらげ工匠 : http://www.kurage-kosho.info/
+      =>ボタン押下 - button68.mp3
+      =>スライダー移動 - button45.mp3
+    ・効果音ラボ : https://soundeffect-lab.info/
+      =>クリア - データ解析.mp3
+    */
+
+
+    alert("script loaded");
+    let Sleep = ms => new Promise(r=>setTimeout(r,ms));
+    Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
+    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0,audio,interacted;
+    interacted = 0;
+
+    //  難易度順に入れ替える!!!
+    let problems0 = {
+       0 : {
+         type : "title",
+         xaxis : 370,//  0...740
+         yaxis : 460,//  0...920
+         gscale : 175/2,//  グラフの目盛
+         vars : [0,0,1,0],//  各変数を使用するかどうか
+         min : [-1,-1,0,-1],//  最小値
+         value : [0,0,.4,0],//  初期値
+         max : [1,1,1,1],//  最大値  いつか2にする!!!
+         vscale : [0,0,0,0],//  変数値の目盛
+         answer : [0,0,0,0]//  各変数の解答値
+       }
+    }
+    let problems1 = {
+       1 : {
+        type : "explicit",
+        funcstr : "y=a",
+        func : (x,a,b,c,d) => {
+          return a;
+        },
+        xaxis : 550,
+        yaxis : 460,
+        gscale : 60,
+        vars : [1,0,0,0],
+        min : [-10,-1,-1,-1],
+        value : [0,0,0,0],
+        max : [10,1,1,1],
+        vscale : [0,0,0,0],
+        answer : [4,0,0,0]
+      },
+       2 : {
+        type : "explicit",
+        funcstr : "y=ax+b",
+        func : (x,a,b,c,d) => {
+          return a*x+b;
+        },
+        xaxis : 550,
+        yaxis : 460,
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [-10,-10,-1,-1],
+        value : [0,0,0,0],
+        max : [10,10,1,1],
+        vscale : [0,0,0,0],
+        answer : [3,-2,0,0]
+      },
+       3 : {
+        type : "explicit",
+        funcstr : "y=a(x-2)+b",
+        func : (x,a,b,c,d) => {
+          return a*(x-2)+b;
+        },
+        xaxis : 550,
+        yaxis : 320,
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [-3,-10,-1,-1],
+        value : [0,0,0,0],
+        max : [3,10,1,1],
+        vscale : [0,0,0,0],
+        answer : [.5,2,0,0]
+      },
+       4 : {
+        type : "explicit",
+        funcstr : "y=a(bx+1)",
+        func : (x,a,b,c,d) => {
+          return a*(b*x+1);
+        },
+        xaxis : 200,
+        yaxis : 460,
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [-10,-1,-1,-1],
+        value : [0,0,0,0],
+        max : [3,1,1,1],
+        vscale : [0,0,0,0],
+        answer : [-6,.25,0,0]
+      },
+       5 : {
+        type : "explicit",
+        funcstr : "y=ax^2+b",
+        func : (x,a,b,c,d) => {
+          return a*x*x+b;
+        },
+        xaxis : 370,
+        yaxis : 460,
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [-1,-5,-1,-1],
+        value : [0,0,0,0],
+        max : [1,5,1,1],
+        vscale : [0,0,0,0],
+        answer : [-.25,3,0,0]
+      },
+       6 : {
+        type : "explicit",
+        funcstr : "y=a(x-b)^2+c",
+        func : (x,a,b,c,d) => {
+          return a*(x-b)**2+c;
+        },
+        xaxis : 370,
+        yaxis : 460,
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-3,-10,-10,-1],
+        value : [0,0,0,0],
+        max : [3,10,10,1],
+        vscale : [0,0,0,0],
+        answer : [.5,3,-2,0]
+      },
+       7 : {
+        type : "explicit",
+        funcstr : "y=a(x-b)(x-c)",
+        func : (x,a,b,c,d) => {
+          return a*(x-b)*(x-c);
+        },
+        xaxis : 370,
+        yaxis : 460,
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-1,-5,-10,-1],
+        value : [0,0,0,0],
+        max : [1,5,10,1],
+        vscale : [0,0,0,0],
+        answer : [.125,3,-6,0]
+      },
+       8 : {
+        type : "explicit",
+        funcstr : "y=ax(x-b)+c",
+        func : (x,a,b,c,d) => {
+          return a*x*(x-b)+c;
+        },
+        xaxis : 370,
+        yaxis : 460,
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-1,-10,-10,-1],
+        value : [0,0,0,0],
+        max : [1,10,10,1],
+        vscale : [0,0,0,0],
+        answer : [-.25,4,3,0]
+      },
+       9 : {
+        type : "explicit",
+        hide : 1,
+        tangent : 1,
+        funcstr : "y=0.25x^2+a",
+        func : (x,a,b,c,d) => {
+          return x*x/4+a;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-5;
+        },
+        xaxis : 370,
+        yaxis : 460,
+        gscale : 60,
+        vars : [1,0,0,0],
+        min : [-10,-10,-10,-1],
+        value : [0,0,0,0],
+        max : [10,10,10,1],
+        vscale : [0,0,0,0],
+        answer : [-4,4,3,0]
+      },
+      10 : {
+        type : "explicit",
+        hide : 1,
+        points : [4],
+        tangent : 1,
+        funcstr : "y=ax^2+abx",
+        func : (x,a,b,c,d) => {
+          return a*x*x+a*b*x;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-4;
+        },
+        xaxis : 500,
+        yaxis : 300,
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [-1,-5,-10,-1],
+        value : [0,0,0,0],
+        max : [1,5,10,1],
+        vscale : [0,0,0,0],
+        answer : [.25,-4,3,0]
+      },
+      11 : {
+        type : "explicit",
+        hide : 1,
+        points : [0,4],
+        tangent : 1,
+        funcstr : "y=a(x^2-b)",
+        func : (x,a,b,c,d) => {
+          return a*(x*x-b);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return -5;
+        },
+        xaxis : 400,
+        yaxis : 400,
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [-1,-5,-10,-1],
+        value : [0,0,0,0],
+        max : [1,10,10,1],
+        vscale : [0,0,0,0],
+        answer : [.5,10,3,0]
+      },
+      12 : {
+        type : "explicit",
+        hide : 1,
+        points : [-3,1,5],
+        tangent : 0,
+        funcstr : "y=ax^2+bx+c",
+        func : (x,a,b,c,d) => {
+          return a*x*x+b*x+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return -5;
+        },
+        xaxis : 400,
+        yaxis : 400,
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-1,-1,-5,-1],
+        value : [0,0,0,0],
+        max : [1,1,5,1],
+        vscale : [0,0,0,0],
+        answer : [.25,-.5,-3.75,0]
+      }
+    };
+    let problems2 = {
+      13 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        funcstr : "y=asin(x)+b",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(x)+b;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return -5;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [-5,-5,-5,-1],
+        value : [0,0,0,0],
+        max : [5,5,5,1],
+        vscale : [0,0,0,0],
+        answer : [3,-2,-3.75,0]
+      },
+      14 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        funcstr : "y=acos(bx)+c",
+        func : (x,a,b,c,d) => {
+          return a*Math.cos(b*x)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return -5;
+        },
+        xaxis : 450,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-5,0,-5,-1],
+        value : [0,0,0,0],
+        max : [5,5,5,1],
+        vscale : [0,0,0,0],
+        answer : [2,5,1,0]
+      },
+      15 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        funcstr : "y=atan(bx)+c",
+        func : (x,a,b,c,d) => {
+          return a*Math.tan(b*x)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return -5;
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-2,0,-5,-1],
+        value : [0,0,0,0],
+        max : [2,3,5,1],
+        vscale : [0,0,0,0],
+        answer : [-1,.5,3,0]
+      },
+      16 : {
+        type : "explicit",
+        hide : 1,
+        points : [0],
+        tangent : 1,
+        funcstr : "y=asin(x-b)",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(x-b);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return -3;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [0,-2,-5,-1],
+        value : [0,1,0,0],
+        max : [5,2,5,1],
+        vscale : [0,0,0,0],
+        answer : [3,0,3,0]
+      },
+      17 : {
+        type : "explicit",
+        hide : 1,
+        points : [0],
+        tangent : 1,
+        tangent2 : 1,
+        funcstr : "y=asin(x-b)+c",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(x-b)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return -1;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -7;
+        },
+        xaxis : 100,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [0,0,-5,-1],
+        value : [0,0,0,0],
+        max : [5,5,5,1],
+        vscale : [0,0,0,0],
+        answer : [3,4,-4,0]
+      },
+      18 : {
+        type : "explicit",
+        hide : 1,
+        points : [5],
+        tangent : 1,
+        tangent2 : 1,
+        funcstr : "y=axsin(2x-b)",
+        func : (x,a,b,c,d) => {
+          return a*x*Math.sin(2*x-b);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x/2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -x/2;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [0,-2,-5,-1],
+        value : [0,0,0,0],
+        max : [2,2,5,1],
+        vscale : [0,0,0,0],
+        answer : [.5,2,-4,0]
+      },
+      19 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=2sinax+sinbx",
+        func : (x,a,b,c,d) => {
+          return 2*Math.sin(a*x)+Math.sin(b*x);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x/2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -x/2;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,0,0],
+        min : [0,0,-5,-1],
+        value : [0,0,0,0],
+        max : [5,10,5,1],
+        vscale : [0,0,0,0],
+        answer : [2,10,-4,0]
+      },
+      20 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=asinbx+cx",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(b*x)+c*x;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x/2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -x/2;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [0,-10,-3,-1],
+        value : [0,0,0,0],
+        max : [5,10,3,1],
+        vscale : [0,0,0,0],
+        answer : [4,-5,.75,0]
+      },
+      21 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=asinbx+ctanx",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(b*x)+Math.tan(c*x);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x/2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -x/2;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [0,-10,-3,-1],
+        value : [0,0,0,0],
+        max : [5,10,3,1],
+        vscale : [0,0,0,0],
+        answer : [2,7,1,0]
+      },
+      22 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=acos(bx-c)+d",
+        func : (x,a,b,c,d) => {
+          return a*Math.cos(b*x-c)+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x/2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -x/2;
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-5,0,-1,-5],
+        value : [0,2.5,1,0],
+        max : [5,5,1,5],
+        vscale : [0,0,0,0],
+        answer : [-3,3,1,3]
+      },
+      23 : {
+        type : "explicit",
+        hide : 1,
+        points : [],
+        tangent : 1,
+        tangent2 : 1,
+        funcstr : "y=(ax-b)cos3x+c",
+        func : (x,a,b,c,d) => {
+          return (a*x-b)*Math.cos(3*x)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 500,//370
+        yaxis : 300,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-3,-5,-3,-5],
+        value : [0,0,0,0],
+        max : [3,5,3,5],
+        vscale : [0,0,0,0],
+        answer : [1,5,2,3]
+      },
+      24 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=asinbxsincx",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(b*x)*Math.sin(c*x);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,0],
+        min : [0,0,0,-5],
+        value : [0,0,0,0],
+        max : [5,5,10,5],
+        vscale : [0,0,0,0],
+        answer : [3,3,8,3]
+      }
+    };
+    let problems3 = {
+      25 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=a|x-b|+c",
+        func : (x,a,b,c,d) => {
+          return a*Math.abs(x-b)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-5,-5,-5,-5],
+        value : [0,0,0,0],
+        max : [5,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [2,3,-3,3]
+      },
+      26 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=a#||x-b|-c#|-d",
+        func : (x,a,b,c,d) => {
+          return a*Math.abs(Math.abs(x-b)-c)-d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 370,//370
+        yaxis : 300,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-5,-5,-5,-5],
+        value : [0,0,0,0],
+        max : [5,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [2,3,2,3]
+      },
+      27 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=a#||x-b|-c#|+x-d",
+        func : (x,a,b,c,d) => {
+          return a*Math.abs(Math.abs(x-b)-c)+x-d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 370,//370
+        yaxis : 300,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-2,-5,-5,-5],
+        value : [0,0,0,0],
+        max : [2,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [1,4,1,5]
+      },
+      28 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=|asinbx+c|",
+        func : (x,a,b,c,d) => {
+          return Math.abs(a*Math.sin(b*x)+c);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-5,0,-5,-5],
+        value : [0,3,0,0],
+        max : [5,6,5,5],
+        vscale : [0,0,0,0],
+        answer : [4,2,1,5]
+      },
+      29 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=asin#||bx-c|-d#|",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(Math.abs(Math.abs(b*x-c)-d));
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 400,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-5,-3,0,-10],
+        value : [0,0,3,0],
+        max : [5,3,6,10],
+        vscale : [0,0,0,0],
+        answer : [4,2,2,7]
+      },
+      30 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=a|x^2+bx|+cx",
+        func : (x,a,b,c,d) => {
+          return a*Math.abs(x*x+b*x)+c*x;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 600,//370
+        yaxis : 560,//460
+        gscale : 80,
+        vars : [1,1,1,0],
+        min : [-3,-5,-2,-10],
+        value : [0,0,0,0],
+        max : [3,5,2,10],
+        vscale : [0,0,0,0],
+        answer : [1,3,-1,7]
+      },
+      31 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=|x-a|-|x-b|+c",
+        func : (x,a,b,c,d) => {
+          return Math.abs(x-a)-Math.abs(x-b)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 470,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,0],
+        min : [-3,-3,-3,-10],
+        value : [0,0,0,0],
+        max : [3,3,3,10],
+        vscale : [0,0,0,0],
+        answer : [-1,2,1,7]
+      },
+      32 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=|x-a|-|x-b|+cx+d",
+        func : (x,a,b,c,d) => {
+          return Math.abs(x-a)-Math.abs(x-b)+c*x+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 370,//370
+        yaxis : 560,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [-2,0,-1,-2]
+      },
+      33 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=|x^2-a|-|x^2-b|+cx+d",
+        func : (x,a,b,c,d) => {
+          return Math.abs(x*x-a)-Math.abs(x*x-b)+c*x+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 370,//370
+        yaxis : 560,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [1,3,1,-1]
+      },
+      34 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=|x^2-a|-|x-b|+cx^2+d",
+        func : (x,a,b,c,d) => {
+          return Math.abs(x*x-a)-Math.abs(x-b)+c*x*x+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-3,-3,-2,-3],
+        value : [0,0,0,0],
+        max : [3,3,2,3],
+        vscale : [0,0,0,0],
+        answer : [2,3,-1,2]
+      },
+      35 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=(x-a)|x-b|+cx+d",
+        func : (x,a,b,c,d) => {
+          return (x-a)*Math.abs(x-b)+c*x+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [-1,1,-2,-1]
+      },
+      36 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=a|sin3x+b|-csinx+d",
+        func : (x,a,b,c,d) => {
+          return a*Math.abs(Math.sin(3*x)+b)-c*Math.sin(x)+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 50,
+        vars : [1,1,1,1],
+        min : [-5,-1,-5,-5],
+        value : [0,0,0,0],
+        max : [5,1,5,5],
+        vscale : [0,0,0,0],
+        answer : [4,-.6,3,-5]
+      }
+    };
+    let problems4 = {
+      37 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=ae^b^x",
+        func : (x,a,b,c,d) => {
+          return a*Math.exp(b*x);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 600,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [-5,-5,0,-5],
+        value : [0,0,0,0],
+        max : [5,5,10,5],
+        vscale : [0,0,0,0],
+        answer : [2,2,8,3]
+      },
+      38 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=ae^b^x+c",
+        func : (x,a,b,c,d) => {
+          return a*Math.exp(b*x)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 170,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-5,-3,-5,-5],
+        value : [0,0,0,0],
+        max : [5,3,5,5],
+        vscale : [0,0,0,0],
+        answer : [-1,1,-3,3]
+      },
+      39 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=aln(x-b)+c",
+        func : (x,a,b,c,d) => {
+          let r = a*Math.log(x-b)+c;
+          if(Number.isNaN(r))return -Math.sign(a)*Infinity;
+          return r;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-5,-3,-3,-5],
+        value : [0,0,0,0],
+        max : [5,3,3,5],
+        vscale : [0,0,0,0],
+        answer : [1,-2,1,3]
+      },
+      40 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=ae^x+be^-^x+c",
+        func : (x,a,b,c,d) => {
+          return a*Math.exp(x)+b*Math.exp(-x)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-1,-1,-3,-5],
+        value : [0,0,0,0],
+        max : [1,1,3,5],
+        vscale : [0,0,0,0],
+        answer : [.2,-.4,1,3]
+      },
+      41 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=e^a^x^-^bsincx",
+        func : (x,a,b,c,d) => {
+          return Math.exp(a*x-b)*Math.sin(c*x);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-1,-5,-5,-5],
+        value : [0,0,0,0],
+        max : [1,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [.2,-1,-5,3]
+      },
+      42 : {
+        type : "explicit",
+        hide : 1,
+        points : [3],
+        tangent : 1,
+        tangent2 : 0,
+        funcstr : "y=e^x^-^a+b",
+        func : (x,a,b,c,d) => {
+          return Math.exp(x-a)+b;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-6;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 270,//370
+        yaxis : 360,//460
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [-5,-5,-5,-5],
+        value : [0,0,0,0],
+        max : [5,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [3,-4,-5,3]
+      },
+      43 : {
+        type : "explicit",
+        hide : 1,
+        points : [],
+        tangent : 1,
+        tangent2 : 1,
+        funcstr : "y=e^a^x^-^bsin5x+c",
+        func : (x,a,b,c,d) => {
+          return Math.exp(a*x-b)*Math.sin(5*x)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return Math.exp(a*x-b)+c;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -Math.exp(a*x-b)+c;
+        },
+        xaxis : 570,//370
+        yaxis : 660,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-1,-5,-5,-5],
+        value : [0,0,0,0],
+        max : [1,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [.2,-2,3,3]
+      },
+      44 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=(ae^x^+be^-^x)sincx+d",
+        func : (x,a,b,c,d) => {
+          return (a*Math.exp(x)+b*Math.exp(-x))*Math.sin(c*x)+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return (a*Math.exp(x)+b*Math.exp(-x))+d;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -(a*Math.exp(x)+b*Math.exp(-x))+d;
+        },
+        xaxis : 570,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-1,-1,0,-5],
+        value : [0,0,2,0],
+        max : [1,1,4,5],
+        vscale : [0,0,0,0],
+        answer : [.2,.1,3,3]
+      },
+      45 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=aln(bx^2+c)",
+        func : (x,a,b,c,d) => {
+          let r = a*Math.log(b*x*x+c);
+          if(Number.isNaN(r))return -Math.sign(a)*Infinity;
+          return r;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return (a*Math.exp(x)+b*Math.exp(-x))+d;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -(a*Math.exp(x)+b*Math.exp(-x))+d;
+        },
+        xaxis : 470,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-5,-5,-5,-5],
+        value : [0,0,0,0],
+        max : [5,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [1,4,5,3]
+      },
+      46 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=e^a^x+bcoscx+d",
+        func : (x,a,b,c,d) => {
+          return Math.exp(a*x)+b*Math.cos(c*x)+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return Math.exp(a*x)+d+b;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return Math.exp(a*x)+d-b;
+        },
+        xaxis : 170,//370
+        yaxis : 360,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-1,-5,0,-10],
+        value : [0,0,2,0],
+        max : [1,5,4,10],
+        vscale : [0,0,0,0],
+        answer : [.3,3,3,-6]
+      },
+      47 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=e^3^s^i^n^a^x^+^b+c",
+        func : (x,a,b,c,d) => {
+          return Math.exp(3*Math.sin(a*x)+b)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return Math.exp(a*x)+d+b;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return Math.exp(a*x)+d-b;
+        },
+        xaxis : 520,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-3,-3,-5,-5],
+        value : [0,0,0,0],
+        max : [3,3,5,5],
+        vscale : [0,0,0,0],
+        answer : [3,-1,-3,-3]
+      },
+      48 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=|e^a^x+b|+c",
+        func : (x,a,b,c,d) => {
+          return Math.abs(Math.exp(a*x)+b)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return Math.exp(a*x)+d+b;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return Math.exp(a*x)+d-b;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-3,-5,-5,-5],
+        value : [0,0,0,0],
+        max : [3,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [1,-4,-2,-3]
+      }
+    };
+    let problems5 = {
+      49 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=ax^3+bx",
+        func : (x,a,b,c,d) => {
+          return a*x*x*x+b*x;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [-3,-5,-5,-5],
+        value : [0,0,0,0],
+        max : [3,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [1,-4,8,3]
+      },
+      50 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=(x-a)(x-b)(x-c)",
+        func : (x,a,b,c,d) => {
+          return (x-a)*(x-b)*(x-c);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 50,
+        vars : [1,1,1,0],
+        min : [0,-4,-2,-5],
+        value : [2,-2,0,0],
+        max : [4,0,2,5],
+        vscale : [0,0,0,0],
+        answer : [3,-1,2,3]
+      },
+      51 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=#((x-a)^2-b#)^2-c",
+        func : (x,a,b,c,d) => {
+          return ((x-a)**2-b)**2-c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 500,//370
+        yaxis : 660,//460
+        gscale : 50,
+        vars : [1,1,1,0],
+        min : [-5,-5,-5,-5],
+        value : [0,0,0,0],
+        max : [5,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [-3,3,4,3]
+      },
+      52 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=x(x-a)(x-b)+c",
+        func : (x,a,b,c,d) => {
+          return x*(x-a)*(x-b)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 500,//370
+        yaxis : 560,//460
+        gscale : 50,
+        vars : [1,1,1,0],
+        min : [-5,-3,-5,-5],
+        value : [0,0,0,0],
+        max : [5,3,5,5],
+        vscale : [0,0,0,0],
+        answer : [-4,-2,2,3]
+      },
+      53 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=a|x-b||x-c|(x-d)",
+        func : (x,a,b,c,d) => {
+          return a*Math.abs(x-b)*Math.abs(x-c)*(x-d);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 300,//370
+        yaxis : 600,//460
+        gscale : 40,
+        vars : [1,1,1,1],
+        min : [-1,-5,-3,-3],
+        value : [0,0,0,0],
+        max : [1,5,3,3],
+        vscale : [0,0,0,0],
+        answer : [.2,-5,1,-1]
+      },
+      54 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=|ax^3-bx-c|-d",
+        func : (x,a,b,c,d) => {
+          return Math.abs(a*x**3-b*x-c)-d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 400,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-5,-6,-5,-5],
+        value : [0,-2,0,0],
+        max : [5,2,5,5],
+        vscale : [0,0,0,0],
+        answer : [-2,-4,4,3]
+      },
+      55 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=#|ax+(x-b)^2|x-c|#|+d",
+        func : (x,a,b,c,d) => {
+          return Math.abs(a*x+(x-b)**2*Math.abs(x-c))+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return a*x;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-5,0,-6,-5],
+        value : [0,0,0,0],
+        max : [5,6,0,5],
+        vscale : [0,0,0,0],
+        answer : [-2,2,-1,-1]
+      },
+      56 : {
+        type : "explicit",
+        hide : 1,
+        points : [],
+        tangent : 1,
+        tangent2 : 1,
+        funcstr : "y=(x^2-a)(x^2-b)",
+        func : (x,a,b,c,d) => {
+          return (x*x-a)*(x*x-b);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 4;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -9/4;
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,0,0],
+        min : [-5,-2,-6,-5],
+        value : [0,0,0,0],
+        max : [5,2,0,5],
+        vscale : [0,0,0,0],
+        answer : [4,1,-1,-1]
+      },
+      57 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=a(x-b)(x-c)|x-d|",
+        func : (x,a,b,c,d) => {
+          return a*(x-b)*(x-c)*Math.abs(x-d);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 4;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -9/4;
+        },
+        xaxis : 300,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [-1,1,1,-2]
+      },
+      58 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=a+#|(x^2+bx+c)^2-d#|",
+        func : (x,a,b,c,d) => {
+          return a+Math.abs((x*x+b*x+c)**2-d);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 4;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -9/4;
+        },
+        xaxis : 300,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-2],
+        value : [0,0,0,0],
+        max : [3,3,3,2],
+        vscale : [0,0,0,0],
+        answer : [-2,-2,-1,1]
+      },
+      59 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=x(x-a)(x-b)(x-c)(x-d)",
+        func : (x,a,b,c,d) => {
+          return x*(x-a)*(x-b)*(x-c)*(x-d);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 4;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -9/4;
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 100,
+        vars : [1,1,1,1],
+        min : [-3,-4,2,1],
+        value : [0,-1,3,3],
+        max : [3,2,4,5],
+        vscale : [0,0,0,0],
+        answer : [0,0,2,2]
+      },
+      60 : {
+        type : "explicit",
+        hide : 1,
+        points : [-1,1],
+        tangent : 1,
+        tangent2 : 1,
+        funcstr : "y=ax^3-3ax+b",
+        func : (x,a,b,c,d) => {
+          return a*x**3-3*a*x+b;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 300,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,0,0],
+        min : [-3,-5,-5,1],
+        value : [0,-1,3,3],
+        max : [3,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [2,-2,-2,2]
+      }
+    };
+    let problems6 = {
+      61 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{a}{x-b}+c",
+        func : (x,a,b,c,d) => {
+          return a/(x-b)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 51,//  綺麗な値にしない．
+        vars : [1,1,1,0],
+        min : [-5,-5,-5,1],
+        value : [0,0,0,3],
+        max : [5,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [-3,2,-2,2]
+      },
+      62 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{ax}{x^2+bx+c}",
+        func : (x,a,b,c,d) => {
+          return (a*x)/(x*x+b*x+c);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 51,//  綺麗な値にしない．
+        vars : [1,1,1,0],
+        min : [-5,-3,-3,1],
+        value : [0,0,0,3],
+        max : [5,3,3,5],
+        vscale : [0,0,0,0],
+        answer : [5,0,1,2]
+      },
+      63 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{a}{x-b}+cx+d",
+        func : (x,a,b,c,d) => {
+          return (a)/(x-b)+c*x+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 51,//  綺麗な値にしない．
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [1,1,1,-2]
+      },
+      64 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=$|F{a}{|x-b|}-c$|+d",
+        func : (x,a,b,c,d) => {
+          return Math.abs((a)/Math.abs(x-b)-c)+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 71,//  綺麗な値にしない．
+        vars : [1,1,1,1],
+        min : [0,-5,-5,-5],
+        value : [4,0,0,0],
+        max : [8,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [2,3,4,-2]
+      },
+      65 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{1}{(x-a)(x-b)}+c",
+        func : (x,a,b,c,d) => {
+          return 1/(x-a)/(x-b)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 240.3,//460
+        gscale : 70.1,//  綺麗な値にしない．
+        vars : [1,1,1,0],
+        min : [-5,-4,-5,-5],
+        value : [0,1,0,0],
+        max : [5,6,5,5],
+        vscale : [0,0,0,0],
+        answer : [-1,6,-2,-2]
+      },
+      66 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{asinbx}{x-c}+d",
+        func : (x,a,b,c,d) => {
+          return (a*Math.sin(b*x))/(x-c)+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 550,//370
+        yaxis : 460,//460
+        gscale : 50.1,//  綺麗な値にしない．
+        vars : [1,1,1,1],
+        min : [-5,0,-5,-5],
+        value : [0,3,0,0],
+        max : [5,6,5,5],
+        vscale : [0,0,0,0],
+        answer : [-3,4,2,3]
+      },
+      67 : {
+        type : "explicit",
+        hide : 1,
+        points : [-1.62],
+        tangent : 1,
+        tangent2 : 1,
+        funcstr : "y=F{asin3x}{x-b}+c",
+        func : (x,a,b,c,d) => {
+          return (a*Math.sin(3*x))/(x-b)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return a/(x-b)+c;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -a/(x-b)+c;
+        },
+        xaxis : 250,//370
+        yaxis : 660,//460
+        gscale : 50.1,//  綺麗な値にしない．
+        vars : [1,1,1,0],
+        min : [-5,-5,-5,-5],
+        value : [0,0,0,0],
+        max : [5,5,5,5],
+        vscale : [0,0,0,0],
+        answer : [3,-3,-5,3]
+      },
+      68 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{sin(x-a)}{cos(bx-c)}+d",
+        func : (x,a,b,c,d) => {
+          return Math.sin(x-a)/Math.cos(b*x-c)+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return a/(x-b)+c;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -a/(x-b)+c;
+        },
+        xaxis : 370,//370
+        yaxis : 660,//460
+        gscale : 80.1,//  綺麗な値にしない．
+        vars : [1,1,1,1],
+        min : [-1,0,-1,-5],
+        value : [0,2,0,0],
+        max : [1,4,1,5],
+        vscale : [0,0,0,0],
+        answer : [-.5,3,-1,-2]
+      },
+      69 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{a}{x-b}+cx+d|x|",
+        func : (x,a,b,c,d) => {
+          return a/(x-b)+c*x+d*Math.abs(x);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return a/(x-b)+c;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -a/(x-b)+c;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 50.1,//  綺麗な値にしない．
+        vars : [1,1,1,1],
+        min : [-3,-5,-3,-3],
+        value : [0,0,0,0],
+        max : [3,5,3,3],
+        vscale : [0,0,0,0],
+        answer : [-1,3,2,-3]
+      },
+      70 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{a}{|x+b|+c}+d",
+        func : (x,a,b,c,d) => {
+          return a/(Math.abs(x+b)+c)+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return a/(x-b)+c;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -a/(x-b)+c;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 50.1,//  綺麗な値にしない．
+        vars : [1,1,1,1],
+        min : [-3,-5,-3,-3],
+        value : [0,0,0,0],
+        max : [3,5,3,3],
+        vscale : [0,0,0,0],
+        answer : [-2,-3,-1,1]
+      },
+      71 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{a}{#||x+b|+c#|+d}",
+        func : (x,a,b,c,d) => {
+          return a/(Math.abs(Math.abs(x+b)+c)+d);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return a/(x-b)+c;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -a/(x-b)+c;
+        },
+        xaxis : 470,//370
+        yaxis : 460,//460
+        gscale : 50.1,//  綺麗な値にしない．
+        vars : [1,1,1,1],
+        min : [-3,-5,-3,-3],
+        value : [0,0,0,0],
+        max : [3,5,3,3],
+        vscale : [0,0,0,0],
+        answer : [-1,2,-3,-2]
+      },
+      72 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=asinF{b}{x^2+c}",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(b/(x*x+c));
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return a/(x-b)+c;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -a/(x-b)+c;
+        },
+        xaxis : 470,//370
+        yaxis : 460,//460
+        gscale : 50.1,//  綺麗な値にしない．
+        vars : [1,1,1,0],
+        min : [-5,-3,-1,-2],
+        value : [0,0,0,0],
+        max : [5,3,1,2],
+        vscale : [0,0,0,0],
+        answer : [-3,3,.5,1]
+      }
+    };
+
+    let problems = {
+      ...problems0,
+      ...problems1,
+      ...problems2,
+      ...problems3,
+      ...problems4,
+      ...problems5,
+      ...problems6,
+      /*...problems7,
+      ...problems8,
+      ...problems9,
+      ...problems10,
+      ...problems11,
+      ...problems12,*/
+    }
+
+
+
+
+    //  マウス対応!!!
+    //  フォントの読み込み後に開始
+    WebFont.load({
+      custom : {
+        families : ["Inconsolata"]
+      },
+      active : () => {
+        alert("font loaded");
+        Init();
+        ctx.fillStyle = "#00000080";
+        ctx.fillRect(0,0,1000,1650);
+        ctx.font = "160px Inconsolata";
+        ctx.fillStyle = "#ffffffc0";
+        ctx.fillText("TAP TO START",1000/2,1650/2);
+
+        //  リサイズ時, canvasを画面の大きさに合わせる
+        window.onresize = () => {Resize();}
+        //  操作
+        if(window.ontouchstart === null){
+          //  タッチ操作
+          cvs.ontouchstart = (e) => {
+            if(!interacted)return false;
+            if(!ctrl)return 0;
+            e.preventDefault();
+            let x = e.touches[0].clientX-cvs.getBoundingClientRect().left;//  canvas左上からのpx値
+            let y = e.touches[0].clientY-cvs.getBoundingClientRect().top;
+            let wp = cvs.width;
+            let wr = cvs.getBoundingClientRect().width;
+            let hp = cvs.height;
+            let hr = cvs.getBoundingClientRect().height;
+            let r = window.innerWidth/20;
+
+            //  スライダーの判定
+            for(let i=0; i<4; i++){
+              ctx.fillStyle = "#ff00ff20";
+              ctx.fillRect(vars[i].proportion*600+200-50,950+i*130-50,100,100);
+              if(IsIn(x,y,(vars[i].proportion*600+200)/wp*wr-r,(950+i*130)/wp*wr-r,r*2,r*2)){//  canvas内の点の座標を戻す
+                buttons.slider = i;
+                break;
+              }
+            }
+
+            //  ボタンの判定
+            if(IsIn(x,y,40/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.prev.available){
+              Prev(1);
+              audio.button.PLAY();
+            };
+            if(IsIn(x,y,360/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.reset.available){
+              Reset(1);
+              audio.button.PLAY();
+            };
+            if(IsIn(x,y,680/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.next.available){
+              Next(1);
+              audio.button.PLAY();
+            };
+
+            //  タッチ操作は一つのみ有効
+            ctrl = 0;
+            DrawAll();
+          }
+          cvs.ontouchmove = (e) => {
+            if(!interacted)return false;
+            e.preventDefault();
+            let x = e.touches[0].clientX-cvs.getBoundingClientRect().left;
+            x *= cvs.width;
+            x /= cvs.getBoundingClientRect().width;
+            let v;
+
+            //  スライダー操作
+            if(0<=buttons.slider){
+              v = vars[buttons.slider];
+              let d = Math.round(v.proportion*10)/10;
+              v.value = (v.max-v.min)*Math.min(Math.max((x-200)/600,0),1)+v.min;
+              v.adapt();
+              d = Math.round(v.proportion*10)/10-d;
+              if(.04<Math.abs(d)){
+                audio.slider.PLAY();
+              }
+              SetButtons();
+            }
+            DrawAll();
+
+            if(graph.type === "title"){
+              Check();
+            }
+            else if(graph.type === "settings"){
+              AdaptSettings();
+            }
+          }
+          cvs.ontouchend = () => {
+            if(!interacted){
+              interacted = 1;
+              Reset();
+              return false;
+            }
+            buttons.slider = -1;
+            Check();
+            ctrl = 1;
+          }
+        }else{
+          //  マウス操作
+        }
+      },
+      inactive : () => {
+        alert("フォント読み込み失敗");
+      }
+    });
+
+    function LoadCookie(){
+      cdata0 = {
+        maxlevel : 1,
+        analog : 0,
+        color : 0,
+        weight : 10,
+        sound : .2
+      };
+      if(!document.cookie.length){
+        //  初訪問
+        cdata = {};
+        for(let k in cdata0){
+          cdata[k] = cdata0[k];
+        }
+      }
+      else{
+        let cookies = document.cookie.split(";");
+        if(cookies.length < Object.keys(cdata0).reduce((a,b)=>Math.max(+a,+b))){
+          ClearCookie();
+          LoadCookie();
+          return 0;
+        }
+        cdata = {};
+        for(let i=0; i<cookies.length; i++){
+          cdata[cookies[i].split("=")[0].replace(/\s/g,"")] = +decodeURIComponent(cookies[i].split("=")[1]);
+        }
+      }
+      colors = {
+        get main(){return ["#ffff00","#00ff00","#c000ff"][cdata.color];},
+        get main_(){return ["#ffff0040","#00ff0040","#c000ff40"][cdata.color];},
+        get hint(){return ["#00ffff","#ff00c0","#ffc000"][cdata.color];},
+        get disabled(){return ["#888888"][0];},
+        get disabled_(){return ["#88888840"][0];},
+        get message(){return ["#ffffff"][0];},
+        get message_(){return ["#ffffff40"][0];}
+      }
+      audio.slider.volume = cdata.sound;
+      audio.button.volume = cdata.sound;
+      audio.clear.volume = Math.min(cdata.sound*1.6,1);
+    }
+
+    function SaveCookie(){
+      for(let k in cdata){
+        document.cookie =  `${k}=${encodeURIComponent(String(cdata[k]))};max_age=315360000;`;//  10年
+      }
+    }
+
+    function ClearCookie(){
+      alert(`clear cookie : ${document.cookie}`);
+      let cookies = document.cookie.split(";");
+      for(let i=0; i<cookies.length; i++){
+        document.cookie = `${cookies[i]};max-age=0;`;
+      }
+    }
+
+    function Resize(){
+      let len = Math.min(window.innerWidth/20,window.innerHeight/33)*.95;
+      cvs.style.width = `${len*20}px`;
+    }
+
+    function Init(){
+      cvs = document.querySelector("#main_canvas");
+      ctx = cvs.getContext("2d");
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.shadowColor = "#c0ffc0";
+      touches = {};
+      buttons = {
+        prev : {
+          //down : 0,  ボタン押下時の見た目はそのままでよいのか!!!???
+          available : 0
+        },
+        reset : {
+          //down : 0,
+          available : 1
+        },
+        next : {
+          //down : 0,
+          available : 0
+        },
+        slider : -1
+      };
+      graph = {
+        colors : {
+          get main(){return cdata.analog ? "#d0ffd0" : colors.main;},
+          get main_(){return cdata.analog ? "#d0ffd040" : colors.main_;},
+          get hint(){return cdata.analog ? "#d0ffd0" : colors.hint;},
+          get disabled(){return cdata.analog ? "#80a080" : colors.disabled;},
+          get disabled_(){return cdata.analog ? "#80a08040" : colors.disabled_;},
+          get message(){return cdata.analog ? "#d0ffd0" : colors.message;},
+          get message_(){return cdata.analog ? "#d0ffd040" : colors.message_;}
+        }
+      };
+      vars = [];
+      for(let i=0; i<4; i++){
+        vars.push({});
+        Object.defineProperty(vars[i],"proportion",{
+          get : () => {
+            let v = vars[i];
+            return (v.value-v.min)/(v.max-v.min);
+          }
+        });
+        Object.defineProperty(vars[i],"adapt",{
+          value : () => {
+            let v = vars[i];
+            if(v.scale){
+              v.value = v.scale*Math.round((v.value-v.min)/v.scale)+v.min;
+            }
+          }
+        });
+      }
+      ctrl = 1;//  使用した記憶なし．要確認!!!
+      level = 0;//  0はタイトル画面
+      clear = 0;//  レベルごとに使用. 0:未, 1:済
+      audio = {
+        slider : new Audio("sounds/button45.mp3"),
+        button : new Audio("sounds/button68.mp3"),
+        clear : new Audio("sounds/データ解析.mp3")
+      };
+      for(let a in audio){
+        audio[a].PLAY = ()=>{
+          audio[a].currentTime = 0;
+          audio[a].play();
+        };
+      }
+
+      //  クッキーがあれば，そのデータを代入する
+      LoadCookie();
+      //  Resetによる初期化
+      Resize();
+      Reset();
+    }
+
+    //  ボタン設定
+    function SetButtons(){
+      if(graph.type==="title"){
+        buttons.prev.available = 1;
+        buttons.reset.available = 1;
+      }
+      else if(graph.type === "stages"){
+        buttons.prev.available = 1;
+        if(vars[0].value-1+(vars[1].value-1)*4<=Math.ceil(cdata.maxlevel/12)-1){
+          //  nextボタン
+          buttons.next.available = 1;
+        }else{
+          buttons.next.available = 0;
+        }
+        buttons.reset.available = 1;
+      }
+      else if(graph.type === "settings"){
+        buttons.prev.available = 1;
+        buttons.next.available = 0;
+        buttons.reset.available = 1;
+      }
+      else if(graph.type === "levels"){
+        if(vars[0].value+(vars[1].value-1)*4<=cdata.maxlevel){
+          //  nextボタン
+          buttons.next.available = 1;
+        }else{
+          buttons.next.available = 0;
+        }
+        buttons.reset.available = 1;
+      }
+      else{
+        buttons.prev.available = 1;
+        buttons.reset.available = 1;
+        buttons.next.available = +(level<cdata.maxlevel);
+      }
+    }
+
+    //  設定の適用
+    function AdaptSettings(){
+      cdata.analog = vars[0].value;
+      cdata.color = vars[1].value;
+      SaveCookie();
+    }
+
+    //  クリア判定等
+    function Check(){
+      if(graph.type === "title"){
+        //  タイトル画面スライド後の処理
+        if(Math.min(Math.abs(vars[2].value-0),Math.abs(vars[2].value-1),Math.abs(vars[2].value-2))<=2/30){
+          buttons.next.available = 1;
+        }else{
+          buttons.next.available = 0;
+        }
+        DrawAll();
+        return 0;
+      }
+      if(graph.type === "stages")return 0;
+      if(graph.type === "levels")return 0;
+      let bool = 1;
+      for(let i=0; i<4; i++){
+        if(!vars[i].available)continue;
+        if(Math.abs(vars[i].value-problems[level].answer[i])>(vars[i].max-vars[i].min)/30){
+          bool = 0;
+        }
+      }
+      if(bool)Clear();
+    }
+
+    //  クリア後の処理
+    async function Clear(){
+      for(let i=0; i<4; i++){
+        if(vars[i].available)
+          vars[i].value = problems[level].answer[i];
+      }
+      if(clear)return 0;
+      SaveCookie();
+      audio.clear.PLAY();
+      await Sleep(50);
+      Unlock(level+1);
+      SetButtons();
+      clear = 1;
+      DrawAll();
+    }
+
+    //  レベルnの開放
+    function Unlock(n){
+      cdata.maxlevel = Math.max(cdata.maxlevel,Math.min(n,Object.keys(problems).reduce((a,b)=>Math.max(+a,+b))));
+      SetButtons();
+      clear = 0;
+      DrawAll();
+    }
+
+    //  ステージ・レベル選択画面の描画
+    function DrawSelect(b){
+      graph.scale = 55;
+      vars[0].available = 1;
+      vars[0].min = 1;
+      vars[0].max = 4;
+      vars[0].value = b ? ((level-1)%12)%4+1 : 1;
+      vars[0].scale = 1;
+      vars[1].available = 1;
+      vars[1].min = 1;
+      vars[1].max = 3;
+      vars[1].value = b ? Math.floor(((level-1)%12)/4)+1 : 1;
+      vars[1].scale = 1;
+      vars[2].available = 0;
+      vars[3].available = 0;
+      SetButtons();
+      DrawAll();
+    }
+
+    //  設定画面の描画
+    function DrawSettings(){
+      graph.scale = 148/2;
+      vars[0].available = 1;
+      vars[0].min = 0;
+      vars[0].max = 1;
+      vars[0].scale = 1;
+      vars[0].value = cdata.analog;
+      vars[1].available = 1;
+      vars[1].min = 0;
+      vars[1].max = 3;
+      vars[1].scale = 1;
+      vars[1].value = cdata.color;
+      vars[2].available = 1;
+      vars[2].min = 0;
+      vars[2].max = 20;
+      vars[2].scale = 0;
+      vars[2].value = cdata.weight;
+      vars[3].available = 1;
+      vars[3].min = 0;
+      vars[3].max = 1;
+      vars[3].scale = 0;
+      vars[3].value = cdata.sound;
+      SetButtons();
+      DrawAll();
+    }
+
+    //  prevボタン押下時の処理
+    function Prev(){
+      if(graph.type === "title"){
+        //  ホームページへ
+        location.href = "https://tomoq1024.github.io/WebApps/";
+      }
+      else if(graph.type === "settings"){
+        Reset();
+      }
+      else if(graph.type === "stages"){
+        level = 0;
+        Reset();
+      }
+      else if(graph.type === "levels"){
+        graph.type = "stages";
+        SetButtons();
+        DrawAll();
+      }
+      else{
+        //  任意のレベル
+        graph.type = "levels";
+        clear = 0;
+        SetButtons();
+        DrawSelect(1);
+      }
+    }
+
+    //  resetボタン押下時の処理
+    //  問題画面の初期化. 最初の表示にも用いる
+    //  設定の初期化!!!
+    function Reset(b){
+      if(b){
+        //  手動押下時
+        if(graph.type === "title"){
+          location.reload();
+          return 0;
+        }
+        else if(graph.type === "settings"){
+          DrawSettings();
+          return 0;
+        }
+        else if(graph.type === "stages"){
+          DrawSelect();
+          return 0;
+        }
+        else if(graph.type === "levels"){
+          DrawSelect();
+          return 0;
+        }
+        else if(graph.type === "settings"){
+          DrawSettings();
+          return 0;
+        }
+      }
+      //  自動押下時
+      //  グラフの設定
+      let p = problems[level];
+      graph.type = p.type;
+      graph.xaxis = p.xaxis;
+      graph.yaxis = p.yaxis;
+      graph.scale = p.gscale;
+      graph.func = p.func;
+      for(let i=0; i<4; i++){
+        vars[i].available = p.vars[i];
+        vars[i].min = p.min[i];
+        vars[i].value = p.value[i];
+        vars[i].max = p.max[i];
+        vars[i].scale = p.vscale[i];
+      }
+      clear = 0;
+
+      //  ボタンの設定
+      SetButtons();
+
+      DrawAll();
+    }
+
+    //  nextボタン押下時の処理
+    function Next(){
+      if(graph.type === "title"){
+        if(Math.abs(vars[2].value-0)<=2/30){
+          //  ステージ選択へ
+          graph.type = "stages";
+          SetButtons();
+          DrawSelect();
+        }
+        else if(Math.abs(vars[2].value-1)<=2/30){
+          //  設定画面へ
+          graph.type = "settings";
+          SetButtons();
+          DrawSettings();
+        }
+        else if(Math.abs(vars[2].value-2)<=2/30){
+          //  砂場にする!!!
+        }
+      }
+      else if(graph.type === "stages"){
+        graph.type = "levels";
+        level = (vars[0].value-1+(vars[1].value-1)*4)*12+1;
+        DrawSelect();
+      }
+      else if(graph.type === "levels"){
+        level = Math.floor((level-1)/12)*12 + vars[0].value-1+(vars[1].value-1)*4 + 1;
+        Reset();
+      }
+      else{
+        level += 1;
+        Reset();
+      }
+    }
+
+    function DrawAll(){
+      DrawBackground();
+      DrawScreen();
+      DrawControls();
+    }
+
+    function DrawBackground(){
+      ctx.fillStyle = "#ccc";
+      ctx.fillRect(0,0,cvs.width,cvs.height);
+    }
+
+    function DrawScreen(){
+      ctx.save();
+
+      //  描画範囲の指定
+      ctx.beginPath();
+      ctx.moveTo(40,40);
+      ctx.lineTo(40,780);
+      ctx.lineTo(960,780);
+      ctx.lineTo(960,40);
+      ctx.closePath();
+      ctx.clip();
+
+      //  スクリーン左上を原点とする
+      ctx.translate(40,40);
+
+      //  背景
+      if(cdata.analog){
+        let gra = ctx.createRadialGradient(460,370,0,460,370,1000);
+        gra.addColorStop(0.0,"#246347");
+        gra.addColorStop(0.7,"#133828");
+        gra.addColorStop(1.0,"#091c14");
+        ctx.fillStyle = gra;
+        ctx.fillRect(-10,-10,940,760);
+      }
+      else{
+        ctx.fillStyle = "#000";
+        ctx.fillRect(-10,-10,940,760);
+      }
+
+      //  グリッド
+      //  レベル選択に戻ったとき，グリッドの設定を戻す!!!
+      ctx.strokeStyle = cdata.analog ? "#333" : "#444";
+      for(let i=Math.ceil(-graph.yaxis/graph.scale); i<=(920-graph.yaxis)/graph.scale; i++){
+        ctx.lineWidth = i%5 ? 4 : 6;
+        ctx.beginPath();
+        ctx.moveTo(graph.yaxis+i*graph.scale,0);
+        ctx.lineTo(graph.yaxis+i*graph.scale,740);
+        ctx.stroke();
+      }
+      for(let i=Math.ceil(-graph.xaxis/graph.scale); i<=(740-graph.xaxis)/graph.scale; i++){
+        ctx.lineWidth = i%5 ? 4 : 6;
+        ctx.beginPath();
+        ctx.moveTo(0,graph.xaxis+i*graph.scale);
+        ctx.lineTo(920,graph.xaxis+i*graph.scale);
+        ctx.stroke();
+      }
+      //  軸
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = cdata.analog ? "#333" : "#777";
+      ctx.beginPath();
+      ctx.moveTo(graph.yaxis,0);
+      ctx.lineTo(graph.yaxis,740);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0,graph.xaxis);
+      ctx.lineTo(920,graph.xaxis);
+      ctx.stroke();
+
+      //  レベルの表示
+      if(graph.type==="explicit"){
+        ctx.fillStyle = cdata.analog ? "#222" : "#888";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "bottom";
+        ctx.font = "70px Inconsolata";
+        ctx.fillText(
+          `${(Math.floor((level-1)/12)+1).toString(16).toUpperCase()}-${((level-1)%12+1).toString(16).toUpperCase()}`,
+          10,740-10
+        );
+      }
+
+      //  グラフ
+      if(graph.type == "title"){
+        //  タイトル画面
+        //  quitはprevボタンで代用できるため，sandbox等に置き換えるべき!!!
+        ctx.strokeStyle = graph.colors.main;
+        ctx.lineWidth = 10;
+        if(cdata.analog)ctx.shadowBlur = 10;
+
+        //  タイトル画面(改)
+        let t = vars[2].value;
+        for(let i=0; i<8; i++){
+          for(let j=0; j<2; j++){
+            ctx.save();
+            ctx.translate(35+110*i,120+340*j);
+            ctx.scale(80/2,160/2);
+            switch(`${j}${i}`){
+              case "00":
+                //  G
+                ctx.beginPath();
+                ctx.moveTo(2,0);
+                ctx.lineTo(0,0);
+                ctx.lineTo(0,2);
+                ctx.lineTo(2,2);
+                ctx.lineTo(2,1);
+                ctx.lineTo(1,1);
+                break;
+              case "01":
+                //  R
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.lineTo(2,0);
+                ctx.lineTo(2,1);
+                ctx.lineTo(0,1);
+                ctx.moveTo(1,1);
+                ctx.lineTo(2,2);
+                break;
+              case "02":
+                //  A
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.lineTo(2,0);
+                ctx.lineTo(2,2);
+                ctx.moveTo(0,1);
+                ctx.lineTo(2,1);
+                break;
+              case "03":
+                //  P
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.lineTo(2,0);
+                ctx.lineTo(2,1);
+                ctx.lineTo(0,1);
+                break;
+              case "04":
+                //  H
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.moveTo(2,0);
+                ctx.lineTo(2,2);
+                ctx.moveTo(0,1);
+                ctx.lineTo(2,1);
+                break;
+              case "05":
+                //  _
+                ctx.moveTo(0,2);
+                ctx.lineTo(2,2);
+                break;
+              case "06":
+                //  M
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.lineTo(2,0);
+                ctx.lineTo(2,2);
+                ctx.moveTo(1,0);
+                ctx.lineTo(1,2);
+                break;
+              case "07":
+                //  E
+                ctx.beginPath();
+                ctx.moveTo(2,0);
+                ctx.lineTo(0,0);
+                ctx.lineTo(0,2);
+                ctx.lineTo(2,2);
+                ctx.moveTo(0,1);
+                ctx.lineTo(2,1);
+                break;
+
+              case "10":
+                //  _S_
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,2,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,2,0,2),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,0,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,0,2,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,0,2,0),Smooth(t,2,2,2));
+                break;
+              case "11":
+                //  _E_
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,0,2),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,0,0,0),Smooth(t,2,2,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,2,0,2),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,1,2));
+                break;
+              case "12":
+                //  PTQ
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,1,0),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,1,0),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,2,1,2),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,2,1,2),Smooth(t,1,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,0,0,0));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,1,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,1,0,2));
+                ctx.moveTo(Smooth(t,0,1,1),Smooth(t,1,0,1));
+                ctx.lineTo(Smooth(t,0,1,2),Smooth(t,2,2,2));
+                break;
+              case "13":
+                //  LTU
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,1,0),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,1,0),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,1,2),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,1,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                break;
+              case "14":
+                //  AII
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,1,1),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,1,1),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,2,1,1),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,2,1,1),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,0,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,0,0,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,1,2,0));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,1,2,0));
+                break;
+              case "15":
+                //  YNT
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,0,1),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,0,1),Smooth(t,1,2,2));
+                ctx.moveTo(Smooth(t,2,2,1),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,2,2,1),Smooth(t,1,2,2));
+                ctx.moveTo(Smooth(t,1,1,1),Smooth(t,1,0,0));
+                ctx.lineTo(Smooth(t,1,1,1),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,1,0,0));
+                ctx.lineTo(Smooth(t,1,1,1),Smooth(t,1,0,0));
+                ctx.moveTo(Smooth(t,1,1,1),Smooth(t,1,2,0));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,1,2,0));
+                break;
+              case "16":
+                //  _G_
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,2,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,1,1,1),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,2,0,2),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,0,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,1,2,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,1,2,0),Smooth(t,2,2,2));
+                break;
+              case "17":
+                //  _S_
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,2,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,0,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,0,2,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                break;
+            }
+            ctx.restore();
+            ctx.stroke();
+          }
+        }
+
+        ctx.shadowBlur = 0;
+      }
+      else if(graph.type == "settings"){
+        //  設定画面
+        ctx.strokeStyle = graph.colors.main;
+        ctx.fillStyle = graph.colors.main;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "100px,Inconsolata";
+        ctx.fillText(`DISPLAY - ${cdata.analog?"ANALOG ":"DIGITAL"}`,920/2,148*1);
+        ctx.fillText(`COLOR   -        `,920/2,148*2);
+        ctx.fillText(`WEIGHT  -        `,920/2,148*3);
+        ctx.fillText(`SOUND   -        `,920/2,148*4);
+
+        ctx.beginPath();
+        ctx.moveTo(920/2,148*2);
+      }
+      else if(graph.type == "stages"){
+        //  ステージ選択
+        //  ボタンの枠
+        //  クリアしたら緑にする???
+        ctx.lineWidth = 15;
+        for(let y=0; y<3; y++){
+          for(let x=0; x<4; x++){
+            ctx.strokeStyle = x+y*4<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+            ctx.fillStyle = x+y*4<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main_ : graph.colors.disabled_;
+            ctx.fillRect(50+220*x,70+220*y,160,160);
+            if(cdata.analog)ctx.shadowBlur = 10;
+            ctx.strokeRect(50+220*x,70+220*y,160,160);
+            ctx.shadowBlur = 0;
+            if(x+y*4 === vars[0].value-1+(vars[1].value-1)*4){
+              ctx.fillRect(50+220*x,70+220*y,160,160);
+              ctx.fillRect(50+220*x,70+220*y,160,160);
+              if(cdata.analog)ctx.shadowBlur = 10;
+              ctx.strokeRect(50+220*x-10,70+220*y-10,160+20,160+20);
+              ctx.shadowBlur = 0;
+            }
+          }
+        }
+        //  ボタンのデザイン
+        ctx.strokeStyle = graph.colors.main;
+        ctx.strokeStyle = 0<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.beginPath();
+        ctx.moveTo(130+220*0-40,150+220*0-40);//  1:礎
+        ctx.lineTo(130+220*0+0,150+220*0+40);
+        ctx.lineTo(130+220*0+40,150+220*0-40);
+        ctx.stroke();
+        ctx.strokeStyle = 1<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.beginPath();
+        ctx.moveTo(130+220*1-40,150+220*0+40);//  2:三
+        ctx.lineTo(130+220*1+40,150+220*0+40);
+        ctx.lineTo(130+220*1+40,150+220*0-40);
+        ctx.lineTo(130+220*1-40,150+220*0+40);
+        ctx.stroke();
+        ctx.strokeStyle = 2<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.beginPath();
+        ctx.moveTo(130+220*2-40,150+220*0+40);//  3:絶
+        ctx.lineTo(130+220*2-40,150+220*0-40);
+        ctx.moveTo(130+220*2+40,150+220*0+40);
+        ctx.lineTo(130+220*2+40,150+220*0-40);
+        ctx.stroke();
+        ctx.strokeStyle = 3<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.beginPath();
+        ctx.moveTo(130+220*3-40,150+220*0+0);//  4:指
+        ctx.lineTo(130+220*3+0,150+220*0-40);
+        ctx.lineTo(130+220*3+40,150+220*0+0);
+        ctx.stroke();
+        ctx.strokeStyle = 4<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.beginPath();
+        ctx.moveTo(130+220*0-40,150+220*1+40);//  5:高
+        ctx.lineTo(130+220*0-40,150+220*1+0);
+        ctx.lineTo(130+220*0+40,150+220*1+0);
+        ctx.lineTo(130+220*0+40,150+220*1-40);
+        ctx.stroke();
+        ctx.strokeStyle = 5<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.beginPath();
+        ctx.moveTo(130+220*1-40,150+220*1+0);//  6:分
+        ctx.lineTo(130+220*1+0,150+220*1+40);
+        ctx.moveTo(130+220*1+0,150+220*1-40);
+        ctx.lineTo(130+220*1+40,150+220*1+0);
+        ctx.stroke();
+        ctx.strokeStyle = 6<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.beginPath();
+        ctx.moveTo(130+220*2-40,150+220*1+40);//  7:斜
+        ctx.lineTo(130+220*2+0,150+220*1+40);
+        ctx.lineTo(130+220*2+40,150+220*1-40);
+        ctx.lineTo(130+220*2+0,150+220*1-40);
+        ctx.lineTo(130+220*2-40,150+220*1+40);
+        ctx.stroke();
+        ctx.strokeStyle = 7<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.beginPath();
+        ctx.moveTo(130+220*3-40,150+220*1+40);//  8:断
+        ctx.lineTo(130+220*3+0,150+220*1+40);
+        ctx.moveTo(130+220*3+0,150+220*1-40);
+        ctx.lineTo(130+220*3+40,150+220*1-40);
+        ctx.stroke();
+        ctx.strokeStyle = 8<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.beginPath();
+        ctx.moveTo(130+220*0+40,150+220*2+40);//  9:極
+        ctx.lineTo(130+220*0-40,150+220*2+40);
+        ctx.lineTo(130+220*0+0,150+220*2-40);
+        ctx.stroke();
+      }
+      else if(graph.type == "levels"){
+        //  レベル選択
+        //  ボタンの枠
+        ctx.lineWidth = 15;
+        ctx.font = "160px Inconsolata";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        for(let y=0; y<3; y++){
+          for(let x=0; x<4; x++){
+            ctx.strokeStyle = x+y*4<=cdata.maxlevel-Math.floor((level-1)/12)*12-1 ? graph.colors.main : graph.colors.disabled;
+            ctx.fillStyle = x+y*4<=cdata.maxlevel-Math.floor((level-1)/12)*12-1 ? graph.colors.main_ : graph.colors.disabled_;
+            ctx.fillRect(50+220*x,70+220*y,160,160);
+            if(cdata.analog)ctx.shadowBlur = 10;
+            ctx.strokeRect(50+220*x,70+220*y,160,160);
+            ctx.shadowBlur = 0;
+            if(x+y*4 === vars[0].value-1+(vars[1].value-1)*4){
+              ctx.fillRect(50+220*x,70+220*y,160,160);
+              ctx.fillRect(50+220*x,70+220*y,160,160);
+              if(cdata.analog)ctx.shadowBlur = 10;
+              ctx.strokeRect(50+220*x-10,70+220*y-10,160+20,160+20);
+              ctx.shadowBlur = 0;
+            }
+            ctx.fillStyle = x+y*4<=cdata.maxlevel-Math.floor((level-1)/12)*12-1 ? graph.colors.main : graph.colors.disabled;
+            if(cdata.analog)ctx.shadowBlur = 10;
+            ctx.fillText((x+y*4+1).toString(16).toUpperCase(),130+220*x,150+220*y);
+            ctx.shadowBlur = 0;
+          }
+        }
+      }
+      else if(graph.type == "explicit"){
+        //  陽関数
+        let p = problems[level];
+        let x,y;
+
+        //  グラフ
+
+        /*離散的描画法
+        for(let i=0; i<920; i+=2){
+          x = (i-graph.yaxis)/graph.scale;
+
+          //  ヒント部分
+          if(i%30 < 15){
+            if(!problems[level].hide){
+              y = graph.func(x,problems[level].answer[0],problems[level].answer[1],problems[level].answer[2],problems[level].answer[3]);
+              if(0<=-y*graph.scale+graph.xaxis && -y*graph.scale+graph.xaxis<=740){
+                ctx.beginPath();
+                ctx.arc(x*graph.scale+graph.yaxis,-y*graph.scale+graph.xaxis,2.5,0,Math.PI*2);
+                ctx.fill();
+              }
+            }
+            if(problems[level].tangent){
+              ctx.fillStyle = graph.colors.hint;
+              y = problems[level].funcTangent(x,problems[level].answer[0],problems[level].answer[1],problems[level].answer[2],problems[level].answer[3]);
+              if(0<=-y*graph.scale+graph.xaxis && -y*graph.scale+graph.xaxis<=740){
+                ctx.beginPath();
+                ctx.arc(x*graph.scale+graph.yaxis,-y*graph.scale+graph.xaxis,2.5,0,Math.PI*2);
+                ctx.fill();
+              }
+            }
+          }
+
+          //  可動グラフ部分
+          y = graph.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value);
+          ctx.fillStyle = graph.colors.main;
+          if(0<=-y*graph.scale+graph.xaxis && -y*graph.scale+graph.xaxis<=740){
+            ctx.beginPath();
+            ctx.arc(x*graph.scale+graph.yaxis,-y*graph.scale+graph.xaxis,5,0,Math.PI*2);
+            ctx.fill();
+          }
+        }
+        */
+
+        /*折れ線描画法*/
+        if(cdata.analog)ctx.shadowBlur = 10;
+        let c;
+        if(!problems[level].hide){
+          //  ヒント部分
+          ctx.strokeStyle = graph.colors.main;
+          ctx.lineWidth = 5;
+          ctx.setLineDash([15,15]);
+          ctx.beginPath();
+          for(let i=-10; i<=930; i+=3){
+            x = (i-graph.yaxis)/graph.scale;
+            if(Number.isNaN(graph.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]))){
+              c = {bool:false,x:x,d:3/graph.scale}
+            }else{
+              c = isContinuous(
+                (x)=>graph.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),
+                x,3/graph.scale
+              );
+            }
+            if(c.bool){
+              y = graph.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
+              y = -y*graph.scale+graph.xaxis;
+              y = Math.min(Math.max(y,-10),750);
+              ctx.lineTo(i,y);
+            }
+            else{
+              y = graph.func(c.x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
+              y = -y*graph.scale+graph.xaxis;
+              y = Math.min(Math.max(y,-10),750);
+              ctx.lineTo(i,y);
+              ctx.stroke();
+              y = graph.func(c.x+c.d,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
+              y = -y*graph.scale+graph.xaxis;
+              y = Math.min(Math.max(y,-10),750);
+              ctx.beginPath();
+              ctx.moveTo(i,y);
+            }
+          }
+          ctx.stroke();
+        }
+        if(problems[level].tangent){
+          //  接線
+          ctx.strokeStyle = graph.colors.hint;
+          ctx.lineWidth = 5;
+          ctx.setLineDash([15,15,45,15]);
+          ctx.beginPath();
+          for(let i=-10; i<=930; i+=3){
+            x = (i-graph.yaxis)/graph.scale;
+            if(Number.isNaN(p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]))){
+              c = {bool:false,x:x,d:3/graph.scale}
+            }else{
+              c = isContinuous(
+                (x)=>p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),
+                x,3/graph.scale
+              );
+            }
+            if(c.bool){
+              y = p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
+              y = -y*graph.scale+graph.xaxis;
+              y = Math.min(Math.max(y,-10),750);
+              ctx.lineTo(i,y);
+            }
+            else{
+              y = p.funcTangent(c.x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
+              y = -y*graph.scale+graph.xaxis;
+              y = Math.min(Math.max(y,-10),750);
+              ctx.lineTo(i,y);
+              ctx.stroke();
+              y = p.funcTangent(c.x+c.d,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
+              y = -y*graph.scale+graph.xaxis;
+              y = Math.min(Math.max(y,-10),750);
+              ctx.beginPath();
+              ctx.moveTo(i,y);
+            }
+          }
+          ctx.stroke();
+        }
+        if(problems[level].tangent2){
+          //  接線2
+          ctx.strokeStyle = graph.colors.hint;
+          ctx.lineWidth = 5;
+          ctx.setLineDash([15,15,45,15]);
+          ctx.beginPath();
+          for(let i=-10; i<=930; i+=3){
+            x = (i-graph.yaxis)/graph.scale;
+            if(Number.isNaN(p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]))){
+              c = {bool:false,x:x,d:3/graph.scale}
+            }else{
+              c = isContinuous(
+                (x)=>p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),
+                x,3/graph.scale
+              );
+            }
+            if(c.bool){
+              y = p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
+              y = -y*graph.scale+graph.xaxis;
+              y = Math.min(Math.max(y,-10),750);
+              ctx.lineTo(i,y);
+            }
+            else{
+              y = p.funcTangent2(c.x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
+              y = -y*graph.scale+graph.xaxis;
+              y = Math.min(Math.max(y,-10),750);
+              ctx.lineTo(i,y);
+              ctx.stroke();
+              y = p.funcTangent2(c.x+c.d,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
+              y = -y*graph.scale+graph.xaxis;
+              y = Math.min(Math.max(y,-10),750);
+              ctx.beginPath();
+              ctx.moveTo(i,y);
+            }
+          }
+          ctx.stroke();
+        }
+        if(1){
+          //  可動グラフ部分
+          //  不連続点の取り扱い!!!
+          seq = [];
+          ctx.strokeStyle = graph.colors.main;
+          ctx.lineWidth = 10;
+          ctx.setLineDash([]);
+          ctx.beginPath();
+          for(let i=-10; i<=930; i+=3){
+            x = (i-graph.yaxis)/graph.scale;
+            if(Number.isNaN(graph.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value))){
+              c = {bool:false,x:x,d:3/graph.scale}
+            }else{
+              c = isContinuous(
+                (x)=>graph.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value),
+                x,3/graph.scale
+              );
+            }
+            if(c.bool){
+              y = graph.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value);
+              y = -y*graph.scale+graph.xaxis;
+              y = Math.min(Math.max(y,-10),750);
+              ctx.lineTo(i,y);
+            }
+            else{
+              y = graph.func(c.x,vars[0].value,vars[1].value,vars[2].value,vars[3].value);
+              y = -y*graph.scale+graph.xaxis;
+              y = Math.min(Math.max(y,-10),750);
+              ctx.lineTo(i,y);
+              ctx.stroke();
+              y = graph.func(c.x+c.d,vars[0].value,vars[1].value,vars[2].value,vars[3].value);
+              y = -y*graph.scale+graph.xaxis;
+              y = Math.min(Math.max(y,-10),750);
+              ctx.beginPath();
+              ctx.moveTo(i,y);
+            }
+          }
+          ctx.stroke();
+        }
+
+        //  通過する点
+        if(problems[level].points){
+          ctx.lineWidth = 10;
+          ctx.strokeStyle = graph.colors.main;
+          for(let i=0; i<problems[level].points.length; i++){
+            x = problems[level].points[i];
+            y = graph.func(x,problems[level].answer[0],problems[level].answer[1],problems[level].answer[2],problems[level].answer[3]);
+            ctx.beginPath();
+            ctx.arc(x*graph.scale+graph.yaxis,-y*graph.scale+graph.xaxis,10,0,Math.PI*2);
+            ctx.stroke();
+          }
+        }
+
+        //  式の表示
+        //  影を落とす!!!
+        let strs0,strs1,chars,x0,w0,w1,w;
+        x = 40;
+        ctx.strokeStyle = graph.colors.main;
+        ctx.setLineDash([]);
+        ctx.lineWidth = 5;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        if(p.funcstr.match(/F/)){//  分数を含むとき
+          strs0 = p.funcstr.match(/F\{[^\}]*\}\{[^\}]*\}|[^F]+/g);//  分数部分または一般部分
+          ctx.clearRect(20,20,40,170);
+          for(let i=0; i<strs0.length; i++){
+            if(strs0[i].match(/F/)){//  分数部分
+              strs1 = strs0[i].match(/(?<={)[^\}]*(?=})/g);//  [分子,分母]
+              ctx.font = "60px Inconsolata";
+              w0 = ctx.measureText(strs1[0].replace(/\^.|#./g,"")).width;
+              w1 = ctx.measureText(strs1[1].replace(/\^.|#./g,"")).width;
+              ctx.font = "75px Inconsolata";
+              w0 += ctx.measureText(strs1[0].replace(/[^#]/g,"")).width;
+              w1 += ctx.measureText(strs1[1].replace(/[^#]/g,"")).width;
+              ctx.font = "40px Inconsolata";
+              w0 += ctx.measureText(strs1[0].replace(/[^^]/g,"")).width;
+              w1 += ctx.measureText(strs1[1].replace(/[^^]/g,"")).width;
+              w = Math.max(w0,w1);
+              ctx.clearRect(x,20,w+40,170);
+              x0 = x+20;
+              ctx.beginPath();
+              ctx.moveTo(x+10,100);
+              ctx.lineTo(x+w+30,100);
+              ctx.stroke();
+              //  分子の描画
+              x = x0+(w-w0)/2;
+              chars = strs1[0].match(/[\^\#]?./g);
+              for(let j=0; j<chars.length; j++){
+                if(chars[j].match(/\^/)){
+                  chars[j] = chars[j].replace("^","");
+                  y = 60;
+                  ctx.font = "40px Inconsolata";
+                }else if(chars[j].match(/\#/)){
+                  chars[j] = chars[j].replace("#","");
+                  y = 65;
+                  ctx.font = "75px Inconsolata";
+                }else{
+                  y = 70;
+                  ctx.font = "60px Inconsolata";
+                }
+                ctx.fillStyle = graph.colors.main;
+                ctx.fillText(chars[j],x,y);
+                x += ctx.measureText(chars[j]).width;
+              }
+              //  分母の描画
+              x = x0+(w-w1)/2;
+              chars = strs1[1].match(/[\^\#]?./g);
+              for(let j=0; j<chars.length; j++){
+                if(chars[j].match(/\^/)){
+                  chars[j] = chars[j].replace("^","");
+                  y = 60+70;
+                  ctx.font = "40px Inconsolata";
+                }else if(chars[j].match(/\#/)){
+                  chars[j] = chars[j].replace("#","");
+                  y = 65+70;
+                  ctx.font = "75px Inconsolata";
+                }else{
+                  y = 70+70;
+                  ctx.font = "60px Inconsolata";
+                }
+                ctx.fillStyle = graph.colors.main;
+                ctx.fillText(chars[j],x,y);
+                x += ctx.measureText(chars[j]).width;
+              }
+              x = x0+w+20;
+            }
+            else{//  一般部分
+              chars = strs0[i].match(/[\^\#\$]?./g);
+              ctx.font = "60px Inconsolata";
+              w = ctx.measureText("|").width;//  普通のフォントの横幅
+              for(let j=0; j<chars.length; j++){
+                if(chars[j].match(/\^/)){
+                  chars[j] = chars[j].replace("^","");
+                  y = 60+35;
+                  ctx.font = "40px Inconsolata";//  一回り小さい
+                }else if(chars[j].match(/\#/)){
+                  chars[j] = chars[j].replace("#","");
+                  y = 65+35;
+                  ctx.font = "75px Inconsolata";//  大きめ
+                }else if(chars[j].match(/\$/)){
+                  chars[j] = chars[j].replace("$","");
+                  y = 65+35;
+                  ctx.font = "150px Inconsolata";//  一回り大きい
+                }else{
+                  y = 70+35;
+                  ctx.font = "60px Inconsolata";//  普通
+                }
+                ctx.clearRect(x,20,ctx.measureText(chars[j]).width,180);
+                ctx.fillStyle = graph.colors.main;
+                ctx.fillText(chars[j],x,y,w);
+                x += Math.min(ctx.measureText(chars[j]).width,w);
+              }
+            }
+          }
+          ctx.clearRect(x,20,20,170);
+          ctx.strokeRect(20,20,x,170);
+          ctx.fillStyle = graph.colors.main_;
+          ctx.shadowBlur = 0;
+          ctx.fillRect(20,20,x,170);
+        }
+        else{//  分数を含まないとき
+          ctx.clearRect(20,20,40,100);
+          chars = p.funcstr.match(/[\^\#]?./g);
+          for(let i=0; i<chars.length; i++){
+            if(chars[i].match(/\^/)){
+              chars[i] = chars[i].replace("^","");
+              y = 60;
+              ctx.font = "40px Inconsolata";
+            }else if(chars[i].match(/\#/)){
+              chars[i] = chars[i].replace("#","");
+              y = 65;
+              ctx.font = "75px Inconsolata";
+            }else{
+              y = 70;
+              ctx.font = "60px Inconsolata";
+            }
+            ctx.clearRect(x,20,ctx.measureText(chars[i]).width,100);
+            ctx.fillStyle = graph.colors.main;
+            ctx.fillText(chars[i],x,y);
+            x += ctx.measureText(chars[i]).width;
+          }
+          ctx.clearRect(x,20,20,100);
+          ctx.strokeRect(20,20,x,100);
+          ctx.fillStyle = graph.colors.main_;
+          ctx.shadowBlur = 0;
+          ctx.fillRect(20,20,x,100);
+        }
+      }
+
+      //  クリアメッセージ
+      if(clear){
+        if(cdata.analog)ctx.shadowBlur = 10;
+        ctx.fillStyle = "#000000c0";
+        ctx.fillRect(-10,-10,940,760);
+        let txt = "LEVEL ";
+        txt += `${(Math.floor((level-1)/12)+1).toString(16).toUpperCase()}-`;
+        txt += `${((level-1)%12+1).toString(16).toUpperCase()}`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = graph.colors.message_;
+        ctx.strokeStyle = graph.colors.message;
+        ctx.lineWidth = 5;
+        ctx.font = "160px Inconsolata";
+        ctx.fillText(`${txt}`,460,200);
+        ctx.strokeText(`${txt}`,460,200);
+        ctx.font = "300px Inconsolata";
+        ctx.fillText(`CLEAR!`,460,500);
+        ctx.strokeText(`CLEAR!`,460,500);
+      }
+
+      ctx.restore();
+    }
+
+    function DrawControls(){
+      //  スライダー
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = "#888";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for(let i=0; i<4; i++){
+        ctx.beginPath();
+        ctx.moveTo(200,925+i*130);
+        ctx.lineTo(200,975+i*130);
+        ctx.moveTo(800,925+i*130);
+        ctx.lineTo(800,975+i*130);
+        ctx.moveTo(200,950+i*130);
+        ctx.lineTo(800,950+i*130);
+        ctx.stroke();
+        //  上限と下限
+        ctx.fillStyle = "#000";
+        ctx.fillRect(40,910+i*130,100,80);
+        ctx.fillRect(860,910+i*130,100,80);
+        ctx.fillStyle = "#f00";
+        ctx.font = "80px Inconsolata";
+        ctx.fillText(vars[i].available ? vars[i].min : "",90,950+i*130,80);
+        ctx.fillText(vars[i].available ? vars[i].max : "",910,950+i*130,80);
+        //  可動部
+        ctx.fillStyle = "#333";
+        ctx.beginPath();
+        ctx.arc(vars[i].proportion*600+200,950+i*130,30,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = vars[i].available ? "#8f8" : "#888";
+        ctx.beginPath();
+        ctx.arc(vars[i].proportion*600+200,950+i*130,25,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = "#333";
+        ctx.font = "50px Inconsolata";
+        ctx.fillText("abcd"[i],vars[i].proportion*600+200,950+i*130);
+      }
+
+
+
+      //  ボタン
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "#333";
+      //  prevボタン
+      ctx.fillStyle = buttons.prev.available ? "#8f8" : "#888";
+      ctx.fillRect(40,1510,280,100);
+      ctx.beginPath();
+      ctx.moveTo(40,1610);
+      ctx.lineTo(320,1610);
+      ctx.lineTo(320,1510);
+      ctx.lineTo(40,1510);
+      ctx.closePath();
+      ctx.stroke();
+      //  resetボタン
+      ctx.fillStyle = buttons.reset.available ? "#8f8" : "#888";
+      ctx.fillRect(40+320,1510,280,100);
+      ctx.beginPath();
+      ctx.moveTo(40+320,1610);
+      ctx.lineTo(320+320,1610);
+      ctx.lineTo(320+320,1510);
+      ctx.lineTo(40+320,1510);
+      ctx.closePath();
+      ctx.stroke();
+      //  nextボタン
+      ctx.fillStyle = buttons.next.available ? "#8f8" : "#888";
+      ctx.fillRect(40+640,1510,280,100);
+      ctx.beginPath();
+      ctx.moveTo(40+640,1610);
+      ctx.lineTo(320+640,1610);
+      ctx.lineTo(320+640,1510);
+      ctx.lineTo(40+640,1510);
+      ctx.closePath();
+      ctx.stroke();
+      //  各ボタンの表示部
+      ctx.fillStyle = "#333";
+      ctx.font = "100px Inconsolata";
+      ctx.fillText("PREV",180,1560);
+      ctx.fillText("RESET",180+320,1560);
+      ctx.fillText("NEXT",180+640,1560);
+    }
+
+    function isContinuous(f,x,d){
+      if(Math.min(f(x),f(x+d))<f(x+d/2)&&f(x+d/2)<Math.max(f(x),f(x+d))){
+        //  連続とみなす
+        return {bool:true};
+      }
+      else if(Math.abs(Math.atan2(f(x+d/2)-f(x),d/2) - Math.atan2(f(x+d)-f(x+d/2),d/2))<.0001){
+        //  連続とみなす
+        return {bool:true};
+      }
+      else{
+        if(d<.000001)return {bool:false,x:x,d:d};
+        //  不連続かもしれない
+        let c0 = isContinuous(f,x,d/2);
+        let c1 = isContinuous(f,x+d/2,d/2);
+        if(c0.bool&&c1.bool){
+          return {bool:true};
+        }else{
+          let c = c0.bool ? c1 : c0;
+          return {bool:false,x:c.x,d:c.d};
+        }
+      }
+    }
+
+    //  (x,y)が矩形内にあるかどうか
+    function IsIn(x,y,x0,y0,w,h){
+      let bool = 1;
+      bool = bool && x0 < x;
+      bool = bool && x < x0+w;
+      bool = bool && y0 < y;
+      bool = bool && y < y0+h;
+      return bool;
+    }
+
+    //  滑らかに変化する値を返す
+    //  t=0 => a
+    //  t=1 => b
+    //  t=2 => c
+    function Smooth(t,a,b,c){
+      if(t<0 || 2<t){
+        console.error("Unexpected value");
+      }else if(t<1){
+        return a+(b-a)/2*(1-Math.cos(Math.PI*t));
+      }else{
+        return b+(c-b)/2*(1+Math.cos(Math.PI*t));
+      }
+    }
+
+
+
+
+
+
+
+
+
+
+
+  </script>
+</html>
+
