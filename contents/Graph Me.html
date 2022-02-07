@@ -1949,16 +1949,15 @@
     });
 
     function LoadCookie(){
+      cdata0 = {
+        maxlevel : 1,
+        analog : 0,
+        color : 0,
+        weight : 10,
+        max_age : 60*60*24*365*10
+      };
       if(!document.cookie.length){
         //  初訪問
-        cdata0 = {
-          maxlevel : 1,
-          analog : 0,
-          color : 0,
-          weight : 10,
-          max_age : 60*60*24*365*10
-        };
-
         cdata = {};
         for(let k in cdata0){
           cdata[k] = cdata0[k];
@@ -1966,6 +1965,10 @@
       }
       else{
         let cookies = document.cookie.split(";");
+        if(cookies.length < 5){
+          document.cookie = "";
+          LoadCookie();
+        }
         cdata = {};
         for(let i=0; i<cdata.length; i++){
           cdata[cookies[i].split("=")[0].replace("-","_")] = +decodeURIComponent(cookies[i].split("=")[1]);
@@ -1987,6 +1990,7 @@
     function SaveCookie(){
       let cookies = "";
       for(let k in cdata){
+        console.log(k,cdata[k]);
         cookies += `${k.replace("_","-")}=${encodeURIComponent(String(cdata[k]))};`;
       }
       cookies.replace(/;$/,"");
