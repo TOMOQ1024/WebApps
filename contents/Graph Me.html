@@ -1954,7 +1954,6 @@
         analog : 0,
         color : 0,
         weight : 10
-        //max_age : 60*60*24*365*10
       };
       if(!document.cookie.length){
         //  初訪問
@@ -1990,14 +1989,10 @@
     }
 
     function SaveCookie(){
-      let cookies = "";
       for(let k in cdata){
         console.log(k,cdata[k]);
-        cookies += `${k}=${encodeURIComponent(String(cdata[k]))}; `;
+        document.cookie =  `${k}=${encodeURIComponent(String(cdata[k]))}; max_age=;315360000`;//  10年
       }
-      cookies = cookies.replace(/;\s$/,"");
-      console.log(cookies);
-      document.cookie = cookies;
     }
 
     function ClearCookie(){
