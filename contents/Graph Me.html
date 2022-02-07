@@ -47,17 +47,20 @@
     フォントのロードの検知:Web Font Loader
     参考:http://ithat.me/2016/12/10/js-web-font-load-start-complete-detection-web-font-loader
 
-    音源 - フリー効果音素材 くらげ工匠 : http://www.kurage-kosho.info/
-      ボタン押下 - button68.mp3
-      スライダー移動 - button45.mp3
-
+    音源
+    ・フリー効果音素材 くらげ工匠 : http://www.kurage-kosho.info/
+      =>ボタン押下 - button68.mp3
+      =>スライダー移動 - button45.mp3
+    ・効果音ラボ : https://soundeffect-lab.info/
+      =>クリア - データ解析.mp3
     */
 
 
 
     let Sleep = ms => new Promise(r=>setTimeout(r,ms));
     Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
-    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0,audio;
+    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0,audio,interacted;
+    interacted = 0;
 
     //  難易度順に入れ替える!!!
     let problems0 = {
@@ -1877,6 +1880,11 @@
       },
       active : () => {
         Init();
+        ctx.fillStyle = "#00000080";
+        ctx.fillRect(0,0,1000,1650);
+        ctx.font = "160px Inconsolata";
+        ctx.fillStyle = "#ffffffc0";
+        ctx.fillText("TAP TO START",1000/2,1650/2);
 
         //  リサイズ時, canvasを画面の大きさに合わせる
         window.onresize = () => {Resize();}
@@ -1884,7 +1892,7 @@
         if(window.ontouchstart === null){
           //  タッチ操作
           cvs.ontouchstart = (e) => {
-            cvs.click();
+            if(!interacted)return false;
             if(!ctrl)return 0;
             e.preventDefault();
             let x = e.touches[0].clientX-cvs.getBoundingClientRect().left;//  canvas左上からのpx値
@@ -1908,12 +1916,15 @@
             //  ボタンの判定
             if(IsIn(x,y,40/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.prev.available){
               Prev(1);
+              audio.button.PLAY();
             };
             if(IsIn(x,y,360/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.reset.available){
               Reset(1);
+              audio.button.PLAY();
             };
             if(IsIn(x,y,680/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.next.available){
               Next(1);
+              audio.button.PLAY();
             };
 
             //  タッチ操作は一つのみ有効
@@ -1921,6 +1932,7 @@
             DrawAll();
           }
           cvs.ontouchmove = (e) => {
+            if(!interacted)return false;
             e.preventDefault();
             let x = e.touches[0].clientX-cvs.getBoundingClientRect().left;
             x *= cvs.width;
@@ -1944,8 +1956,16 @@
             if(graph.type === "title"){
               Check();
             }
+            else if(graph.type === "settings"){
+              AdaptSettings();
+            }
           }
           cvs.ontouchend = () => {
+            if(!interacted){
+              interacted = 1;
+              Reset();
+              return false;
+            }
             buttons.slider = -1;
             Check();
             ctrl = 1;
@@ -1965,7 +1985,7 @@
         analog : 0,
         color : 0,
         weight : 10,
-        sound : .15
+        sound : .2
       };
       if(!document.cookie.length){
         //  初訪問
@@ -1987,17 +2007,17 @@
         }
       }
       colors = {
-        get main(){return ["#ffff00"][cdata.color];},
-        get main_(){return ["#ffff0040"][cdata.color];},
-        get hint(){return ["#00ffff"][cdata.color];},
+        get main(){return ["#ffff00","#00ff00","#c000ff"][cdata.color];},
+        get main_(){return ["#ffff0040","#00ff0040","#c000ff40"][cdata.color];},
+        get hint(){return ["#00ffff","#ff00c0","#ffc000"][cdata.color];},
         get disabled(){return ["#888888"][0];},
         get disabled_(){return ["#88888840"][0];},
         get message(){return ["#ffffff"][0];},
         get message_(){return ["#ffffff40"][0];}
       }
-      for(let a in audio){
-        audio[a].volume = cdata.sound;
-      }
+      audio.slider.volume = cdata.sound;
+      audio.button.volume = cdata.sound;
+      audio.clear.volume = Math.min(cdata.sound*1.6,1);
     }
 
     function SaveCookie(){
@@ -2018,7 +2038,6 @@
       cvs.style.width = `${len*20}px`;
     }
 
-    //  最初にインタラクトさせる!!!
     function Init(){
       cvs = document.querySelector("#main_canvas");
       ctx = cvs.getContext("2d");
@@ -2075,7 +2094,8 @@
       clear = 0;//  レベルごとに使用. 0:未, 1:済
       audio = {
         slider : new Audio("sounds/button45.mp3"),
-        button : new Audio("sounds/button68.mp3")
+        button : new Audio("sounds/button68.mp3"),
+        clear : new Audio("sounds/データ解析.mp3")
       };
       for(let a in audio){
         audio[a].PLAY = ()=>{
@@ -2128,6 +2148,13 @@
       }
     }
 
+    //  設定の適用
+    function AdaptSettings(){
+      cdata.analog = vars[0].value;
+      cdata.color = vars[1].value;
+      SaveCookie();
+    }
+
     //  クリア判定等
     function Check(){
       if(graph.type === "title"){
@@ -2160,6 +2187,7 @@
       }
       if(clear)return 0;
       SaveCookie();
+      audio.clear.PLAY();
       await Sleep(50);
       Unlock(level+1);
       SetButtons();
@@ -2196,18 +2224,27 @@
 
     //  設定画面の描画
     function DrawSettings(){
-      graph.scale = 55;
+      graph.scale = 148/2;
       vars[0].available = 1;
       vars[0].min = 0;
       vars[0].max = 1;
-      vars[0].value = 0;
       vars[0].scale = 1;
+      vars[0].value = cdata.analog;
       vars[1].available = 1;
-      vars[1].min = 1;
+      vars[1].min = 0;
       vars[1].max = 3;
-      vars[1].value = 1;
-      vars[2].available = 0;
-      vars[3].available = 0;
+      vars[1].scale = 1;
+      vars[1].value = cdata.color;
+      vars[2].available = 1;
+      vars[2].min = 0;
+      vars[2].max = 20;
+      vars[2].scale = 0;
+      vars[2].value = cdata.weight;
+      vars[3].available = 1;
+      vars[3].min = 0;
+      vars[3].max = 1;
+      vars[3].scale = 0;
+      vars[3].value = cdata.sound;
       SetButtons();
       DrawAll();
     }
@@ -2219,10 +2256,10 @@
         location.href = "https://tomoq1024.github.io/WebApps/";
       }
       else if(graph.type === "settings"){
-        Init();
+        Reset();
       }
       else if(graph.type === "stages"){
-        Init();
+        Reset();
       }
       else if(graph.type === "levels"){
         graph.type = "stages";
@@ -2390,6 +2427,18 @@
       ctx.moveTo(0,graph.xaxis);
       ctx.lineTo(920,graph.xaxis);
       ctx.stroke();
+
+      //  レベルの表示
+      if(graph.type==="explicit"){
+        ctx.fillStyle = cdata.analog ? "#222" : "#888";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "bottom";
+        ctx.font = "70px Inconsolata";
+        ctx.fillText(
+          `${(Math.floor((level-1)/12)+1).toString(16).toUpperCase()}-${((level-1)%12+1).toString(16).toUpperCase()}`,
+          10,740-10
+        );
+      }
 
       //  グラフ
       if(graph.type == "title"){
@@ -2594,10 +2643,25 @@
 
         ctx.shadowBlur = 0;
       }
+      else if(graph.type == "settings"){
+        //  設定画面
+        ctx.strokeStyle = graph.colors.main;
+        ctx.fillStyle = graph.colors.main;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "100px,Inconsolata";
+        ctx.fillText(`DISPLAY - ${cdata.analog?"ANALOG ":"DIGITAL"}`,920/2,148*1);
+        ctx.fillText(`COLOR   -        `,920/2,148*2);
+        ctx.fillText(`WEIGHT  -        `,920/2,148*3);
+        ctx.fillText(`SOUND   -        `,920/2,148*4);
+
+        ctx.beginPath();
+        ctx.moveTo(920/2,148*2);
+      }
       else if(graph.type == "stages"){
         //  ステージ選択
         //  ボタンの枠
-        //  クリアしたら緑にする!!!
+        //  クリアしたら緑にする???
         ctx.lineWidth = 15;
         for(let y=0; y<3; y++){
           for(let x=0; x<4; x++){
@@ -3082,7 +3146,7 @@
     function DrawControls(){
       //  スライダー
       ctx.lineWidth = 10;
-      ctx.strokeStyle = graph.colors.disabled;
+      ctx.strokeStyle = "#888";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       for(let i=0; i<4; i++){
@@ -3107,7 +3171,7 @@
         ctx.beginPath();
         ctx.arc(vars[i].proportion*600+200,950+i*130,30,0,Math.PI*2);
         ctx.fill();
-        ctx.fillStyle = vars[i].available ? "#8f8" : graph.colors.disabled;
+        ctx.fillStyle = vars[i].available ? "#8f8" : "#888";
         ctx.beginPath();
         ctx.arc(vars[i].proportion*600+200,950+i*130,25,0,Math.PI*2);
         ctx.fill();
@@ -3122,7 +3186,7 @@
       ctx.lineWidth = 5;
       ctx.strokeStyle = "#333";
       //  prevボタン
-      ctx.fillStyle = buttons.prev.available ? "#8f8" : graph.colors.disabled;
+      ctx.fillStyle = buttons.prev.available ? "#8f8" : "#888";
       ctx.fillRect(40,1510,280,100);
       ctx.beginPath();
       ctx.moveTo(40,1610);
@@ -3132,7 +3196,7 @@
       ctx.closePath();
       ctx.stroke();
       //  resetボタン
-      ctx.fillStyle = buttons.reset.available ? "#8f8" : graph.colors.disabled;
+      ctx.fillStyle = buttons.reset.available ? "#8f8" : "#888";
       ctx.fillRect(40+320,1510,280,100);
       ctx.beginPath();
       ctx.moveTo(40+320,1610);
@@ -3142,7 +3206,7 @@
       ctx.closePath();
       ctx.stroke();
       //  nextボタン
-      ctx.fillStyle = buttons.next.available ? "#8f8" : graph.colors.disabled;
+      ctx.fillStyle = buttons.next.available ? "#8f8" : "#888";
       ctx.fillRect(40+640,1510,280,100);
       ctx.beginPath();
       ctx.moveTo(40+640,1610);
