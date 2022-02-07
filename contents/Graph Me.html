@@ -1966,7 +1966,7 @@
       else{
         let cookies = document.cookie.split(";");
         if(cookies.length < 5){
-          document.cookie = "";
+          cdata = {};
           LoadCookie();
         }
         cdata = {};
