@@ -1972,7 +1972,7 @@
         console.log(cookies);
         cdata = {};
         for(let i=0; i<cookies.length; i++){
-          cdata[cookies[i].split("=")[0]] = +decodeURIComponent(cookies[i].split("=")[1]);
+          cdata[cookies[i].split("=")[0].replace(/\s/g,"")] = +decodeURIComponent(cookies[i].split("=")[1]);
         }
       }
       maxlevel = cdata.maxlevel;
@@ -1991,14 +1991,14 @@
     function SaveCookie(){
       for(let k in cdata){
         console.log(k,cdata[k]);
-        document.cookie =  `${k}=${encodeURIComponent(String(cdata[k]))}; max_age=;315360000`;//  10年
+        document.cookie =  `${k}=${encodeURIComponent(String(cdata[k]))};max_age=315360000;`;//  10年
       }
     }
 
     function ClearCookie(){
       let cookies = document.cookie.split(";");
       for(let i=0; i<cookies.length; i++){
-        document.cookie = `${cookies[i]}; max-age = 0;`;
+        document.cookie = `${cookies[i]};max-age=0;`;
       }
     }
 
