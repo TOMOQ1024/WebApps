@@ -1948,13 +1948,13 @@
       }
     });
 
-    async function LoadCookie(){
+    function LoadCookie(){
       cdata0 = {
         maxlevel : 1,
         analog : 0,
         color : 0,
-        weight : 10,
-        max_age : 60*60*24*365*10
+        weight : 10
+        //max_age : 60*60*24*365*10
       };
       if(!document.cookie.length){
         //  初訪問
@@ -1965,15 +1965,15 @@
       }
       else{
         let cookies = document.cookie.split(";");
-        if(cookies.length < 5){
-          document.cookie = "";
-          await Sleep(30);
+        if(cookies.length < 4){
+          ClearCookie();
           LoadCookie();
           return 0;
         }
+        console.log(cookies);
         cdata = {};
         for(let i=0; i<cdata.length; i++){
-          cdata[cookies[i].split("=")[0].replace("-","_")] = +decodeURIComponent(cookies[i].split("=")[1]);
+          cdata[cookies[i].split("=")[0]] = +decodeURIComponent(cookies[i].split("=")[1]);
         }
       }
       maxlevel = cdata.maxlevel;
@@ -1993,11 +1993,18 @@
       let cookies = "";
       for(let k in cdata){
         console.log(k,cdata[k]);
-        cookies += `${k.replace("_","-")}=${encodeURIComponent(String(cdata[k]))}; `;
+        cookies += `${k}=${encodeURIComponent(String(cdata[k]))}; `;
       }
       cookies = cookies.replace(/;\s$/,"");
       console.log(cookies);
       document.cookie = cookies;
+    }
+
+    function ClearCookie(){
+      let cookies = document.cookie.split(";");
+      for(let i=0; i<cookies.length; i++){
+        document.cookie = `${cookies[i]}; max-age = 0;`;
+      }
     }
 
     function Resize(){
