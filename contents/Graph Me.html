@@ -1971,7 +1971,7 @@
         }
         console.log(cookies);
         cdata = {};
-        for(let i=0; i<cdata.length; i++){
+        for(let i=0; i<cookies.length; i++){
           cdata[cookies[i].split("=")[0]] = +decodeURIComponent(cookies[i].split("=")[1]);
         }
       }
