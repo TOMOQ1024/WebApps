@@ -57,7 +57,7 @@
     */
 
 
-
+    alert("script loaded");
     let Sleep = ms => new Promise(r=>setTimeout(r,ms));
     Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
     let cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0,audio,interacted;
@@ -1880,6 +1880,7 @@
         families : ["Inconsolata"]
       },
       active : () => {
+        alert("font loaded");
         Init();
         ctx.fillStyle = "#00000080";
         ctx.fillRect(0,0,1000,1650);
