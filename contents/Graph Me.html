@@ -2131,6 +2131,7 @@
           vars[i].value = problems[level].answer[i];
       }
       if(clear)return 0;
+      SaveCookie();
       await Sleep(50);
       Unlock(level+1);
       SetButtons();
