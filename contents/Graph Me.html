@@ -1171,11 +1171,11 @@
               //w0 = ctx.measureText(strs1[0].replace(/\^.|#./g,"")).width;
               //w1 = ctx.measureText(strs1[1].replace(/\^.|#./g,"")).width;
               ctx.font = "75px Inconsolata";
-              //w0 += ctx.measureText(strs1[0].replace(/[^#]/g,"")).width;
-              //w1 += ctx.measureText(strs1[1].replace(/[^#]/g,"")).width;
+              w0 += ctx.measureText(strs1[0].replace(/[^#]/g,"")).width;
+              w1 += ctx.measureText(strs1[1].replace(/[^#]/g,"")).width;
               ctx.font = "40px Inconsolata";
-              //w0 += ctx.measureText(strs1[0].replace(/[^^]/g,"")).width;
-              //w1 += ctx.measureText(strs1[1].replace(/[^^]/g,"")).width;
+              w0 += ctx.measureText(strs1[0].replace(/[^^]/g,"")).width;
+              w1 += ctx.measureText(strs1[1].replace(/[^^]/g,"")).width;
               w = Math.max(w0,w1);
               ctx.clearRect(x,20,w+40,170);
               x0 = x+20;
@@ -1454,5 +1454,5 @@
 
 
   </script>
-  <script type="text/javascript">alert("script fracwco");</script>
+  <script type="text/javascript">alert("script fracwcoff");</script>
 </html>
