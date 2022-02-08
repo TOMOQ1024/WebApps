@@ -644,7 +644,6 @@
         );
       }
 
-      /*
 
       //  グラフ
       if(graph.type == "title"){
@@ -849,7 +848,7 @@
 
         ctx.shadowBlur = 0;
       }
-      else */if(graph.type == "settings"){
+      else if(graph.type == "settings"){
         //  設定画面
         ctx.strokeStyle = graph.colors.main;
         ctx.fillStyle = graph.colors.main;
@@ -979,7 +978,7 @@
           }
         }
       }
-      else if(graph.type == "explicit"){
+      else /*if(graph.type == "explicit"){
         //  陽関数
         let p = problems[level];
         let x,y;
@@ -1451,5 +1450,5 @@
 
 
   </script>
-  <script type="text/javascript">alert("script %%%");</script>
+  <script type="text/javascript">alert("script %--");</script>
 </html>
