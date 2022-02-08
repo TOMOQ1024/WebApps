@@ -562,8 +562,6 @@
       }
     }
 
-    /**/
-
     function DrawAll(){
       DrawBackground();
       DrawScreen();
@@ -575,8 +573,8 @@
       ctx.fillRect(0,0,cvs.width,cvs.height);
     }
 
-    /*
 
+    //  ページが真っ暗になるバグ発生!!!
     function DrawScreen(){
       ctx.save();
 
@@ -588,6 +586,8 @@
       ctx.lineTo(960,40);
       ctx.closePath();
       ctx.clip();
+
+      return 0;//  !!!
 
       //  スクリーン左上を原点とする
       ctx.translate(40,40);
@@ -1312,8 +1312,6 @@
       ctx.restore();
     }
 
-    /**/
-
     function DrawControls(){
       //  スライダー
       ctx.lineWidth = 10;
@@ -1452,5 +1450,5 @@
 
 
   </script>
-  <script type="text/javascript">alert("script ddddd");</script>
+  <script type="text/javascript">alert("script DD");</script>
 </html>
