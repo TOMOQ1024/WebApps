@@ -310,6 +310,7 @@
         v.seq = [];
         for(let i=0; i<10; i++){
           v.seq.push(new Audio(v.src));
+          v.seq[i].load();
           v.seq[i].volume = v.vol;
         }
         v.PLAY = ()=>{
