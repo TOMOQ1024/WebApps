@@ -573,7 +573,6 @@
       ctx.fillRect(0,0,cvs.width,cvs.height);
     }
 
-
     //  ページが真っ暗になるバグ発生!!!
     function DrawScreen(){
       ctx.save();
@@ -587,7 +586,6 @@
       ctx.closePath();
       ctx.clip();
 
-      return 0;//  !!!
 
       //  スクリーン左上を原点とする
       ctx.translate(40,40);
@@ -646,6 +644,8 @@
           10,740-10
         );
       }
+
+      /*
 
       //  グラフ
       if(graph.type == "title"){
@@ -1309,6 +1309,8 @@
         ctx.strokeText(`CLEAR!`,460,500);
       }
 
+      */
+
       ctx.restore();
     }
 
@@ -1450,5 +1452,5 @@
 
 
   </script>
-  <script type="text/javascript">alert("script DD");</script>
+  <script type="text/javascript">alert("script %");</script>
 </html>
