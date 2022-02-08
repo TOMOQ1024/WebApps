@@ -213,9 +213,6 @@
         get message(){return ["#ffffff"][0];},
         get message_(){return ["#ffffff40"][0];}
       }
-      audio.slider.volume = cdata.sound;
-      audio.button.volume = cdata.sound;
-      audio.clear.volume = Math.min(cdata.sound*1.6,1);
     }
 
     function SaveCookie(){
@@ -292,17 +289,31 @@
       level = 0;//  0はタイトル画面
       clear = 0;//  レベルごとに使用. 0:未, 1:済
       audio = {
-        slider : new Audio("sounds/button45.mp3"),
-        button : new Audio("sounds/button68.mp3"),
-        clear : new Audio("sounds/データ解析.mp3")
+        slider : {
+          PLAY : ()=>{
+            let a = new Audio("sounds/button45.mp3");
+            a.load();
+            a.volume = cdata.sound;
+            a.play();
+          }
+        },
+        button : {
+          PLAY : ()=>{
+            let a = new Audio("sounds/button45.mp3");
+            a.load();
+            a.volume = cdata.sound;
+            a.play();
+          }
+        },
+        clear : {
+          PLAY : ()=>{
+            let a = new Audio("sounds/button45.mp3");
+            a.load();
+            a.volume = Math.min(cdata.sound*1.6,1);
+            a.play();
+          }
+        }
       };
-      for(let a in audio){
-        audio[a].PLAY = ()=>{
-          audio[a].load();
-          audio[a].currentTime = 0;
-          audio[a].play();
-        };
-      }
 
       //  クッキーがあれば，そのデータを代入する
       LoadCookie();
