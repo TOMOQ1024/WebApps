@@ -1161,9 +1161,9 @@
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
         if(p.funcstr.match(/F/)){//  分数を含むとき
-          /*
           strs0 = p.funcstr.match(/F\{[^\}]*\}\{[^\}]*\}|[^F]+/g);//  分数部分または一般部分
           ctx.clearRect(20,20,40,170);
+          /*
           for(let i=0; i<strs0.length; i++){
             if(strs0[i].match(/F/)){//  分数部分
               strs1 = strs0[i].match(/(?<={)[^\}]*(?=})/g);//  [分子,分母]
@@ -1253,12 +1253,12 @@
               }
             }
           }
+          */
           ctx.clearRect(x,20,20,170);
           ctx.strokeRect(20,20,x,170);
           ctx.fillStyle = graph.colors.main_;
           ctx.shadowBlur = 0;
           ctx.fillRect(20,20,x,170);
-          */
         }
         else{//  分数を含まないとき
           ctx.clearRect(20,20,40,100);
@@ -1453,5 +1453,5 @@
 
 
   </script>
-  <script type="text/javascript">alert("script frac");</script>
+  <script type="text/javascript">alert("script fraccc");</script>
 </html>
