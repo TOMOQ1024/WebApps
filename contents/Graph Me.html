@@ -59,7 +59,7 @@
     */
 
 
-    //alert("script loaded");
+    alert("script loaded");
     let Sleep = ms => new Promise(r=>setTimeout(r,ms));
     Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
     let cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0,audio,interacted;
@@ -67,7 +67,7 @@
 
 
 
-
+    /*
 
     //  マウス対応!!!
     //  フォントの読み込み後に開始
@@ -980,45 +980,7 @@
         let p = problems[level];
         let x,y;
 
-        //  グラフ
-
-        /*離散的描画法
-        for(let i=0; i<920; i+=2){
-          x = (i-graph.yaxis)/graph.scale;
-
-          //  ヒント部分
-          if(i%30 < 15){
-            if(!problems[level].hide){
-              y = graph.func(x,problems[level].answer[0],problems[level].answer[1],problems[level].answer[2],problems[level].answer[3]);
-              if(0<=-y*graph.scale+graph.xaxis && -y*graph.scale+graph.xaxis<=740){
-                ctx.beginPath();
-                ctx.arc(x*graph.scale+graph.yaxis,-y*graph.scale+graph.xaxis,2.5,0,Math.PI*2);
-                ctx.fill();
-              }
-            }
-            if(problems[level].tangent){
-              ctx.fillStyle = graph.colors.hint;
-              y = problems[level].funcTangent(x,problems[level].answer[0],problems[level].answer[1],problems[level].answer[2],problems[level].answer[3]);
-              if(0<=-y*graph.scale+graph.xaxis && -y*graph.scale+graph.xaxis<=740){
-                ctx.beginPath();
-                ctx.arc(x*graph.scale+graph.yaxis,-y*graph.scale+graph.xaxis,2.5,0,Math.PI*2);
-                ctx.fill();
-              }
-            }
-          }
-
-          //  可動グラフ部分
-          y = graph.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value);
-          ctx.fillStyle = graph.colors.main;
-          if(0<=-y*graph.scale+graph.xaxis && -y*graph.scale+graph.xaxis<=740){
-            ctx.beginPath();
-            ctx.arc(x*graph.scale+graph.yaxis,-y*graph.scale+graph.xaxis,5,0,Math.PI*2);
-            ctx.fill();
-          }
-        }
-        */
-
-        /*折れ線描画法*/
+        //  グラフ  折れ線描画法
         if(cdata.analog)ctx.shadowBlur = 10;
         let c;
         if(!problems[level].hide){
@@ -1472,7 +1434,7 @@
       }
     }
 
-
+    */
 
 
 
@@ -1483,5 +1445,5 @@
 
 
   </script>
-  <script type="text/javascript">alert("!!!");</script>
+  <script type="text/javascript">alert("endofhtml");</script>
 </html>
