@@ -60,7 +60,7 @@
 
     let Sleep = ms => new Promise(r=>setTimeout(r,ms));
     Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
-    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0,audio,interacted;
+    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0,interacted;
     interacted = 0;
 
 
@@ -112,15 +112,12 @@
             //  ボタンの判定
             if(IsIn(x,y,40/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.prev.available){
               Prev(1);
-              audio.button.PLAY();
             };
             if(IsIn(x,y,360/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.reset.available){
               Reset(1);
-              audio.button.PLAY();
             };
             if(IsIn(x,y,680/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.next.available){
               Next(1);
-              audio.button.PLAY();
             };
 
             //  タッチ操作は一つのみ有効
@@ -143,7 +140,6 @@
               v.adapt();
               d = Math.round(v.proportion*10)/10-d;
               if(.04<Math.abs(d)){
-                audio.slider.PLAY();
               }
               SetButtons();
             }
@@ -182,8 +178,7 @@
         maxlevel : 1,
         analog : 0,
         color : 0,
-        weight : 10,
-        sound : .2
+        weight : 10
       };
       if(!document.cookie.length){
         //  初訪問
@@ -222,7 +217,6 @@
     }
 
     function ClearCookie(){
-      alert(`clear cookie : ${document.cookie}`);
       let cookies = document.cookie.split(";");
       for(let i=0; i<cookies.length; i++){
         document.cookie = `${cookies[i]};max-age=0;`;
@@ -288,38 +282,9 @@
       ctrl = 1;//  使用した記憶なし．要確認!!!
       level = 0;//  0はタイトル画面
       clear = 0;//  レベルごとに使用. 0:未, 1:済
-      audio = {
-        slider : {
-          src : "sounds/button45.mp3",
-          get vol(){return cdata.sound}
-        },
-        button : {
-          src : "sounds/button68.mp3",
-          get vol(){return cdata.sound}
-        },
-        clear : {
-          src : "sounds/データ解析.mp3",
-          get vol(){return Math.min(cdata.sound*1.6,1)}
-        }
-      };
+
       //  クッキーがあれば，そのデータを代入する
       LoadCookie();
-      for(let k in audio){
-        let v = audio[k];
-        v.c = 0;
-        v.seq = [];
-        for(let i=0; i<10; i++){
-          v.seq.push(new Audio(v.src));
-          v.seq[i].volume = v.vol;
-        }
-        v.PLAY = async()=>{
-          await Sleep(50);
-          v.seq[v.c].play();
-          v.seq[v.c] = new Audio(v.src);
-          v.seq[v.c].volume = v.vol;
-          v.c = (v.c+1)%5;
-        };
-      }
 
       //  Resetによる初期化
       Resize();
@@ -402,7 +367,6 @@
       }
       if(clear)return 0;
       SaveCookie();
-      audio.clear.PLAY();
       await Sleep(50);
       Unlock(level+1);
       SetButtons();
@@ -455,11 +419,13 @@
       vars[2].max = 20;
       vars[2].scale = 0;
       vars[2].value = cdata.weight;
+      /*  !!!
       vars[3].available = 1;
       vars[3].min = 0;
       vars[3].max = 1;
       vars[3].scale = 0;
       vars[3].value = cdata.sound;
+      */
       SetButtons();
       DrawAll();
     }
