@@ -310,10 +310,10 @@
         v.seq = [];
         for(let i=0; i<10; i++){
           v.seq.push(new Audio(v.src));
-          v.seq[i].load();
           v.seq[i].volume = v.vol;
         }
-        v.PLAY = ()=>{
+        v.PLAY = async()=>{
+          await Sleep(50);
           v.seq[v.c].play();
           v.seq[v.c] = new Audio(v.src);
           v.seq[v.c].volume = v.vol;
