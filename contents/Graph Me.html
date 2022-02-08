@@ -1165,12 +1165,11 @@
           ctx.clearRect(20,20,40,170);
           for(let i=0; i<strs0.length; i++){
             if(strs0[i].match(/F/)){//  分数部分
-              /*下にバグがある*/
-              //strs1 = strs0[i].match(/(?<={)[^\}]*(?=})/g);//  [分子,分母]
+              //  この行の所為で一日費やした^^  strs1 = strs0[i].match(/(?<={)[^\}]*(?=})/g);//  [分子,分母]
+              strs1 = strs0[i].match(/(?<=\{)[^\}]*(?=\})/g);//  [分子,分母]
               ctx.font = "60px Inconsolata";
               w0 = ctx.measureText(strs1[0].replace(/\^.|#./g,"")).width;
               w1 = ctx.measureText(strs1[1].replace(/\^.|#./g,"")).width;
-              /*上にバグがある*/
               ctx.font = "75px Inconsolata";
               w0 += ctx.measureText(strs1[0].replace(/[^#]/g,"")).width;
               w1 += ctx.measureText(strs1[1].replace(/[^#]/g,"")).width;
@@ -1454,5 +1453,5 @@
 
 
   </script>
-  <script type="text/javascript">alert("script fracwcofffff");</script>
+  <script type="text/javascript">alert("script fwcofffesc");</script>
 </html>
