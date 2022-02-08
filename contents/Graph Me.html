@@ -491,7 +491,6 @@
       graph.xaxis = p.xaxis;
       graph.yaxis = p.yaxis;
       graph.scale = p.gscale;
-      graph.func = p.func;
       for(let i=0; i<4; i++){
         vars[i].available = p.vars[i];
         vars[i].min = p.min[i];
@@ -564,66 +563,11 @@
       ctx.lineTo(960,40);
       ctx.closePath();
       ctx.clip();
-
-
       //  スクリーン左上を原点とする
       ctx.translate(40,40);
 
       //  背景
-      if(cdata.analog){
-        let gra = ctx.createRadialGradient(460,370,0,460,370,1000);
-        gra.addColorStop(0.0,"#246347");
-        gra.addColorStop(0.7,"#133828");
-        gra.addColorStop(1.0,"#091c14");
-        ctx.fillStyle = gra;
-        ctx.fillRect(-10,-10,940,760);
-      }
-      else{
-        ctx.fillStyle = "#000";
-        ctx.fillRect(-10,-10,940,760);
-      }
-
-      //  グリッド
-      //  レベル選択に戻ったとき，グリッドの設定を戻す!!!
-      ctx.strokeStyle = cdata.analog ? "#333" : "#444";
-      for(let i=Math.ceil(-graph.yaxis/graph.scale); i<=(920-graph.yaxis)/graph.scale; i++){
-        ctx.lineWidth = i%5 ? 4 : 6;
-        ctx.beginPath();
-        ctx.moveTo(graph.yaxis+i*graph.scale,0);
-        ctx.lineTo(graph.yaxis+i*graph.scale,740);
-        ctx.stroke();
-      }
-      for(let i=Math.ceil(-graph.xaxis/graph.scale); i<=(740-graph.xaxis)/graph.scale; i++){
-        ctx.lineWidth = i%5 ? 4 : 6;
-        ctx.beginPath();
-        ctx.moveTo(0,graph.xaxis+i*graph.scale);
-        ctx.lineTo(920,graph.xaxis+i*graph.scale);
-        ctx.stroke();
-      }
-      //  軸
-      ctx.lineWidth = 8;
-      ctx.strokeStyle = cdata.analog ? "#333" : "#777";
-      ctx.beginPath();
-      ctx.moveTo(graph.yaxis,0);
-      ctx.lineTo(graph.yaxis,740);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(0,graph.xaxis);
-      ctx.lineTo(920,graph.xaxis);
-      ctx.stroke();
-
-      //  レベルの表示
-      if(graph.type==="explicit"){
-        ctx.fillStyle = cdata.analog ? "#222" : "#888";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "bottom";
-        ctx.font = "70px Inconsolata";
-        ctx.fillText(
-          `${(Math.floor((level-1)/12)+1).toString(16).toUpperCase()}-${((level-1)%12+1).toString(16).toUpperCase()}`,
-          10,740-10
-        );
-      }
-
+      DrawScreenBackground();
 
       //  グラフ
       if(graph.type == "title"){
@@ -966,155 +910,22 @@
         //  グラフ  折れ線描画法
         if(cdata.analog)ctx.shadowBlur = 10;
         let c;
-        if(!problems[level].hide){
+        if(!p.hide){
           //  ヒント部分
-          ctx.strokeStyle = graph.colors.main;
-          ctx.lineWidth = 5;
-          ctx.setLineDash([15,15]);
-          ctx.beginPath();
-          for(let i=-10; i<=930; i+=3){
-            x = (i-graph.yaxis)/graph.scale;
-            if(Number.isNaN(graph.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]))){
-              c = {bool:false,x:x,d:3/graph.scale}
-            }else{
-              c = isContinuous(
-                (x)=>graph.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),
-                x,3/graph.scale
-              );
-            }
-            if(c.bool){
-              y = graph.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
-              ctx.lineTo(i,y);
-            }
-            else{
-              y = graph.func(c.x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
-              ctx.lineTo(i,y);
-              ctx.stroke();
-              y = graph.func(c.x+c.d,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
-              ctx.beginPath();
-              ctx.moveTo(i,y);
-            }
-          }
-          ctx.stroke();
+          DrawScreenGraph(graph.colors.main,5,[15,15],(x)=>p.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]));
         }
-        if(problems[level].tangent){
+        if(p.tangent){
           //  接線
-          ctx.strokeStyle = graph.colors.hint;
-          ctx.lineWidth = 5;
-          ctx.setLineDash([15,15,45,15]);
-          ctx.beginPath();
-          for(let i=-10; i<=930; i+=3){
-            x = (i-graph.yaxis)/graph.scale;
-            if(Number.isNaN(p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]))){
-              c = {bool:false,x:x,d:3/graph.scale}
-            }else{
-              c = isContinuous(
-                (x)=>p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),
-                x,3/graph.scale
-              );
-            }
-            if(c.bool){
-              y = p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
-              ctx.lineTo(i,y);
-            }
-            else{
-              y = p.funcTangent(c.x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
-              ctx.lineTo(i,y);
-              ctx.stroke();
-              y = p.funcTangent(c.x+c.d,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
-              ctx.beginPath();
-              ctx.moveTo(i,y);
-            }
-          }
-          ctx.stroke();
+          DrawScreenGraph(graph.colors.hint,5,[15,15,45,15],(x)=>p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]));
         }
-        if(problems[level].tangent2){
-          //  接線2
-          ctx.strokeStyle = graph.colors.hint;
-          ctx.lineWidth = 5;
-          ctx.setLineDash([15,15,45,15]);
-          ctx.beginPath();
-          for(let i=-10; i<=930; i+=3){
-            x = (i-graph.yaxis)/graph.scale;
-            if(Number.isNaN(p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]))){
-              c = {bool:false,x:x,d:3/graph.scale}
-            }else{
-              c = isContinuous(
-                (x)=>p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),
-                x,3/graph.scale
-              );
-            }
-            if(c.bool){
-              y = p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
-              ctx.lineTo(i,y);
-            }
-            else{
-              y = p.funcTangent2(c.x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
-              ctx.lineTo(i,y);
-              ctx.stroke();
-              y = p.funcTangent2(c.x+c.d,p.answer[0],p.answer[1],p.answer[2],p.answer[3]);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
-              ctx.beginPath();
-              ctx.moveTo(i,y);
-            }
-          }
-          ctx.stroke();
+        if(p.tangent2){
+          //  接線
+          DrawScreenGraph(graph.colors.hint,5,[15,15,45,15],(x)=>p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]));
         }
         if(1){
           //  可動グラフ部分
           //  不連続点の取り扱い!!!
-          seq = [];
-          ctx.strokeStyle = graph.colors.main;
-          ctx.lineWidth = 10;
-          ctx.setLineDash([]);
-          ctx.beginPath();
-          for(let i=-10; i<=930; i+=3){
-            x = (i-graph.yaxis)/graph.scale;
-            if(Number.isNaN(graph.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value))){
-              c = {bool:false,x:x,d:3/graph.scale}
-            }else{
-              c = isContinuous(
-                (x)=>graph.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value),
-                x,3/graph.scale
-              );
-            }
-            if(c.bool){
-              y = graph.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
-              ctx.lineTo(i,y);
-            }
-            else{
-              y = graph.func(c.x,vars[0].value,vars[1].value,vars[2].value,vars[3].value);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
-              ctx.lineTo(i,y);
-              ctx.stroke();
-              y = graph.func(c.x+c.d,vars[0].value,vars[1].value,vars[2].value,vars[3].value);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
-              ctx.beginPath();
-              ctx.moveTo(i,y);
-            }
-          }
-          ctx.stroke();
+          DrawScreenGraph(graph.colors.main,10,[],(x)=>p.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value));
         }
 
         //  通過する点
@@ -1123,152 +934,15 @@
           ctx.strokeStyle = graph.colors.main;
           for(let i=0; i<problems[level].points.length; i++){
             x = problems[level].points[i];
-            y = graph.func(x,problems[level].answer[0],problems[level].answer[1],problems[level].answer[2],problems[level].answer[3]);
+            y = p.func(x,problems[level].answer[0],problems[level].answer[1],problems[level].answer[2],problems[level].answer[3]);
             ctx.beginPath();
             ctx.arc(x*graph.scale+graph.yaxis,-y*graph.scale+graph.xaxis,10,0,Math.PI*2);
             ctx.stroke();
           }
         }
 
-
         //  式の表示
-        //  影を落とす!!!
-        let strs0,strs1,chars,x0,w0,w1,w;
-        x = 40;
-        ctx.strokeStyle = graph.colors.main;
-        ctx.setLineDash([]);
-        ctx.lineWidth = 5;
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        if(p.funcstr.match(/F/)){//  分数を含むとき
-          strs0 = p.funcstr.match(/F\{[^\}]*\}\{[^\}]*\}|[^F]+/g);//  分数部分または一般部分
-          ctx.clearRect(20,20,40,170);
-          for(let i=0; i<strs0.length; i++){
-            if(strs0[i].match(/F/)){//  分数部分
-              //  この行の所為で一日費やした^^  strs1 = strs0[i].match(/(?<={)[^\}]*(?=})/g);//  [分子,分母]
-              //  strs0[i]は"F{...}{...}"の形だから，splitで分ける．
-              strs1 = strs0[i].replace(/^F\{|}$/,"").split("}{");//  [分子,分母]
-              ctx.font = "60px Inconsolata";
-              w0 = ctx.measureText(strs1[0].replace(/\^.|#./g,"")).width;
-              w1 = ctx.measureText(strs1[1].replace(/\^.|#./g,"")).width;
-              ctx.font = "75px Inconsolata";
-              w0 += ctx.measureText(strs1[0].replace(/[^#]/g,"")).width;
-              w1 += ctx.measureText(strs1[1].replace(/[^#]/g,"")).width;
-              ctx.font = "40px Inconsolata";
-              w0 += ctx.measureText(strs1[0].replace(/[^^]/g,"")).width;
-              w1 += ctx.measureText(strs1[1].replace(/[^^]/g,"")).width;
-              w = Math.max(w0,w1);
-              ctx.clearRect(x,20,w+40,170);
-              x0 = x+20;
-              ctx.beginPath();
-              ctx.moveTo(x+10,100);
-              ctx.lineTo(x+w+30,100);
-              ctx.stroke();
-              //  分子の描画
-              x = x0+(w-w0)/2;
-              chars = strs1[0].match(/[\^\#]?./g);
-              for(let j=0; j<chars.length; j++){
-                if(chars[j].match(/\^/)){
-                  chars[j] = chars[j].replace("^","");
-                  y = 60;
-                  ctx.font = "40px Inconsolata";
-                }else if(chars[j].match(/\#/)){
-                  chars[j] = chars[j].replace("#","");
-                  y = 65;
-                  ctx.font = "75px Inconsolata";
-                }else{
-                  y = 70;
-                  ctx.font = "60px Inconsolata";
-                }
-                ctx.fillStyle = graph.colors.main;
-                ctx.fillText(chars[j],x,y);
-                x += ctx.measureText(chars[j]).width;
-              }
-              //  分母の描画
-              x = x0+(w-w1)/2;
-              chars = strs1[1].match(/[\^\#]?./g);
-              for(let j=0; j<chars.length; j++){
-                if(chars[j].match(/\^/)){
-                  chars[j] = chars[j].replace("^","");
-                  y = 60+70;
-                  ctx.font = "40px Inconsolata";
-                }else if(chars[j].match(/\#/)){
-                  chars[j] = chars[j].replace("#","");
-                  y = 65+70;
-                  ctx.font = "75px Inconsolata";
-                }else{
-                  y = 70+70;
-                  ctx.font = "60px Inconsolata";
-                }
-                ctx.fillStyle = graph.colors.main;
-                ctx.fillText(chars[j],x,y);
-                x += ctx.measureText(chars[j]).width;
-              }
-              x = x0+w+20;
-
-            }
-            else{//  一般部分
-              chars = strs0[i].match(/[\^\#\$]?./g);
-              ctx.font = "60px Inconsolata";
-              w = ctx.measureText("|").width;//  普通のフォントの横幅
-              for(let j=0; j<chars.length; j++){
-                if(chars[j].match(/\^/)){
-                  chars[j] = chars[j].replace("^","");
-                  y = 60+35;
-                  ctx.font = "40px Inconsolata";//  一回り小さい
-                }else if(chars[j].match(/\#/)){
-                  chars[j] = chars[j].replace("#","");
-                  y = 65+35;
-                  ctx.font = "75px Inconsolata";//  大きめ
-                }else if(chars[j].match(/\$/)){
-                  chars[j] = chars[j].replace("$","");
-                  y = 65+35;
-                  ctx.font = "150px Inconsolata";//  一回り大きい
-                }else{
-                  y = 70+35;
-                  ctx.font = "60px Inconsolata";//  普通
-                }
-                ctx.clearRect(x,20,ctx.measureText(chars[j]).width,180);
-                ctx.fillStyle = graph.colors.main;
-                ctx.fillText(chars[j],x,y,w);
-                x += Math.min(ctx.measureText(chars[j]).width,w);
-              }
-            }
-          }
-          ctx.clearRect(x,20,20,170);
-          ctx.strokeRect(20,20,x,170);
-          ctx.fillStyle = graph.colors.main_;
-          ctx.shadowBlur = 0;
-          ctx.fillRect(20,20,x,170);
-        }
-        else{//  分数を含まないとき
-          ctx.clearRect(20,20,40,100);
-          chars = p.funcstr.match(/[\^\#]?./g);
-          for(let i=0; i<chars.length; i++){
-            if(chars[i].match(/\^/)){
-              chars[i] = chars[i].replace("^","");
-              y = 60;
-              ctx.font = "40px Inconsolata";
-            }else if(chars[i].match(/\#/)){
-              chars[i] = chars[i].replace("#","");
-              y = 65;
-              ctx.font = "75px Inconsolata";
-            }else{
-              y = 70;
-              ctx.font = "60px Inconsolata";
-            }
-            ctx.clearRect(x,20,ctx.measureText(chars[i]).width,100);
-            ctx.fillStyle = graph.colors.main;
-            ctx.fillText(chars[i],x,y);
-            x += ctx.measureText(chars[i]).width;
-          }
-          ctx.clearRect(x,20,20,100);
-          ctx.strokeRect(20,20,x,100);
-          ctx.fillStyle = graph.colors.main_;
-          ctx.shadowBlur = 0;
-          ctx.fillRect(20,20,x,100);
-        }
-
+        DrawScreenFuncStr();
       }
 
 
@@ -1294,6 +968,239 @@
       }
 
       ctx.restore();
+    }
+
+    function DrawScreenBackground(){
+      if(cdata.analog){
+        let gra = ctx.createRadialGradient(460,370,0,460,370,1000);
+        gra.addColorStop(0.0,"#246347");
+        gra.addColorStop(0.7,"#133828");
+        gra.addColorStop(1.0,"#091c14");
+        ctx.fillStyle = gra;
+        ctx.fillRect(-10,-10,940,760);
+      }
+      else{
+        ctx.fillStyle = "#000";
+        ctx.fillRect(-10,-10,940,760);
+      }
+
+      //  グリッド
+      //  レベル選択に戻ったとき，グリッドの設定を戻す!!!
+      ctx.strokeStyle = cdata.analog ? "#333" : "#444";
+      for(let i=Math.ceil(-graph.yaxis/graph.scale); i<=(920-graph.yaxis)/graph.scale; i++){
+        ctx.lineWidth = i%5 ? 4 : 6;
+        ctx.beginPath();
+        ctx.moveTo(graph.yaxis+i*graph.scale,0);
+        ctx.lineTo(graph.yaxis+i*graph.scale,740);
+        ctx.stroke();
+      }
+      for(let i=Math.ceil(-graph.xaxis/graph.scale); i<=(740-graph.xaxis)/graph.scale; i++){
+        ctx.lineWidth = i%5 ? 4 : 6;
+        ctx.beginPath();
+        ctx.moveTo(0,graph.xaxis+i*graph.scale);
+        ctx.lineTo(920,graph.xaxis+i*graph.scale);
+        ctx.stroke();
+      }
+      //  軸
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = cdata.analog ? "#333" : "#777";
+      ctx.beginPath();
+      ctx.moveTo(graph.yaxis,0);
+      ctx.lineTo(graph.yaxis,740);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0,graph.xaxis);
+      ctx.lineTo(920,graph.xaxis);
+      ctx.stroke();
+
+      //  レベルの表示
+      if(graph.type==="explicit"){
+        ctx.fillStyle = cdata.analog ? "#222" : "#888";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "bottom";
+        ctx.font = "70px Inconsolata";
+        ctx.fillText(
+          `${(Math.floor((level-1)/12)+1).toString(16).toUpperCase()}-${((level-1)%12+1).toString(16).toUpperCase()}`,
+          10,740-10
+        );
+      }
+    }
+
+    function DrawScreenFuncStr(){
+      //  影を落とす!!!
+      let strs0,strs1,chars,x0,w0,w1,w;
+      let p = problems[level];
+      x = 40;
+      ctx.strokeStyle = graph.colors.main;
+      ctx.setLineDash([]);
+      ctx.lineWidth = 5;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      if(p.funcstr.match(/F/)){//  分数を含むとき
+        strs0 = p.funcstr.match(/F\{[^\}]*\}\{[^\}]*\}|[^F]+/g);//  分数部分または一般部分
+        ctx.clearRect(20,20,40,170);
+        for(let i=0; i<strs0.length; i++){
+          if(strs0[i].match(/F/)){//  分数部分
+            //  この行の所為で一日費やした^^  strs1 = strs0[i].match(/(?<={)[^\}]*(?=})/g);//  [分子,分母]
+            //  strs0[i]は"F{...}{...}"の形だから，splitで分ける．
+            strs1 = strs0[i].replace(/^F\{|}$/,"").split("}{");//  [分子,分母]
+            ctx.font = "60px Inconsolata";
+            w0 = ctx.measureText(strs1[0].replace(/\^.|#./g,"")).width;
+            w1 = ctx.measureText(strs1[1].replace(/\^.|#./g,"")).width;
+            ctx.font = "75px Inconsolata";
+            w0 += ctx.measureText(strs1[0].replace(/[^#]/g,"")).width;
+            w1 += ctx.measureText(strs1[1].replace(/[^#]/g,"")).width;
+            ctx.font = "40px Inconsolata";
+            w0 += ctx.measureText(strs1[0].replace(/[^^]/g,"")).width;
+            w1 += ctx.measureText(strs1[1].replace(/[^^]/g,"")).width;
+            w = Math.max(w0,w1);
+            ctx.clearRect(x,20,w+40,170);
+            x0 = x+20;
+            ctx.beginPath();
+            ctx.moveTo(x+10,100);
+            ctx.lineTo(x+w+30,100);
+            ctx.stroke();
+            //  分子の描画
+            x = x0+(w-w0)/2;
+            chars = strs1[0].match(/[\^\#]?./g);
+            for(let j=0; j<chars.length; j++){
+              if(chars[j].match(/\^/)){
+                chars[j] = chars[j].replace("^","");
+                y = 60;
+                ctx.font = "40px Inconsolata";
+              }else if(chars[j].match(/\#/)){
+                chars[j] = chars[j].replace("#","");
+                y = 65;
+                ctx.font = "75px Inconsolata";
+              }else{
+                y = 70;
+                ctx.font = "60px Inconsolata";
+              }
+              ctx.fillStyle = graph.colors.main;
+              ctx.fillText(chars[j],x,y);
+              x += ctx.measureText(chars[j]).width;
+            }
+            //  分母の描画
+            x = x0+(w-w1)/2;
+            chars = strs1[1].match(/[\^\#]?./g);
+            for(let j=0; j<chars.length; j++){
+              if(chars[j].match(/\^/)){
+                chars[j] = chars[j].replace("^","");
+                y = 60+70;
+                ctx.font = "40px Inconsolata";
+              }else if(chars[j].match(/\#/)){
+                chars[j] = chars[j].replace("#","");
+                y = 65+70;
+                ctx.font = "75px Inconsolata";
+              }else{
+                y = 70+70;
+                ctx.font = "60px Inconsolata";
+              }
+              ctx.fillStyle = graph.colors.main;
+              ctx.fillText(chars[j],x,y);
+              x += ctx.measureText(chars[j]).width;
+            }
+            x = x0+w+20;
+
+          }
+          else{//  一般部分
+            chars = strs0[i].match(/[\^\#\$]?./g);
+            ctx.font = "60px Inconsolata";
+            w = ctx.measureText("|").width;//  普通のフォントの横幅
+            for(let j=0; j<chars.length; j++){
+              if(chars[j].match(/\^/)){
+                chars[j] = chars[j].replace("^","");
+                y = 60+35;
+                ctx.font = "40px Inconsolata";//  一回り小さい
+              }else if(chars[j].match(/\#/)){
+                chars[j] = chars[j].replace("#","");
+                y = 65+35;
+                ctx.font = "75px Inconsolata";//  大きめ
+              }else if(chars[j].match(/\$/)){
+                chars[j] = chars[j].replace("$","");
+                y = 65+35;
+                ctx.font = "150px Inconsolata";//  一回り大きい
+              }else{
+                y = 70+35;
+                ctx.font = "60px Inconsolata";//  普通
+              }
+              ctx.clearRect(x,20,ctx.measureText(chars[j]).width,180);
+              ctx.fillStyle = graph.colors.main;
+              ctx.fillText(chars[j],x,y,w);
+              x += Math.min(ctx.measureText(chars[j]).width,w);
+            }
+          }
+        }
+        ctx.clearRect(x,20,20,170);
+        ctx.strokeRect(20,20,x,170);
+        ctx.fillStyle = graph.colors.main_;
+        ctx.shadowBlur = 0;
+        ctx.fillRect(20,20,x,170);
+      }
+      else{//  分数を含まないとき
+        ctx.clearRect(20,20,40,100);
+        chars = p.funcstr.match(/[\^\#]?./g);
+        for(let i=0; i<chars.length; i++){
+          if(chars[i].match(/\^/)){
+            chars[i] = chars[i].replace("^","");
+            y = 60;
+            ctx.font = "40px Inconsolata";
+          }else if(chars[i].match(/\#/)){
+            chars[i] = chars[i].replace("#","");
+            y = 65;
+            ctx.font = "75px Inconsolata";
+          }else{
+            y = 70;
+            ctx.font = "60px Inconsolata";
+          }
+          ctx.clearRect(x,20,ctx.measureText(chars[i]).width,100);
+          ctx.fillStyle = graph.colors.main;
+          ctx.fillText(chars[i],x,y);
+          x += ctx.measureText(chars[i]).width;
+        }
+        ctx.clearRect(x,20,20,100);
+        ctx.strokeRect(20,20,x,100);
+        ctx.fillStyle = graph.colors.main_;
+        ctx.shadowBlur = 0;
+        ctx.fillRect(20,20,x,100);
+      }
+    }
+
+    function DrawScreenGraph(s,w,ld,f){
+      let c;
+      ctx.strokeStyle = s;
+      ctx.lineWidth = w;
+      ctx.setLineDash(ld);
+      ctx.beginPath();
+      if(graph.type === "explicit"){
+        for(let i=-10; i<=930; i+=3){
+          x = (i-graph.yaxis)/graph.scale;
+          if(Number.isNaN(f(x))){
+            c = {bool:false,x:x,d:3/graph.scale}
+          }else{
+            c = isContinuous(f,x,3/graph.scale);
+          }
+          if(c.bool){
+            y = f(x);
+            y = -y*graph.scale+graph.xaxis;
+            y = Math.min(Math.max(y,-10),750);
+            ctx.lineTo(i,y);
+          }
+          else{
+            y = f(c.x);
+            y = -y*graph.scale+graph.xaxis;
+            y = Math.min(Math.max(y,-10),750);
+            ctx.lineTo(i,y);
+            ctx.stroke();
+            y = f(c.x);
+            y = -y*graph.scale+graph.xaxis;
+            y = Math.min(Math.max(y,-10),750);
+            ctx.beginPath();
+            ctx.moveTo(i,y);
+          }
+        }
+      }
+      ctx.stroke();
     }
 
     function DrawControls(){
