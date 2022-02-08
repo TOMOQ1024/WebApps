@@ -59,8 +59,7 @@
 
     let Sleep = ms => new Promise(r=>setTimeout(r,ms));
     Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
-    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0,interacted;
-    interacted = 0;
+    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0;
 
     //  難易度順に入れ替える!!!
     let problems0 = {
@@ -1881,11 +1880,6 @@
       },
       active : () => {
         Init();
-        ctx.fillStyle = "#00000080";
-        ctx.fillRect(0,0,1000,1650);
-        ctx.font = "160px Inconsolata";
-        ctx.fillStyle = "#ffffffc0";
-        ctx.fillText("TAP TO START",1000/2,1650/2);
 
         //  リサイズ時, canvasを画面の大きさに合わせる
         window.onresize = () => {Resize();}
@@ -1893,7 +1887,6 @@
         if(window.ontouchstart === null){
           //  タッチ操作
           cvs.ontouchstart = (e) => {
-            if(!interacted)return false;
             if(!ctrl)return 0;
             e.preventDefault();
             let x = e.touches[0].clientX-cvs.getBoundingClientRect().left;//  canvas左上からのpx値
@@ -1930,7 +1923,6 @@
             DrawAll();
           }
           cvs.ontouchmove = (e) => {
-            if(!interacted)return false;
             e.preventDefault();
             let x = e.touches[0].clientX-cvs.getBoundingClientRect().left;
             x *= cvs.width;
@@ -1958,11 +1950,6 @@
             }
           }
           cvs.ontouchend = () => {
-            if(!interacted){
-              interacted = 1;
-              Reset();
-              return false;
-            }
             buttons.slider = -1;
             Check();
             ctrl = 1;
@@ -2005,9 +1992,9 @@
         }
       }
       colors = {
-        get main(){return ["#ffff00","#00ff00","#c000ff"][cdata.color];},
-        get main_(){return ["#ffff0040","#00ff0040","#c000ff40"][cdata.color];},
-        get hint(){return ["#00ffff","#ff00c0","#ffc000"][cdata.color];},
+        get main(){return ["#ffff00","#00ffff","#e000ff","#ff8000"][cdata.color];},
+        get main_(){return ["#ffff0040","#00ffff40","#e000ff40","#ff800040"][cdata.color];},
+        get hint(){return ["#00ffff","#ff0040","#ffc000","#ffff00"][cdata.color];},
         get disabled(){return ["#888888"][0];},
         get disabled_(){return ["#88888840"][0];},
         get message(){return ["#ffffff"][0];},
@@ -2137,6 +2124,7 @@
     function AdaptSettings(){
       cdata.analog = vars[0].value;
       cdata.color = vars[1].value;
+      cdata.weight = vars[2].value;
       SaveCookie();
     }
 
@@ -2220,7 +2208,7 @@
       vars[1].scale = 1;
       vars[1].value = cdata.color;
       vars[2].available = 1;
-      vars[2].min = 0;
+      vars[2].min = 1;
       vars[2].max = 20;
       vars[2].scale = 0;
       vars[2].value = cdata.weight;
@@ -2273,6 +2261,10 @@
           return 0;
         }
         else if(graph.type === "settings"){
+          //  設定の初期化
+          cdata.analog = cdata0.analog;
+          cdata.color = cdata0.color;
+          cdata.weight = cdata0.weight
           DrawSettings();
           return 0;
         }
@@ -2356,7 +2348,7 @@
       ctx.fillRect(0,0,cvs.width,cvs.height);
     }
 
-    //  ページが真っ暗になるバグ発生!!!
+    //  ページが真っ暗になるバグ発生(解決済)
     function DrawScreen(){
       ctx.save();
 
@@ -2379,7 +2371,7 @@
         //  タイトル画面
         //  quitはprevボタンで代用できるため，sandbox等に置き換えるべき!!!
         ctx.strokeStyle = graph.colors.main;
-        ctx.lineWidth = 10;
+        ctx.lineWidth = cdata.weight;
         if(cdata.analog)ctx.shadowBlur = 10;
 
         //  タイトル画面(改)
@@ -2579,24 +2571,36 @@
       }
       else if(graph.type == "settings"){
         //  設定画面
-        ctx.strokeStyle = graph.colors.main;
         ctx.fillStyle = graph.colors.main;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.font = "100px,Inconsolata";
         ctx.fillText(`DISPLAY - ${cdata.analog?"ANALOG ":"DIGITAL"}`,920/2,148*1);
-        ctx.fillText(`COLOR   -        `,920/2,148*2);
+        ctx.fillText(`COLOR   -   ${["Y / C","C / R","P / O","O / Y"][cdata.color]}`,920/2,148*2);
         ctx.fillText(`WEIGHT  -        `,920/2,148*3);
-        ctx.fillText(`SOUND   -        `,920/2,148*4);
+        ctx.fillText(`                 `,920/2,148*4);
 
+        //  サンプル
+        ctx.lineWidth = cdata.weight;
+        ctx.strokeStyle = graph.colors.main;
         ctx.beginPath();
-        ctx.moveTo(920/2,148*2);
+        ctx.moveTo(920*.75-160,148*3+50);
+        ctx.lineTo(920*.75-  0,148*3-50);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(920*.75+160,148*3+50,cdata.weight,0,Math.PI*2);
+        ctx.stroke();
+        ctx.strokeStyle = graph.colors.hint;
+        ctx.setLineDash([cdata.weight*1.5,cdata.weight*1.5,cdata.weight*4.5,cdata.weight*1.5]);
+        ctx.beginPath();
+        ctx.moveTo(920*.75+  0,148*3+50);
+        ctx.lineTo(920*.75+160,148*3-50);
+        ctx.stroke();
       }
       else if(graph.type == "stages"){
         //  ステージ選択
         //  ボタンの枠
-        //  クリアしたら緑にする???
-        ctx.lineWidth = 15;
+        ctx.lineWidth = cdata.weight*1.5;
         for(let y=0; y<3; y++){
           for(let x=0; x<4; x++){
             ctx.strokeStyle = x+y*4<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
@@ -2606,6 +2610,7 @@
             ctx.strokeRect(50+220*x,70+220*y,160,160);
             ctx.shadowBlur = 0;
             if(x+y*4 === vars[0].value-1+(vars[1].value-1)*4){
+              //  選択中のボタンは大きくする
               ctx.fillRect(50+220*x,70+220*y,160,160);
               ctx.fillRect(50+220*x,70+220*y,160,160);
               if(cdata.analog)ctx.shadowBlur = 10;
@@ -2681,7 +2686,7 @@
       else if(graph.type == "levels"){
         //  レベル選択
         //  ボタンの枠
-        ctx.lineWidth = 15;
+        ctx.lineWidth = cdata.weight*1.5;
         ctx.font = "160px Inconsolata";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -2694,6 +2699,7 @@
             ctx.strokeRect(50+220*x,70+220*y,160,160);
             ctx.shadowBlur = 0;
             if(x+y*4 === vars[0].value-1+(vars[1].value-1)*4){
+              //  選択中のボタンは大きくする
               ctx.fillRect(50+220*x,70+220*y,160,160);
               ctx.fillRect(50+220*x,70+220*y,160,160);
               if(cdata.analog)ctx.shadowBlur = 10;
@@ -2714,37 +2720,37 @@
 
         //  グラフ  折れ線描画法
         if(cdata.analog)ctx.shadowBlur = 10;
-        let c;
         if(!p.hide){
           //  ヒント部分
-          DrawScreenGraph(graph.colors.main,5,[15,15],(x)=>p.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]));
+          DrawScreenGraph(graph.colors.main,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5],(x)=>p.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]));
         }
         if(p.tangent){
           //  接線
-          DrawScreenGraph(graph.colors.hint,5,[15,15,45,15],(x)=>p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]));
+          DrawScreenGraph(graph.colors.hint,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5,cdata.weight*4.5,cdata.weight*1.5],(x)=>p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]));
         }
         if(p.tangent2){
           //  接線
-          DrawScreenGraph(graph.colors.hint,5,[15,15,45,15],(x)=>p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]));
+          DrawScreenGraph(graph.colors.hint,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5,cdata.weight*4.5,cdata.weight*1.5],(x)=>p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]));
         }
         if(1){
           //  可動グラフ部分
-          //  不連続点の取り扱い!!!
-          DrawScreenGraph(graph.colors.main,10,[],(x)=>p.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value));
+          DrawScreenGraph(graph.colors.main,cdata.weight,[],(x)=>p.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value));
         }
 
         //  通過する点
         if(problems[level].points){
-          ctx.lineWidth = 10;
+          ctx.lineWidth = cdata.weight;
           ctx.strokeStyle = graph.colors.main;
           for(let i=0; i<problems[level].points.length; i++){
             x = problems[level].points[i];
             y = p.func(x,problems[level].answer[0],problems[level].answer[1],problems[level].answer[2],problems[level].answer[3]);
             ctx.beginPath();
-            ctx.arc(x*graph.scale+graph.yaxis,-y*graph.scale+graph.xaxis,10,0,Math.PI*2);
+            ctx.arc(x*graph.scale+graph.yaxis,-y*graph.scale+graph.xaxis,cdata.weight,0,Math.PI*2);
             ctx.stroke();
           }
         }
+
+        ctx.shadowBlur = 0;
 
         //  式の表示
         DrawScreenFuncStr();
@@ -2753,7 +2759,6 @@
 
       //  クリアメッセージ
       if(clear){
-        if(cdata.analog)ctx.shadowBlur = 10;
         ctx.fillStyle = "#000000c0";
         ctx.fillRect(-10,-10,940,760);
         let txt = "LEVEL ";
@@ -2766,10 +2771,12 @@
         ctx.lineWidth = 5;
         ctx.font = "160px Inconsolata";
         ctx.fillText(`${txt}`,460,200);
+        if(cdata.analog)ctx.shadowBlur = 10;
         ctx.strokeText(`${txt}`,460,200);
         ctx.font = "300px Inconsolata";
-        ctx.fillText(`CLEAR!`,460,500);
         ctx.strokeText(`CLEAR!`,460,500);
+        ctx.shadowBlur = 0;
+        ctx.fillText(`CLEAR!`,460,500);
       }
 
       ctx.restore();
@@ -2836,6 +2843,7 @@
       let strs0,strs1,chars,x0,w0,w1,w;
       let p = problems[level];
       x = 40;
+      if(cdata.analog)ctx.shadowBlur = 10;
       ctx.strokeStyle = graph.colors.main;
       ctx.setLineDash([]);
       ctx.lineWidth = 5;
