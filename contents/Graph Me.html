@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata&display=swap" rel="stylesheet">
-    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
     <style>
       *{
         font-size: 0;
@@ -34,14 +33,10 @@
     <div id="wrapper">
       <canvas id="main_canvas" width="1000" height="1650"></canvas>
     </div>
-    <script type="text/javascript">
-      alert("page opened1");
-    </script>
   </body>
-  <script type="text/javascript">
-    alert("page opened2");
-  </script>
   <script type="text/javascript" src="scripts/Graph Me.js"></script>
+  <script type="text/javascript">alert("!");</script>
+  <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
   <script type="text/javascript">
     //
 
@@ -78,7 +73,7 @@
     //  フォントの読み込み後に開始
     WebFont.load({
       //custom : {
-      google : {
+      custom : {
         families : ["Inconsolata"]
       },
       active : () => {
