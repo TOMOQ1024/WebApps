@@ -77,7 +77,6 @@
       },
       active : () => {
         alert("font loaded");
-        return 0;
         Init();
         ctx.fillStyle = "#00000080";
         ctx.fillRect(0,0,1000,1650);
@@ -1288,6 +1287,8 @@
         }
       }
 
+      */
+
       //  クリアメッセージ
       if(clear){
         if(cdata.analog)ctx.shadowBlur = 10;
@@ -1308,8 +1309,6 @@
         ctx.fillText(`CLEAR!`,460,500);
         ctx.strokeText(`CLEAR!`,460,500);
       }
-
-      */
 
       ctx.restore();
     }
@@ -1452,5 +1451,5 @@
 
 
   </script>
-  <script type="text/javascript">alert("script %");</script>
+  <script type="text/javascript">alert("script %%%");</script>
 </html>
