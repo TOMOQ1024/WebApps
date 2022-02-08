@@ -1168,8 +1168,9 @@
               /*下にバグがある*/
               //strs1 = strs0[i].match(/(?<={)[^\}]*(?=})/g);//  [分子,分母]
               ctx.font = "60px Inconsolata";
-              //w0 = ctx.measureText(strs1[0].replace(/\^.|#./g,"")).width;
-              //w1 = ctx.measureText(strs1[1].replace(/\^.|#./g,"")).width;
+              w0 = ctx.measureText(strs1[0].replace(/\^.|#./g,"")).width;
+              w1 = ctx.measureText(strs1[1].replace(/\^.|#./g,"")).width;
+              /*上にバグがある*/
               ctx.font = "75px Inconsolata";
               w0 += ctx.measureText(strs1[0].replace(/[^#]/g,"")).width;
               w1 += ctx.measureText(strs1[1].replace(/[^#]/g,"")).width;
@@ -1183,7 +1184,6 @@
               ctx.moveTo(x+10,100);
               ctx.lineTo(x+w+30,100);
               ctx.stroke();
-              /*上にバグがある*/
               //  分子の描画
               x = x0+(w-w0)/2;
               chars = strs1[0].match(/[\^\#]?./g);
@@ -1454,5 +1454,5 @@
 
 
   </script>
-  <script type="text/javascript">alert("script fracwcoff");</script>
+  <script type="text/javascript">alert("script fracwcofffff");</script>
 </html>
