@@ -1165,7 +1165,6 @@
           ctx.clearRect(20,20,40,170);
           for(let i=0; i<strs0.length; i++){
             if(strs0[i].match(/F/)){//  分数部分
-              /*
               strs1 = strs0[i].match(/(?<={)[^\}]*(?=})/g);//  [分子,分母]
               ctx.font = "60px Inconsolata";
               w0 = ctx.measureText(strs1[0].replace(/\^.|#./g,"")).width;
@@ -1183,6 +1182,7 @@
               ctx.moveTo(x+10,100);
               ctx.lineTo(x+w+30,100);
               ctx.stroke();
+              /*
               //  分子の描画
               x = x0+(w-w0)/2;
               chars = strs1[0].match(/[\^\#]?./g);
@@ -1453,5 +1453,5 @@
 
 
   </script>
-  <script type="text/javascript">alert("script fraccf");</script>
+  <script type="text/javascript">alert("script fraccfff");</script>
 </html>
