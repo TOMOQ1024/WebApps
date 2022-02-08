@@ -290,33 +290,36 @@
       clear = 0;//  レベルごとに使用. 0:未, 1:済
       audio = {
         slider : {
-          PLAY : ()=>{
-            let a = new Audio("sounds/button45.mp3");
-            a.load();
-            a.volume = cdata.sound;
-            a.play();
-          }
+          src : "sounds/button45.mp3",
+          get vol(){return cdata.sound}
         },
         button : {
-          PLAY : ()=>{
-            let a = new Audio("sounds/button68.mp3");
-            a.load();
-            a.volume = cdata.sound;
-            a.play();
-          }
+          src : "sounds/button68.mp3",
+          get vol(){return cdata.sound}
         },
         clear : {
-          PLAY : ()=>{
-            let a = new Audio("sounds/データ解析.mp3");
-            a.load();
-            a.volume = Math.min(cdata.sound*1.6,1);
-            a.play();
-          }
+          src : "sounds/データ解析.mp3",
+          get vol(){return Math.min(cdata.sound*1.6,1)}
         }
       };
-
       //  クッキーがあれば，そのデータを代入する
       LoadCookie();
+      for(let k in audio){
+        let v = audio[k];
+        v.c = 0;
+        v.seq = [];
+        for(let i=0; i<10; i++){
+          v.seq.push(new Audio(v.src));
+          v.seq[i].volume = v.vol;
+        }
+        v.PLAY = ()=>{
+          v.seq[v.c].play();
+          v.seq[v.c] = new Audio(v.src);
+          v.seq[v.c].volume = v.vol;
+          v.c = (v.c+1)%5;
+        };
+      }
+
       //  Resetによる初期化
       Resize();
       Reset();
