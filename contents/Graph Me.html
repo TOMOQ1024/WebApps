@@ -1163,9 +1163,9 @@
         if(p.funcstr.match(/F/)){//  分数を含むとき
           strs0 = p.funcstr.match(/F\{[^\}]*\}\{[^\}]*\}|[^F]+/g);//  分数部分または一般部分
           ctx.clearRect(20,20,40,170);
-          /*
           for(let i=0; i<strs0.length; i++){
             if(strs0[i].match(/F/)){//  分数部分
+              /*
               strs1 = strs0[i].match(/(?<={)[^\}]*(?=})/g);//  [分子,分母]
               ctx.font = "60px Inconsolata";
               w0 = ctx.measureText(strs1[0].replace(/\^.|#./g,"")).width;
@@ -1224,6 +1224,7 @@
                 x += ctx.measureText(chars[j]).width;
               }
               x = x0+w+20;
+              */
             }
             else{//  一般部分
               chars = strs0[i].match(/[\^\#\$]?./g);
@@ -1253,7 +1254,6 @@
               }
             }
           }
-          */
           ctx.clearRect(x,20,20,170);
           ctx.strokeRect(20,20,x,170);
           ctx.fillStyle = graph.colors.main_;
@@ -1453,5 +1453,5 @@
 
 
   </script>
-  <script type="text/javascript">alert("script fraccc");</script>
+  <script type="text/javascript">alert("script fraccf");</script>
 </html>
