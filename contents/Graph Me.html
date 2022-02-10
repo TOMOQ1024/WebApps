@@ -1851,6 +1851,320 @@
         answer : [-3,3,.5,1]
       }
     };
+    let problems7 = {
+      73 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=afloor(bx+c)",
+        func : (x,a,b,c,d) => {
+          return a*Math.floor(b*x+c);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 200,//370
+        yaxis : 300,//460
+        gscale : 80,
+        vars : [1,1,1,0],
+        min : [0,-1,-3,1],
+        value : [3,0,0,3],
+        max : [6,1,3,5],
+        vscale : [0,0,0,0],
+        answer : [2,.5,-1,2]
+      },
+      74 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=mod(ax,b)+c",
+        func : (x,a,b,c,d) => {
+          return Math.mod(a*x,b)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-1,-3,-3,1],
+        value : [0,0,0,3],
+        max : [1,3,3,5],
+        vscale : [0,0,0,0],
+        answer : [-.7,-2,-3,2]
+      },
+      75 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=mod(ax,b)+cx+d",
+        func : (x,a,b,c,d) => {
+          return Math.mod(a*x,b)+c*x+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-1,-3,-1,-2],
+        value : [0,0,0,0],
+        max : [1,3,1,2],
+        vscale : [0,0,0,0],
+        answer : [1,-2,.3,-1]
+      },
+      76 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=afloor(bx^2)+c",
+        func : (x,a,b,c,d) => {
+          return a*Math.floor(b*x*x)+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,0],
+        min : [-1,-1,-1,-2],
+        value : [0,0,0,0],
+        max : [1,1,1,2],
+        vscale : [0,0,0,0],
+        answer : [1,-.3,-.6,-1]
+      },
+      77 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=afloor(bx)^2+c",
+        func : (x,a,b,c,d) => {
+          return a*Math.floor(b*x)**2+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 70,
+        vars : [1,1,1,0],
+        min : [-1,-1,-3,-2],
+        value : [0,0,0,0],
+        max : [1,1,3,2],
+        vscale : [0,0,0,0],
+        answer : [.5,-.6,-2,-1]
+      },
+      78 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=afloor#(bsin(cx+d)#)",
+        func : (x,a,b,c,d) => {
+          return a*Math.floor(b*Math.sin(c*x+d));
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 70,
+        vars : [1,1,1,1],
+        min : [-2,-2,-3,-1],
+        value : [0,0,0,0],
+        max : [2,2,3,1],
+        vscale : [0,0,0,0],
+        answer : [1.5,1.3,-2,-.4]
+      },
+      79 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=asin#(bmod(x,c)#)+d",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(b*Math.mod(x,c))+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 70,
+        vars : [1,1,1,1],
+        min : [0,-1,-2,-3],
+        value : [2,0,0,0],
+        max : [4,1,2,3],
+        vscale : [0,0,0,0],
+        answer : [3,-1,2,1]
+      },
+      80 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=afloor(x)-floor(bx)+cx+d",
+        func : (x,a,b,c,d) => {
+          return a*Math.floor(x)-Math.floor(b*x)+c*x+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 470,//370
+        yaxis : 460,//460
+        gscale : 70,
+        vars : [1,1,1,1],
+        min : [0,0,-2,-3],
+        value : [2,2,0,0],
+        max : [4,4,2,3],
+        vscale : [0,0,0,0],
+        answer : [2.5,1.5,-1,2]
+      },
+      81 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{ax+b}{mod(x,c)+d}",
+        func : (x,a,b,c,d) => {
+          return (a*x+b)/(Math.mod(x,c)+d);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 470,//370
+        yaxis : 460,//460
+        gscale : 70,
+        vars : [1,1,1,1],
+        min : [0,0,-2,-3],
+        value : [1,4,0,0],
+        max : [2,8,2,3],
+        vscale : [0,0,0,0],
+        answer : [.4,5,2,2]
+      },
+      82 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{mod(x,a)+b}{mod(x,c)+d}",
+        func : (x,a,b,c,d) => {
+          return (Math.mod(x,a)+b)/(Math.mod(x,c)+d);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 270,//370
+        yaxis : 460,//460
+        gscale : 50,
+        vars : [1,1,1,1],
+        min : [0,0,0,-3],
+        value : [2,2,1,0],
+        max : [4,4,2,3],
+        vscale : [0,0,0,0],
+        answer : [3.3,2,1,-2]
+      },
+      83 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=aceil#(bmod(x,c)+d#)",
+        func : (x,a,b,c,d) => {
+          return a*Math.ceil(b*Math.mod(x,c)+d);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-5,-5],
+        value : [0,0,0,0],
+        max : [3,3,5,5],
+        vscale : [0,0,0,0],
+        answer : [1,1,4,-3]
+      },
+      84 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=acos#(x+bfloor(cx)#)+d",
+        func : (x,a,b,c,d) => {
+          return a*Math.cos(x+b*Math.floor(c*x))+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 600,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-5,-5],
+        value : [0,0,0,0],
+        max : [3,3,5,5],
+        vscale : [0,0,0,0],
+        answer : [-2,3,2,3]
+      }
+    };
 
     let problems = {
       ...problems0,
@@ -1859,9 +2173,9 @@
       ...problems3,
       ...problems4,
       ...problems5,
-      ...problems6
-      /*...problems7,
-      ...problems8,
+      ...problems6,
+      ...problems7
+      /*...problems8,
       ...problems9,
       ...problems10,
       ...problems11,
@@ -2856,7 +3170,7 @@
           if(strs0[i].match(/F/)){//  分数部分
             //  この行の所為で一日費やした^^  strs1 = strs0[i].match(/(?<={)[^\}]*(?=})/g);//  [分子,分母]
             //  strs0[i]は"F{...}{...}"の形だから，splitで分ける．
-            strs1 = strs0[i].replace(/^F\{|}$/,"").split("}{");//  [分子,分母]
+            strs1 = strs0[i].replace(/^F{|}$/g,"").split("}{");//  [分子,分母]
             ctx.font = "60px Inconsolata";
             w0 = ctx.measureText(strs1[0].replace(/\^.|#./g,"")).width;
             w1 = ctx.measureText(strs1[1].replace(/\^.|#./g,"")).width;
@@ -3005,7 +3319,7 @@
               y = Math.min(Math.max(y,-10),750);
               ctx.lineTo(i,y);
               ctx.stroke();
-              y = f(c.x);
+              y = f(c.x+c.d);
               y = -y*graph.scale+graph.xaxis;
               y = Math.min(Math.max(y,-10),750);
               ctx.beginPath();
