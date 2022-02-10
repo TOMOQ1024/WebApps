@@ -2663,18 +2663,18 @@
         ctx.stroke();
         ctx.strokeStyle = 6<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
         ctx.beginPath();
-        ctx.moveTo(130+220*2-40,150+220*1+40);//  7:斜
+        ctx.moveTo(130+220*2-40,150+220*1+40);//  7:断
         ctx.lineTo(130+220*2+0,150+220*1+40);
+        ctx.moveTo(130+220*2+0,150+220*1-40);
         ctx.lineTo(130+220*2+40,150+220*1-40);
-        ctx.lineTo(130+220*2+0,150+220*1-40);
-        ctx.lineTo(130+220*2-40,150+220*1+40);
         ctx.stroke();
         ctx.strokeStyle = 7<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
         ctx.beginPath();
-        ctx.moveTo(130+220*3-40,150+220*1+40);//  8:断
+        ctx.moveTo(130+220*3-40,150+220*1+40);//  8:斜
         ctx.lineTo(130+220*3+0,150+220*1+40);
-        ctx.moveTo(130+220*3+0,150+220*1-40);
         ctx.lineTo(130+220*3+40,150+220*1-40);
+        ctx.lineTo(130+220*3+0,150+220*1-40);
+        ctx.lineTo(130+220*3-40,150+220*1+40);
         ctx.stroke();
         ctx.strokeStyle = 8<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
         ctx.beginPath();
