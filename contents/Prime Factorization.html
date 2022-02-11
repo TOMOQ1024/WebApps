@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no"/>
+    <title>Prime Factorization</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+      *{
+        font-size: 0;
+        overflow: hidden;
+        display: inline-block;
+        text-align: center;
+      }
+      .hidden{
+        opacity: 0;
+        pointer-events: none;
+      }
+      .blurred{
+        filter: blur(2px);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <canvas id="menu_canvas" width="128" height="1024"></canvas>
+      <canvas id="main_canvas" width="640" height="1024"></canvas>
+      <canvas id="popup_canvas" width="640" height="1024"></canvas>
+    </div>
+  </body>
+  <script type="text/javascript">
+    //
+
+
+    /********************************\
+    このコードで使用する色
+    #028 - ベースの背景
+    #004 - 背景枠
+    #002 - 入力欄, ヘッダ内
+    #4df - 決定ボタン, ヘッダ枠
+    #0eb - 正解
+    #e0b - 不正解
+    #fc0 - fav(active)
+    #aaa - fav(inactive)
+    white - 文字, ボタン
+
+    " //  !!! " => 要編集箇所
+    \********************************/
+
+
+
+    //  変数の定義
+    let Sleep = ms => new Promise(r=>setTimeout(r,ms));
+    let page = {//  表示場所のid
+      all : 0,//  全体的なページ番号
+      nums : 0,//  数字一覧とフィルタ設定間のページ番号
+      list : 0,//  数字一覧でのページ番号
+      test : 0,//  テストページ内でのページ番号
+      result : 0,//  テスト結果でのページ番号
+      log : 0,//  ログとフィルタ設定間のページ番号
+      logs : 0,//  ログでのページ番号
+      search : 0//  数値検索でのページ番号
+    };
+    let ready;
+    let Nums = {//  数値に関するデータ
+      min : 1,
+      max : 1000,
+      PrimeFactorize : (n) => {//  nを素因数分解した式の文字列を返す
+        if(Nums.PrimeList[Nums.PrimeList.length-1]**2<n){
+          Nums.CreatePL(Math.sqrt(n));
+        }
+        let divisors={}, rtn="";
+        for(let i=0; Nums.PrimeList[i]**2<=n; i++){
+          while(n%Nums.PrimeList[i] === 0){
+            divisors[Nums.PrimeList[i]] = divisors[Nums.PrimeList[i]] ? divisors[Nums.PrimeList[i]]+1 : 1;
+            n /= Nums.PrimeList[i];
+          }
+        }
+        if(n !== 1)divisors[n] = 1;
+        for(let p in divisors){
+          rtn += `${p}^${divisors[p]}*`;
+        }
+        return rtn.slice(0,-1);
+      },
+      CreatePL : (n) => {//  n以下の素数のリストを作成する。
+        for(let i=Nums.PrimeList[Nums.PrimeList.length-1]+1; i<=n; i++){
+          let bool = 1;
+          for(let j=0; Nums.PrimeList[j]**2<=i; j++){
+            if(i%Nums.PrimeList[j] === 0){
+              bool = 0;
+              break;
+            }
+          }
+          if(bool)Nums.PrimeList.push(i);
+        }
+      },
+      CreateBL : (n) => {
+        Nums.CreatePL(n);
+        for(let i=Math.max(...Object.keys(Nums.BaseList))+1; i<=n; i++){
+          Nums.BaseList[i] = {
+            PF : Nums.PrimeFactorize(i),
+            PN : Nums.PrimeList.indexOf(i)!==-1 ? 0 : (Nums.PrimeFactorize(i).match(/^\d+\^1\*\d+\^1$|^\d+\^2$/) ? 1 : 2),
+            FAV : 0
+          }
+        }
+      },
+      CreateList : () => {//  リストの初期化
+        //  お気に入り!!!
+        Nums.CreateBL(Nums.max);
+        Nums.List = [];
+        for(let i=Nums.min; i<=Nums.max; i++){
+          if(
+            (Nums.filter.P&&Nums.BaseList[i].PN===0)
+            ||(Nums.filter.S&&Nums.BaseList[i].PN===1)
+            ||(Nums.filter.C&&Nums.BaseList[i].PN===2)
+          ){
+            Nums.List.push(i);
+          }
+        }
+      },
+      filter : {
+        P : 1,//  素数(Prime)
+        S : 1,//  半素数(Semiprime)
+        C : 1,//  1,合成数(Composite)
+        fav : 1//  0:なし,1:あり,2:のみ
+      },
+      BaseList : {
+        1 : {
+          PF : "1^1",//  素因数分解の式
+          PN : 2,//  数値の分類(0:素数, 1:半素数, 2:合成数か1)
+          FAV : 0//  お気に入り登録
+        }
+      },
+      PrimeList : [2],
+      List : [],
+      showing : 0,
+      select : 0,//  ShowNum対象のid
+      setargs : {},
+      Set : (id,str,min,max) => {//  ポップアップcanvasでの値の設定
+        ptx.clearRect(0,0,640,1024);
+        ptx.fillStyle = "#ffffff50";
+        ptx.fillRect(0,0,640,1024);
+        Nums.setargs = {
+          id:id,str:str,min:min,max:max
+        };
+
+        //  iの設定
+        let i;
+        if(id==="000")i = Nums.min;
+        if(id==="001")i = Nums.max;
+        if(id==="100")i = Test.min;
+        if(id==="101")i = Test.max;
+        if(id==="102")i = Test.n;
+
+        //  入力欄の描画
+        {
+          ptx.fillStyle = "#002";
+          ptx.fillRect(40,40,560,184);
+          ptx.textAlign = "left";
+          ptx.textBaseline = "top";
+          ptx.fillStyle = "white";
+          ptx.font = `bold 40px serif`;
+          ptx.fillText(`${str} (${min}以上${max}以下)`,45,45);
+          ptx.textAlign = "center";
+          ptx.textBaseline = "middle";
+          ptx.font = `bold 130px serif`;
+          ptx.globalAlpha = min<=i&&i<=max ? 1 : .4;
+          ptx.fillText(i,320,157);
+          ptx.globalAlpha = 1;
+        }
+
+        //  ボタンの描画
+        {
+          ptx.font = `bold 160px serif`;
+          for(let y=0; y<4; y++){
+            for(let x=0; x<3; x++){
+              ptx.fillStyle = "white";
+              DrawRR(ptx,60+180*x,264+180*y,160,160,48);
+              if((x-3)*(y-3)){
+                ptx.fillStyle = "#028";
+                ptx.fillText(x-y*3+7,140+180*x,344+180*y);
+              }
+            }
+          }
+          ptx.fillStyle = "#028";
+          ptx.fillText("",244.5,930.5);
+          ptx.fillText(0,320,884);
+          ptx.font = `bold 120px serif`;
+          ptx.fillText("←",140,884);
+          ptx.fillText("→",500,884);
+        }
+
+        pvs.className = "";
+        cvs.className = "blurred";
+      },
+      ShowSettings : () => {
+        ctx.clearRect(0,0,640,1024);
+
+        //  ヘッダ
+        {
+          ctx.fillStyle = "#4df";
+          ctx.fillRect(20,20,320,80);
+          ctx.fillStyle = "#002";
+          ctx.fillRect(26,26,308,68);
+          ctx.fillStyle = "white";
+          ctx.font = `bold 60px serif`;
+          ctx.fillText("フィルタ",180,60);
+        }
+
+        //  戻るボタン
+        {
+          ctx.save();
+          ctx.fillStyle = "#002";
+          ctx.translate(524,20);
+          DrawRR(ctx,0,0,96,96,20);
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = 8;
+          ctx.lineJoin = "round";
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.arc(33,45,21,Math.PI*1.75,Math.PI*1.25,1);
+          ctx.arc(33,87,21,Math.PI*1.25,Math.PI*1.75,0);
+          ctx.arc(63,45,21,Math.PI*1.25,Math.PI*1.75,0);
+          ctx.arc(63,87,21,Math.PI*1.75,Math.PI*1.25,1);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        //  メイン!!!
+        {
+          ctx.fillStyle = "#002";
+          ctx.fillRect(340,136+124*0,280,104);
+          ctx.fillRect(340,136+124*1,280,104);
+          ctx.fillRect(340,136+124*2,280,104);
+          ctx.fillRect(340,136+124*3,280,104);
+          ctx.fillRect(340,136+124*4,280,104);
+          ctx.fillRect(340,136+124*5,280,104);
+          //  予備  //ctx.fillRect(340,136+124*6,280,104);
+          ctx.fillStyle = "white";
+          ctx.font = `bold 75px serif`;
+          ctx.fillText("上限",160,188+124*0,300);
+          ctx.fillText("下限",160,188+124*1,300);
+          ctx.fillText("お気に入り",160,188+124*2,300);
+          ctx.fillText("素数",160,188+124*3,300);
+          ctx.fillText("半素数",160,188+124*4,300);
+          ctx.fillText("その他",160,188+124*5,300);
+          ctx.font = `bold 75px serif`;//  6桁まで対応
+          ctx.fillText(Nums.max,480,188+124*0);
+          ctx.fillText(Nums.min,480,188+124*1);
+          ctx.fillText(["なし","あり","のみ"][Nums.filter.fav],480,188+124*2);
+          ctx.fillText(["なし","あり"][Nums.filter.P],480,188+124*3);
+          ctx.fillText(["なし","あり"][Nums.filter.S],480,188+124*4);
+          ctx.fillText(["なし","あり"][Nums.filter.C],480,188+124*5);
+
+          ctx.fillStyle = "#ffffffc0";
+          ctx.fillRect(40,188+124*2-30,560,60);
+          ctx.fillStyle = "#000022c0";
+          ctx.font = `bold 50px serif`;
+          ctx.fillText("未実装",320,188+124*2);
+        }
+      },
+      ShowList : (k) => {//  引数は表示するページ番号
+        page.list = k;
+        ctx.clearRect(0,0,640,1024);
+
+        //  ヘッダ
+        {
+          ctx.fillStyle = "#4df";
+          ctx.fillRect(20,20,320,80);
+          ctx.fillStyle = "#002";
+          ctx.fillRect(26,26,308,68);
+          ctx.fillStyle = "white";
+          ctx.font = `bold 60px serif`;
+          ctx.fillText("数字一覧",180,60);
+        }
+
+        //  フィルタ設定ボタン
+        {
+          ctx.save();
+          ctx.fillStyle = "#002";
+          ctx.translate(524,20);
+          DrawRR(ctx,0,0,96,96,20);
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = 8;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(16,32);
+          ctx.lineTo(80,32);
+          ctx.moveTo(16,64);
+          ctx.lineTo(80,64);
+          ctx.stroke();
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.arc(64,32,14,0,Math.PI*2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(32,64,14,0,Math.PI*2);
+          ctx.fill();
+          ctx.fillStyle = "#002";
+          ctx.beginPath();
+          ctx.arc(64,32,6,0,Math.PI*2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(32,64,6,0,Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        //  数字
+        for(let i=63*k; i<63*(1+k); i++){
+          let x = i%7;
+          let y = Math.floor(i/7)%9;
+          ctx.fillStyle = i<Nums.List.length ? "#002" : "#00002260";
+          DrawRR(ctx,16+88*x,136+88*y,80,80,16);
+          ctx.font = `bold ${[90,71,48,35,27,23,20,17,15][Math.floor(Math.log10(Nums.List[i]))]}px serif`;
+          ctx.fillStyle = "white";
+          ctx.fillText(Nums.List[i]||"",56+88*x,176+88*y);
+
+          //  FAV
+          if(Nums.List[i]){
+            ctx.fillStyle = Nums.BaseList[Nums.List[i]].FAV ? "#fc0" : "#aaa";
+            ctx.save();
+            ctx.beginPath();
+            ctx.translate(16+88*x+70,136+88*y+10);
+            for(let i=0; i<=10; i++){
+              ctx.lineTo(
+                Math.sin(Math.PI/5*i)*8*(.75+i%2),
+                Math.cos(Math.PI/5*i)*8*(.75+i%2)
+              );
+            }
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+
+        //  prevボタン
+        {
+          ctx.globalAlpha = 0<k ? 1 : 6/16;
+          ctx.fillStyle = "#002";
+          DrawRR(ctx,16+88*1,312+88*7,80,80,16);
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.moveTo(116,968);
+          ctx.lineTo(170,940);
+          ctx.lineTo(170,996);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.globalAlpha = 0<k ? 1 : 6/16;
+          ctx.fillStyle = "#002";
+          DrawRR(ctx,16+88*0,312+88*7,80,80,16);
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.moveTo(28,968);
+          ctx.lineTo(55-4,940+4);
+          ctx.lineTo(55-4,996-4);
+          ctx.moveTo(55+4,968);
+          ctx.lineTo(82,940+4);
+          ctx.lineTo(82,996-4);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        //  ページ
+        ctx.globalAlpha = 1;
+        ctx.font = `bold ${30}px serif`;
+        ctx.fillText(`ページ : ${k+1}/${Math.ceil(Nums.List.length/63)}`,320,968);
+
+        //  nextボタン
+        {
+          ctx.globalAlpha = k+1<Math.ceil(Nums.List.length/63) ? 1 : 6/16;
+          ctx.fillStyle = "#002";
+          DrawRR(ctx,16+88*5,312+88*7,80,80,16);
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.moveTo(524,968);
+          ctx.lineTo(470,940);
+          ctx.lineTo(470,996);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.globalAlpha = k+1<Math.ceil(Nums.List.length/63) ? 1 : 6/16;
+          ctx.fillStyle = "#002";
+          DrawRR(ctx,16+88*6,312+88*7,80,80,16);
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.moveTo(640-28,968);
+          ctx.lineTo(640-51,944);
+          ctx.lineTo(640-51,992);
+          ctx.moveTo(640-59,968);
+          ctx.lineTo(640-82,944);
+          ctx.lineTo(640-82,992);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        ctx.globalAlpha = 1;
+        ready = 1;
+      },
+      ShowNum : (n0,n1,n2) => {
+        Nums.showing = 1;
+        ptx.clearRect(0,0,640,1024);
+        ptx.fillStyle = "#ffffff50";
+        ptx.fillRect(0,0,640,1024);
+
+        //  n0
+        if(n0){
+          ptx.fillStyle = "#004";
+          DrawRR(ptx,20,360,120,120,24);
+          ptx.textAlign = "center";
+          ptx.textBaseline = "middle";
+          ptx.fillStyle = "white";
+          ptx.font = `bold ${[120,100,70,50,40,35,30,25,22][Math.floor(Math.log10(n0))]}px serif`;
+          ptx.fillText(n0,80,420);
+        }
+
+        //  n1
+        {
+          ptx.fillStyle = "#004";
+          DrawRR(ptx,160,160,320,320,64);
+          ptx.textAlign = "center";
+          ptx.textBaseline = "middle";
+          ptx.fillStyle = "white";
+          ptx.font = `bold ${[360,270,190,140,110,90,80,70,63][Math.floor(Math.log10(n1))]}px serif`;
+          ptx.fillText(n1,320,320);
+        }
+
+        //  n2
+        if(n2){
+          ptx.fillStyle = "#004";
+          DrawRR(ptx,500,360,120,120,24);
+          ptx.textAlign = "center";
+          ptx.textBaseline = "middle";
+          ptx.fillStyle = "white";
+          ptx.font = `bold ${[120,100,70,50,40,35,30,25,22][Math.floor(Math.log10(n2))]}px serif`;
+          ptx.fillText(n2,560,420);
+        }
+
+        //  FAV
+        {
+          ptx.fillStyle = Nums.BaseList[n1].FAV ? "#fc0" : "#aaa";
+          ptx.save();
+          ptx.beginPath();
+          ptx.translate(480-40,160+40);
+          for(let i=0; i<=10; i++){
+            ptx.lineTo(
+              Math.sin(Math.PI/5*i)*12*(.75+i%2),
+              Math.cos(Math.PI/5*i)*12*(.75+i%2)
+            );
+          }
+          ptx.fill();
+          ptx.restore();
+        }
+
+        //  n1の素因数分解
+        {
+          ptx.lineWidth = 12;
+          ptx.lineJoin = "round";
+          ptx.lineCap = "round";
+          ptx.strokeStyle = "#4df";
+          ptx.fillStyle = "#004";
+          ptx.font = `bold ${80}px serif`;
+          ptx.strokeText(["素数","半素数","合成数","１"][Nums.BaseList[n1].PN+(n1===1)],320,540);
+          ptx.fillText(["素数","半素数","合成数","１"][Nums.BaseList[n1].PN+(n1===1)],320,540);
+          ptx.strokeText(Nums.BaseList[n1].PF.replace(/\^1/g,""),320,640);
+          ptx.fillText(Nums.BaseList[n1].PF.replace(/\^1/g,""),320,640);
+        }
+
+        pvs.className = "";
+        cvs.className = "blurred";
+      }
+    };
+    let Test = {//  テスト,ログに関する連想配列
+      min : 2,
+      max : 100,//  九桁まで対応
+      n : 10,
+      fav : 1,
+      problems : [],
+      problem : 0,
+      answer : "",
+      results : [],
+      doing : 0,
+      select : 0,//  ShowNum対象のid
+      timer : {
+        limit : 10*1000,//  ms
+        crnt : 0,
+        dec : (d)=>{Test.timer.crnt -= d;}
+      },
+      logs : [],
+      Log : (num,result) => {//  ログをとる関数
+        Test.logs.push({num:num,result:result});
+      },
+      ShowSettings : () => {
+        ctx.clearRect(0,0,640,1024);
+        page.test = 0;
+
+        //  ヘッダ
+        {
+          ctx.fillStyle = "#4df";
+          ctx.fillRect(20,20,320+60,80);
+          ctx.fillStyle = "#002";
+          ctx.fillRect(26,26,308+60,68);
+          ctx.fillStyle = "white";
+          ctx.font = `bold 60px serif`;
+          ctx.fillText("テスト設定",180+30,60);
+        }
+
+        //  メイン
+        {
+          ctx.fillStyle = "#002";
+          ctx.fillRect(340,120,280,100);
+          ctx.fillRect(340,240,280,100);
+          ctx.fillRect(340,360,280,100);
+          ctx.fillRect(340,480,280,100);
+          ctx.fillStyle = "white";
+          ctx.font = `bold 75px serif`;
+          ctx.fillText("上限",160,170,300);
+          ctx.fillText("下限",160,290,300);
+          ctx.fillText("題数",160,410,300);
+          ctx.fillText("お気に入り",160,530,300);
+          ctx.font = `bold 75px serif`;//  6桁まで対応
+          ctx.fillText(Test.max,480,170);
+          ctx.fillText(Test.min,480,290);
+          ctx.fillText(Test.n,480,410);
+          ctx.fillText(["なし","あり","のみ"][Test.fav],480,530);
+
+          ctx.fillStyle = "#ffffffc0";
+          ctx.fillRect(40,500,560,60);
+          ctx.fillStyle = "#000022c0";
+          ctx.font = `bold 50px serif`;
+          ctx.fillText("未実装",320,530);
+        }
+
+        //  開始ボタン
+        {
+          ctx.fillStyle = "#4df";
+          DrawRR(ctx,30,844,580,150,40);
+          ctx.font = `bold 100px serif`;
+          ctx.fillStyle = "white";
+          ctx.fillText("テスト開始",320,919);
+        }
+      },
+      Do : async function(){//  テスト開始
+        ctx.clearRect(0,0,640,1024);
+        page.test = 1;
+        Test.doing = 1;
+        //  問題の初期化
+        {
+          Test.problems = [];
+          Test.results = [];
+          for(let i=0; i<Test.n; i++){
+            Test.problems.push(
+              Test.min+Math.floor(
+                Math.random()*(Test.max-Test.min+1)
+              )
+            );
+          }
+          Nums.CreateBL(Test.max);
+        }
+
+        //  不変部分の描画
+        {
+          ctx.font = `bold 139px serif`;
+          for(let y=0; y<4; y++){
+            for(let x=0; x<4; x++){
+              if((x-3)*(y-3)){
+                ctx.fillStyle = "white";
+                DrawRR(ctx,24+151*x,408+151*y,139,139,40);
+                ctx.fillStyle = "#028";
+                ctx.fillText(x-y*3+7,93.5+151*x,477.5+151*y);
+              }
+            }
+          }
+          ctx.fillStyle = "white";
+          DrawRR(ctx,24,861,139,139,40);//  一時停止
+          DrawRR(ctx,175,861,139,139,40);//  0
+          DrawRR(ctx,477,559,139,290,40);//  ×
+          DrawRR(ctx,477,408,139,139,40);//  ←
+          ctx.fillStyle = "#4df";
+          DrawRR(ctx,326,861,290,139,40);//  決定
+          ctx.fillStyle = "#028";
+          ctx.fillRect(49,886,32,139-50);//  一時停止マーク
+          ctx.fillRect(106,886,32,139-50);
+          ctx.fillText(0,244.5,930.5);
+          ctx.fillText("×",546.5,704);
+          ctx.font = `bold 120px serif`;
+          ctx.fillText("←",546.5,477.5);
+          ctx.fillStyle = "white";
+          ctx.fillText("決定",471,930.5);
+        }
+
+        //  問題ごとに実行
+        while(Test.results.length < Test.n){
+          Test.problem = Test.problems[Test.results.length];
+          Test.answer = "";
+          Test.timer.crnt = Test.timer.limit;
+
+          //  問題ごとに変化する部分の描画
+          {
+            ctx.clearRect(0,0,640,396);
+            ctx.fillStyle = "#002";
+            ctx.fillRect(24,256,592,128);
+            ctx.save();
+            ctx.fillStyle = "white";
+            ctx.textAlign = "right";
+            ctx.font = `bold 50px serif`;
+            ctx.fillText(`${Test.results.length+1}/${Test.n}`,24+592,210);
+            ctx.restore();
+          }
+
+          //  フレーム毎に実行
+          ready = 1;
+          while(1){
+            await Sleep(100);
+            if(page.all!==1||page.test!==1)return 0;
+            if(!Test.doing)continue;
+            Test.timer.dec(100);
+
+            //  フレーム毎に変化する部分の描画
+            ctx.clearRect(200,8,240,240);
+            ctx.fillStyle = "white";
+            ctx.font = `bold ${[220,160,110,80,70,60,50,45,40][Math.floor(Math.log10(Test.problem))]}px serif`;
+            ctx.fillText(Test.problem,320,128);
+            ctx.lineWidth = 12;
+            ctx.strokeStyle = "#002";
+            ctx.beginPath();
+            ctx.arc(320,128,110,Math.PI*1.5+Math.PI*2*Test.timer.crnt/Test.timer.limit,Math.PI*3.5);
+            ctx.stroke();
+            ctx.strokeStyle = "white";
+            ctx.beginPath();
+            ctx.arc(320,128,110,Math.PI*1.5,Math.PI*1.5+Math.PI*2*Test.timer.crnt/Test.timer.limit);
+            ctx.stroke();
+
+            //  時間切れ => 強制的に正誤判定
+            if(Test.timer.crnt <= 0)break;
+          }
+          ready = 0;
+
+          //  正誤判定の描画
+          ctx.lineWidth = 48;
+          if(Check(Test.answer,Test.problem)){
+            //  正解
+            Test.results.push(1);
+            ctx.beginPath();
+            ctx.arc(320,250,100,0,Math.PI*2);
+            ctx.strokeStyle = "#0eb";
+            ctx.stroke();
+          }
+          else{
+            //  不正解
+            Test.results.push(0);
+            ctx.beginPath();
+            ctx.moveTo(220,150);
+            ctx.lineTo(420,350);
+            ctx.moveTo(420,150);
+            ctx.lineTo(220,350);
+            ctx.strokeStyle = "#e0b";
+            ctx.stroke();
+          }
+
+          Test.Log(Test.problem,Test.results[Test.results.length-1]);
+          await Sleep(800);
+        }
+
+        //  テスト後の処理
+        page.result = 0;
+        SetPage(1,2);
+      },
+      Pause : async function(){
+        Test.doing = 0;
+
+        //  一時停止時の動きが未実装!!!
+
+        //  ポップアップ
+        ptx.clearRect(0,0,640,1024);
+        ptx.fillStyle = "#ffffff50";
+        ptx.fillRect(0,0,640,1024);
+        pvs.className = "";
+        cvs.className = "blurred";
+      },
+      ShowResults : (k) => {//  引数は表示するページ番号
+        page.test = 2;
+        page.result = k;
+        ctx.clearRect(0,0,640,1024);
+        //let accuracy = Math.floor(Test.results.reduce((a,b)=>a+b)/Test.n*100);
+
+        //  ヘッダ
+        {
+          ctx.fillStyle = "#4df";
+          ctx.fillRect(20,20,320,80);
+          ctx.fillStyle = "#002";
+          ctx.fillRect(26,26,308,68);
+          ctx.fillStyle = "white";
+          ctx.font = `bold 60px serif`;
+          ctx.fillText("テスト結果",180,60);
+        }
+
+        //  再テストボタン
+        {
+          ctx.save();
+          ctx.fillStyle = "#002";
+          ctx.translate(524,20);
+          DrawRR(ctx,0,0,96,96,20);
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = 8;
+          ctx.lineJoin = "round";
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(20,52);
+          ctx.lineTo(52,20);
+          ctx.lineTo(76,44);
+          ctx.lineTo(44,76);
+          ctx.lineTo(20,76);
+          ctx.lineTo(20,52);
+          ctx.lineTo(44,76);
+          ctx.stroke();
+          ctx.restore();
+        }
+        //  結果(正解数/問題数)
+        {
+          ctx.save();
+          ctx.fillStyle = "white";
+          ctx.textBaseline = "bottom";
+          ctx.textAlign = "right";
+          ctx.font = `bold 160px serif`;
+          ctx.fillText(Test.results.reduce((a,b)=>a+b),320,286);
+          ctx.textAlign = "left";
+          ctx.font = `bold 80px serif`;
+          ctx.fillText(`/${Test.n}`,320,286);
+          ctx.restore();
+        }
+
+        //  テスト内容,正誤
+        for(let i=49*k; i<49*(1+k); i++){
+          let x = i%7;
+          let y = Math.floor(i/7)%7;
+          ctx.fillStyle = i<Test.n ? "#002" : "#00002260";
+          DrawRR(ctx,16+88*x,312+88*y,80,80,16);
+          ctx.font = `bold ${[90,71,48,35,27,23,20,17,15][Math.floor(Math.log10(Test.problems[i]))]}px serif`;
+          ctx.fillStyle = Test.results[i] ? "#0eb" : "#e0b";
+          ctx.fillText(Test.problems[i]||"",56+88*x,352+88*y);
+
+          //  FAV
+          if(Test.problems[i]){
+            ctx.fillStyle = Nums.BaseList[Test.problems[i]].FAV ? "#fc0" : "#aaa";
+            ctx.save();
+            ctx.beginPath();
+            ctx.translate(16+88*x+70,312+88*y+10);
+            for(let i=0; i<=10; i++){
+              ctx.lineTo(
+                Math.sin(Math.PI/5*i)*8*(.75+i%2),
+                Math.cos(Math.PI/5*i)*8*(.75+i%2)
+              );
+            }
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+
+        //  prevボタン
+        {
+          ctx.globalAlpha = 0<k ? 1 : 6/16;
+          ctx.fillStyle = "#002";
+          DrawRR(ctx,16+88*1,312+88*7,80,80,16);
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.moveTo(116,968);
+          ctx.lineTo(170,940);
+          ctx.lineTo(170,996);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        //  ページ
+        ctx.globalAlpha = 1;
+        ctx.font = `bold ${40}px serif`;
+        ctx.fillText(`ページ : ${k+1}/${Math.ceil(Test.n/49)}`,320,968);
+
+        //  nextボタン
+        {
+          ctx.globalAlpha = k+1<Math.ceil(Test.n/49) ? 1 : 6/16;
+          ctx.fillStyle = "#002";
+          DrawRR(ctx,16+88*5,312+88*7,80,80,16);
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.moveTo(524,968);
+          ctx.lineTo(470,940);
+          ctx.lineTo(470,996);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        ctx.globalAlpha = 1;
+        ready = 1;
+      },
+      ShowLogs : (k) => {
+        ctx.clearRect(0,0,640,1024);
+
+        //  ヘッダ
+        {
+          ctx.fillStyle = "#4df";
+          ctx.fillRect(20,20,200,80);
+          ctx.fillStyle = "#002";
+          ctx.fillRect(26,26,188,68);
+          ctx.fillStyle = "white";
+          ctx.font = `bold 60px serif`;
+          ctx.fillText("ログ",120,60);
+        }
+
+        //  フィルタ設定ボタン
+        {
+          ctx.save();
+          ctx.fillStyle = "#002";
+          ctx.translate(524,20);
+          DrawRR(ctx,0,0,96,96,20);
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = 8;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(16,32);
+          ctx.lineTo(80,32);
+          ctx.moveTo(16,64);
+          ctx.lineTo(80,64);
+          ctx.stroke();
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.arc(64,32,14,0,Math.PI*2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(32,64,14,0,Math.PI*2);
+          ctx.fill();
+          ctx.fillStyle = "#002";
+          ctx.beginPath();
+          ctx.arc(64,32,6,0,Math.PI*2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(32,64,6,0,Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        //  メイン
+        let str;
+        for(let i=9*k; i<9*(1+k); i++){
+          str = Test.logs[i] ? `${Test.logs[i].num}=${Nums.BaseList[Test.logs[i].num].PF}`.replace(/\^1/g,"") : "";
+          ctx.fillStyle = i<Test.logs.length ? "#002" : "#00002260";
+          DrawRR(ctx,16,136+88*(i%9),608,80,16);
+          //ctx.font = `bold ${[90,71,48,35,27,23,20,17,15][str.length]}px serif`;
+          ctx.font = `bold ${Math.min(90,1112/str.length)}px serif`;
+          ctx.fillStyle = Test.logs[i]&&Test.logs[i].result ? "#0eb" : "#e0b";
+          ctx.fillText(str,320,176+88*(i%9));
+          /*文字サイズ実験
+          //  ~12:90
+          //  13:85
+          //  14:80
+          //  15:75
+          //  16:70
+          //  17:66
+          //  18:62
+          //  19:59
+          //  20:56
+          //  21:53
+          //  22:51
+          //  25:45
+          //  30:37
+          //  40:28
+          //ctx.fillText("=999999999999999999999999999999999999999",320,352+88*i);
+          */
+
+          //  FAV
+          /*
+          if(Test.logs[i]){
+            ctx.fillStyle = Nums.BaseList[Test.logs[i].num].FAV ? "#fc0" : "#aaa";
+            ctx.save();
+            ctx.beginPath();
+            ctx.translate(16+88*7+70,312+88*i+10);
+            for(let j=0; j<=10; j++){
+              ctx.lineTo(
+                Math.sin(Math.PI/5*j)*8*(.75+j%2),
+                Math.cos(Math.PI/5*j)*8*(.75+j%2)
+              );
+            }
+            ctx.fill();
+            ctx.restore();
+          }
+          */
+        }
+
+        //  prevボタン
+        {
+          ctx.globalAlpha = 0<k ? 1 : 6/16;
+          ctx.fillStyle = "#002";
+          DrawRR(ctx,16+88*1,312+88*7,80,80,16);
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.moveTo(116,968);
+          ctx.lineTo(170,940);
+          ctx.lineTo(170,996);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.globalAlpha = 0<k ? 1 : 6/16;
+          ctx.fillStyle = "#002";
+          DrawRR(ctx,16+88*0,312+88*7,80,80,16);
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.moveTo(28,968);
+          ctx.lineTo(55-4,940+4);
+          ctx.lineTo(55-4,996-4);
+          ctx.moveTo(55+4,968);
+          ctx.lineTo(82,940+4);
+          ctx.lineTo(82,996-4);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        //  ページ
+        ctx.globalAlpha = 1;
+        ctx.font = `bold ${40}px serif`;
+        ctx.fillText(`ページ : ${k+1}/${Math.ceil(Test.logs.length/9)}`,320,968);
+
+        //  nextボタン
+        {
+          ctx.globalAlpha = k+1<Math.ceil(Test.logs.length/9) ? 1 : 6/16;
+          ctx.fillStyle = "#002";
+          DrawRR(ctx,16+88*5,312+88*7,80,80,16);
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.moveTo(524,968);
+          ctx.lineTo(470,940);
+          ctx.lineTo(470,996);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.globalAlpha = k+1<Math.ceil(Test.logs.length/9) ? 1 : 6/16;
+          ctx.fillStyle = "#002";
+          DrawRR(ctx,16+88*6,312+88*7,80,80,16);
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.moveTo(640-28,968);
+          ctx.lineTo(640-51,944);
+          ctx.lineTo(640-51,992);
+          ctx.moveTo(640-59,968);
+          ctx.lineTo(640-82,944);
+          ctx.lineTo(640-82,992);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        ctx.globalAlpha = 1;
+      },
+      ShowLogSettings : () => {
+        //
+      }
+    };
+
+
+    //  HTML要素に関する定義
+    document.body.style.border = "solid #004 5px";
+    let cvs = document.querySelector("#main_canvas");
+    cvs.style.background = "#028";
+    let ctx = cvs.getContext("2d");
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    cvs.style.transition = "filter .3s";
+    let pvs = document.querySelector("#popup_canvas");
+    pvs.style.position = "absolute";
+    pvs.style.right = "0";
+    pvs.style.top = "0";
+    pvs.style.transition = "opacity .3s";
+    pvs.className = "hidden";
+    let ptx = pvs.getContext("2d");
+    let mvs = document.querySelector("#menu_canvas");
+    mvs.style.background = "#004";
+    let mtx = mvs.getContext("2d");
+
+
+
+    //  ロード時, 初期化・イベント設定
+    window.onload = () => {
+      Init();
+
+      //  リサイズ時, 画面構成を初期化
+      window.onresize = () => {Resize();};
+      if(window.ontouchstart === null){
+        //  タッチ操作
+        cvs.ontouchstart = (e) => {
+          CvsClick(
+            (e.touches[0].clientX-cvs.getBoundingClientRect().left)/cvs.offsetWidth*640,
+            (e.touches[0].clientY-cvs.getBoundingClientRect().top)/cvs.offsetWidth*640
+          );
+        };
+        pvs.ontouchstart = (e) => {
+          PvsClick(
+            (e.touches[0].clientX-cvs.getBoundingClientRect().left)/cvs.offsetWidth*640,
+            (e.touches[0].clientY-cvs.getBoundingClientRect().top)/cvs.offsetWidth*640
+          );
+        };
+        mvs.ontouchstart = (e) => {
+          MvsClick(
+            (e.touches[0].clientX-cvs.getBoundingClientRect().left)/cvs.offsetWidth*640,
+            (e.touches[0].clientY-cvs.getBoundingClientRect().top)/cvs.offsetWidth*640
+          );
+        };
+      }
+      else{
+        //  マウス操作
+        cvs.onmousedown = (e) => {
+          CvsClick(
+            (e.offsetX)/cvs.offsetWidth*640,
+            (e.offsetY)/cvs.offsetWidth*640
+          );
+        };
+        pvs.onmousedown = (e) => {
+          PvsClick(
+            (e.offsetX)/cvs.offsetWidth*640,
+            (e.offsetY)/cvs.offsetWidth*640
+          );
+        };
+        mvs.onmousedown = (e) => {
+          MvsClick(
+            (e.offsetX)/cvs.offsetWidth*640,
+            (e.offsetY)/cvs.offsetWidth*640
+          );
+        };
+      }
+    };
+
+
+
+
+    //  初期化
+    async function Init(){
+      ready = 0;
+      Resize();
+      await Sleep(10);
+      Nums.CreateList(Nums.max);
+      SetPage(0,0);
+    }
+
+    //  画面構成の初期化
+    function Resize(){
+      //  当初は縦横比によって構成を切り替えようとしていた
+      let len = Math.min(window.innerWidth/6,window.innerHeight/8)*.9;
+      cvs.style.width = `${len*5}px`;
+      pvs.style.width = `${len*5}px`;
+      mvs.style.width = `${len}px`;
+    }
+
+    //  ページ移動, 描画
+    function SetPage(m,n){
+      let id = `${m}${n}`;
+      page.all = m;
+      page[["nums","test","log","search"][page.all]] = n;
+      pvs.className = "hidden";
+      cvs.className = "";
+      /* !!! */if(id!=="11")Test.doing = 0;
+      if(id==="00"){
+        //  数字一覧 - main
+        Nums.ShowList(page.list);
+      }
+      if(id==="01"){
+        //  数字一覧 - フィルタ
+        Nums.ShowSettings();
+      }
+      if(id==="10"){
+        //  テスト - 設定
+        Test.ShowSettings();
+      }
+      if(id==="11"){
+        //  テスト - main
+        Test.Do();
+      }
+      if(id==="12"){
+        //  テスト - results
+        Test.ShowResults(page.result);
+      }
+      if(id==="20"){
+        //  ログ - main
+        Test.ShowLogs(page.logs);
+      }
+      if(id==="21"){
+        //  ログ - フィルタ
+        Test.ShowLogSettings();
+      }
+      if(id==="30"){
+        //  数値分析 - main
+      }
+      DrawMenu();
+    }
+
+    //  メニューバーの描画
+    function DrawMenu(){
+      mtx.clearRect(0,0,128,1024);
+      let i = page.all;
+
+      //  選択中の項目を強調
+      let gra = mtx.createRadialGradient(64,64+128*i,0,64,64+128*i,64);
+      gra.addColorStop(0.0,"#ccccffc0");
+      gra.addColorStop(0.5,"#ccccffc0");
+      gra.addColorStop(1.0,"#4444aa00");
+      mtx.fillStyle = gra;
+      mtx.beginPath();
+      mtx.arc(64,64+128*i,64,0,Math.PI*2);
+      mtx.fill();
+
+      //  アイコンの描画設定
+      mtx.save();
+      mtx.strokeStyle = "white";
+      mtx.lineWidth = 8;
+      mtx.lineJoin = "round";
+      mtx.lineCap = "round";
+
+      //  テスト中の移動禁止を示す
+      if(Test.doing){
+        for(let k=0; k<4; k++){
+          if(k===1)continue;
+          mtx.beginPath();
+          mtx.moveTo(24,24+128*k);
+          mtx.lineTo(104,104+128*k);
+          mtx.stroke();
+        }
+      }
+
+      //  数字一覧
+      mtx.beginPath();
+      mtx.arc(44, 60,28,Math.PI*1.75,Math.PI*1.25,1);
+      mtx.arc(44,116,28,Math.PI*1.25,Math.PI*1.75,0);
+      mtx.arc(84, 60,28,Math.PI*1.25,Math.PI*1.75,0);
+      mtx.arc(84,116,28,Math.PI*1.75,Math.PI*1.25,1);
+      mtx.stroke();
+
+      //  テスト
+      mtx.translate(0,128);
+      mtx.beginPath();
+      mtx.moveTo(24,72);
+      mtx.lineTo(24,104);
+      mtx.lineTo(56,104);
+      mtx.lineTo(24,72);
+      mtx.lineTo(72,24);
+      mtx.lineTo(104,56);
+      mtx.lineTo(56,104);
+      mtx.stroke();
+
+      //  ログ
+      mtx.translate(0,128);
+      mtx.beginPath();
+      mtx.moveTo(72,24);
+      mtx.lineTo(32,24);
+      mtx.lineTo(32,104);
+      mtx.lineTo(96,104);
+      mtx.lineTo(96,48);
+      mtx.lineTo(72,48);
+      mtx.lineTo(72,24);
+      mtx.lineTo(96,48);
+      mtx.moveTo(48,62);
+      mtx.lineTo(80,62);
+      mtx.moveTo(48,76);
+      mtx.lineTo(80,76);
+      mtx.moveTo(48,90);
+      mtx.lineTo(80,90);
+      mtx.stroke();
+
+      //  数字一覧
+      mtx.translate(0,128);
+      mtx.beginPath();
+      mtx.moveTo(24,104);
+      mtx.arc(72,56,32,Math.PI*.75,Math.PI*2.75);
+      mtx.stroke();
+
+      //  アイコン描画終了
+      mtx.restore();
+    }
+
+    //  正誤判定
+    function Check(ans,prob){
+      let divisors = ans.split("*");
+
+      if(ans.match(/^\*|\*$/))return 0;
+      if(eval(ans) !== prob)return 0;
+      for(let i=0; i<divisors.length; i++){
+        if(Nums.PrimeList.indexOf(Number(divisors[i]))===-1)return 0;
+      }
+      return 1;
+    }
+
+    //  メインcanvasのクリックイベント
+    //  数値一覧やログでのページ遷移について, 競嘉一があいまいになっている!!!
+    function CvsClick(x,y){
+      //  x,y は px 単位に変換されている
+      if(!ready)return 0;
+
+      if(page.all===0&&page.nums===0){
+        //  数字一覧
+        if(IsIn(x,y,12,132,616,792)){//  数字
+          let X = Math.floor((x-12)/88);
+          let Y = Math.floor((y-132)/88);
+          let i = X+Y*7+page.list*63;
+          if(i < Nums.List.length){
+            Nums.select = i;
+            Nums.ShowNum(
+              0<i?Nums.List[i-1]:0,
+              Nums.List[i],
+              i+1<Nums.List.length?Nums.List[i+1]:0
+            );
+          }
+        }
+        else if(IsIn(x,y,16+88*1,312+88*7,80,80,16)){//  prev
+          Nums.ShowList(Math.max(0,page.list-1));
+        }
+        else if(IsIn(x,y,16+88*0,312+88*7,80,80,16)){//  prev+
+          Nums.ShowList(Math.max(0,page.list-20));
+        }
+        else if(IsIn(x,y,16+88*5,312+88*7,80,80,16)){//  next
+          Nums.ShowList(Math.min(Math.floor(Nums.List.length/63),page.list+1));
+        }
+        else if(IsIn(x,y,16+88*6,312+88*7,80,80,16)){//  next+
+          Nums.ShowList(Math.min(Math.floor(Nums.List.length/63),page.list+20));
+        }
+        else if(IsIn(x,y,524,20,96,96)){//  フィルタ設定
+          SetPage(0,1);
+        }
+      }
+      else if(page.all===0&&page.nums===1){
+        //  数字一覧フィルタ設定!!!
+        if(IsIn(x,y,330,126+124*0,300,124)){//  340,136+124*0,280,104
+          //  上限
+          Nums.Set("001","上限",Nums.min,99999);
+        }
+        else if(IsIn(x,y,330,126+124*1,300,124)){
+          //  下限
+          Nums.Set("000","下限",1,Nums.max);
+        }
+        else if(IsIn(x,y,330,126+124*2,300,124)){
+          //  お気に入り
+          Nums.filter.fav = (Nums.filter.fav+1)%3;
+        }
+        else if(IsIn(x,y,330,126+124*3,300,124)){
+          //  素数
+          Nums.filter.P = (Nums.filter.P+1)%2;
+        }
+        else if(IsIn(x,y,330,126+124*4,300,124)){
+          //  半素数
+          Nums.filter.S = (Nums.filter.S+1)%2;
+        }
+        else if(IsIn(x,y,330,126+124*5,300,124)){
+          //  半素数
+          Nums.filter.C = (Nums.filter.C+1)%2;
+        }
+        if(IsIn(x,y,524,20,96,96)){//  数字一覧に戻る
+          SetPage(0,0);
+        }
+        else {
+          Nums.ShowSettings();
+        }
+      }
+      else if(page.all===1&&page.test===0){
+        //  テスト設定
+        if(IsIn(x,y,340,120,280,100)){
+          //  上限
+          Nums.Set("101","上限",Test.min,99999);
+        }
+        else if(IsIn(x,y,360,240,280,100)){
+          //  下限
+          Nums.Set("100","下限",2,Test.max);
+        }
+        else if(IsIn(x,y,360,360,280,100)){
+          //  題数
+          Nums.Set("102","題数",1,999);
+        }
+        else if(IsIn(x,y,360,480,280,100)){
+          //  お気に入り
+          Test.fav = (Test.fav+1)%3;
+          if(Test.fav===2){
+            //  "のみ"の場合, favの存在を確認!!!
+          }
+          SetPage(1,0);
+        }
+        else if(IsIn(x,y,30,844,580,150)){
+          //  テスト開始
+          SetPage(1,1);
+        }
+      }
+      else if(page.all===1&&page.test===1){
+        //  テスト
+        //ctx.fillRect(18,402,151,151);
+        if(Math.max(Math.abs(x-320),Math.abs(y-698))<296){
+          let c = ["7","8","9","B","4","5","6","*","1","2","3","*","P","0","E","E"][
+            Math.floor((x-18)/151)+Math.floor((y-402)/151)*4
+          ];
+          if(c==="B"){
+            Test.answer = Test.answer.slice(0,-1);
+          }else if(c==="E"){
+            Test.timer.crnt = 100;
+            return 0;
+          }else if(c==="*"){
+            Test.answer += c;
+            Test.answer = Test.answer.replace(/\*\*$/,"*");
+          }else if(c==="P"){
+            Test.Pause();
+            return 0;
+          }else{
+            Test.answer += c;
+          }
+
+          //  解答記入欄の描画
+          ctx.clearRect(12,244,616,152);
+          ctx.fillStyle = "#002";
+          ctx.fillRect(24,256,592,128);
+          ctx.fillStyle = "white";
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(40,256);
+          ctx.lineTo(600,256);
+          ctx.lineTo(600,384);
+          ctx.lineTo(40,384);
+          ctx.closePath();
+          ctx.clip();
+          ctx.textAlign = "right";
+          ctx.font = `bold ${100}px serif`;
+          //ctx.font = `bold ${Math.max(Math.min(140,941/Test.answer.length+6.6),40)}px serif`;
+          ctx.fillText(Test.answer,600,320);
+          ctx.restore();
+        }
+      }
+      else if(page.all===1&&page.test===2){
+        //  テスト結果
+        if(Math.max(Math.abs(x-320),Math.abs(y-616))<308){//  問題一覧
+          let X = Math.floor((x-12)/88);
+          let Y = Math.floor((y-308)/88);
+          let i = X+Y*7+page.result*49;
+          if(i < Test.n){
+            Test.select = i;
+            Nums.ShowNum(
+              0<i?Test.problems[i-1]:0,
+              Test.problems[i],
+              i+1<Test.n?Test.problems[i+1]:0
+            );
+          }
+        }
+        else if(IsIn(x,y,524,20,96,96)){//  再テスト
+          SetPage(1,0);
+        }
+      }
+      else if(page.all===2&&page.logs===0){
+        //  ログ
+        if(IsIn(x,y,12,132,616,792)){//  各ログ
+          let X = Math.floor((x-12)/88);
+          let Y = Math.floor((y-132)/88);
+          let i = Y+page.list*9;
+          if(page.logs*9+i < Test.logs.length){
+            //  ログに対する操作は削除だけでいいのか!!!
+            Test.logs.splice(page.logs*9+i,1);
+            Test.ShowLogs(page.logs);
+          }
+        }
+        else if(IsIn(x,y,16+88*1,312+88*7,80,80,16)){//  prev
+          Test.ShowLogs(Math.max(0,page.logs-1));
+        }
+        else if(IsIn(x,y,16+88*0,312+88*7,80,80,16)){//  prev+
+          Test.ShowLogs(Math.max(0,page.logs-20));
+        }
+        else if(IsIn(x,y,16+88*5,312+88*7,80,80,16)){//  next
+          Test.ShowLogs(Math.min(Math.floor(Test.logs.length/9),page.logs+1));
+        }
+        else if(IsIn(x,y,16+88*6,312+88*7,80,80,16)){//  next+
+          Test.ShowLogs(Math.min(Math.floor(Test.logs.length/9),page.logs+20));
+        }
+        else if(IsIn(x,y,524,20,96,96)){//  フィルタ設定
+          SetPage(0,1);
+        }
+      }
+    }
+
+    //  ポップアップcanvasのクリックイベント
+    function PvsClick(x,y){
+      if(Nums.showing){
+        if(page.all===0&&page.nums===0){
+          //  数字一覧
+          if(IsIn(x,y,20,360,120,120) && 0<Nums.select){
+            Nums.select -= 1;
+            Nums.ShowNum(
+              0<Nums.select?Nums.List[Nums.select-1]:0,
+              Nums.List[Nums.select],
+              Nums.select+1<Nums.List.length?Nums.List[Nums.select+1]:0
+            );
+          }
+          else if(IsIn(x,y,500,360,120,120) && Nums.select+1<Nums.List.length){
+            Nums.select += 1;
+            Nums.ShowNum(
+              0<Nums.select?Nums.List[Nums.select-1]:0,
+              Nums.List[Nums.select],
+              Nums.select+1<Nums.List.length?Nums.List[Nums.select+1]:0
+            );
+          }
+          else if(IsIn(x,y,160,160,320,320)){
+            //  fav
+            Nums.BaseList[Nums.List[Nums.select]].FAV ^= 1;//  toggle
+            Nums.ShowNum(
+              0<Nums.select?Nums.List[Nums.select-1]:0,
+              Nums.List[Nums.select],
+              Nums.select+1<Nums.List.length?Nums.List[Nums.select+1]:0
+            );
+            Nums.ShowList(page.list);
+          }
+          else{
+            pvs.className = "hidden";
+            cvs.className = "";
+            Nums.showing = 0;
+          }
+        }
+        else if(page.all===1&&page.test===2){
+          //  テスト結果
+          if(IsIn(x,y,20,360,120,120) && 0<Test.select){
+            Test.select -= 1;
+            Nums.ShowNum(
+              0<Test.select?Test.problems[Test.select-1]:0,
+              Test.problems[Test.select],
+              Test.select+1<Test.n?Test.problems[Test.select+1]:0
+            );
+          }
+          else if(IsIn(x,y,500,360,120,120) && Test.select+1<Test.n){
+            Test.select += 1;
+            Nums.ShowNum(
+              0<Test.select?Test.problems[Test.select-1]:0,
+              Test.problems[Test.select],
+              Test.select+1<Test.n?Test.problems[Test.select+1]:0
+            );
+          }
+          else if(IsIn(x,y,160,160,320,320)){
+            //  fav
+            Nums.BaseList[Test.problems[Test.select]].FAV ^= 1;//  toggle
+            Nums.ShowNum(
+              0<Test.select?Test.problems[Test.select-1]:0,
+              Test.problems[Test.select],
+              Test.select+1<Test.n?Test.problems[Test.select+1]:0
+            );
+            Test.ShowResults(0);
+          }
+          else{
+            pvs.className = "hidden";
+            cvs.className = "";
+            Nums.showing = 0;
+          }
+        }
+      }
+      else if(page.all===0&&page.nums===1){
+        //  フィルタ設定(min,max)
+        if(IsIn(x,y,50,254,540,720)){
+          let X = Math.floor((x-50)/180);
+          let Y = Math.floor((y-254)/180);
+          let i = Math.max(0,X+(2-Y)*3+1);
+          if(Nums.setargs.id==="000"){//  下限min
+            if(Y===3&&X!==1){
+              if(!X){
+                Nums.min = Math.floor(Nums.min/10);
+              }
+              else{
+                pvs.className = "hidden";
+                cvs.className = "";
+                Nums.min = Math.max(Nums.min,Nums.setargs.min);
+                Nums.min = Math.min(Nums.min,Nums.setargs.max);
+                SetPage(0,1);
+                return 0;
+              }
+            }
+            else{
+              Nums.min = Nums.min*10+i;
+            }
+            Nums.Set("000","下限",1,Nums.max);
+          }
+          else if(Nums.setargs.id==="101"){//  上限max
+            if(Y===3&&X!==1){
+              if(!X){
+                Test.max = Math.floor(Test.max/10);
+              }
+              else{
+                pvs.className = "hidden";
+                cvs.className = "";
+                Test.max = Math.max(Test.max,Nums.setargs.min);
+                Test.max = Math.min(Test.max,Nums.setargs.max);
+                SetPage(1,0);
+                return 0;
+              }
+            }
+            else{
+              Test.max = Test.max*10+i;
+            }
+            Nums.Set("101","上限",Test.min,99999);
+          }
+          else if(Nums.setargs.id==="102"){//  問題数n
+            if(Y===3&&X!==1){
+              if(!X){
+                Test.n = Math.floor(Test.n/10);
+              }
+              else{
+                pvs.className = "hidden";
+                cvs.className = "";
+                Test.n = Math.max(Test.n,Nums.setargs.min);
+                Test.n = Math.min(Test.n,Nums.setargs.max);
+                SetPage(1,0);
+                return 0;
+              }
+            }
+            else{
+              Test.n = Test.n*10+i;
+            }
+            Nums.Set("102","題数",1,999);
+          }
+        }
+        else{
+          pvs.className = "hidden";
+          cvs.className = "";
+          Nums.showing = 0;
+        }
+      }
+      else if(page.all===1&&page.test===0){
+        //  テスト設定(min,max)
+        if(IsIn(x,y,50,254,540,720)){
+          let X = Math.floor((x-50)/180);
+          let Y = Math.floor((y-254)/180);
+          let i = Math.max(0,X+(2-Y)*3+1);
+          if(Nums.setargs.id==="100"){//  下限min
+            if(Y===3&&X!==1){
+              if(!X){
+                Test.min = Math.floor(Test.min/10);
+              }
+              else{
+                pvs.className = "hidden";
+                cvs.className = "";
+                Test.min = Math.max(Test.min,Nums.setargs.min);
+                Test.min = Math.min(Test.min,Nums.setargs.max);
+                SetPage(1,0);
+                return 0;
+              }
+            }
+            else{
+              Test.min = Test.min*10+i;
+            }
+            Nums.Set("100","下限",2,Test.max);
+          }
+          else if(Nums.setargs.id==="101"){//  上限max
+            if(Y===3&&X!==1){
+              if(!X){
+                Test.max = Math.floor(Test.max/10);
+              }
+              else{
+                pvs.className = "hidden";
+                cvs.className = "";
+                Test.max = Math.max(Test.max,Nums.setargs.min);
+                Test.max = Math.min(Test.max,Nums.setargs.max);
+                SetPage(1,0);
+                return 0;
+              }
+            }
+            else{
+              Test.max = Test.max*10+i;
+            }
+            Nums.Set("101","上限",Test.min,99999);
+          }
+          else if(Nums.setargs.id==="102"){//  問題数n
+            if(Y===3&&X!==1){
+              if(!X){
+                Test.n = Math.floor(Test.n/10);
+              }
+              else{
+                pvs.className = "hidden";
+                cvs.className = "";
+                Test.n = Math.max(Test.n,Nums.setargs.min);
+                Test.n = Math.min(Test.n,Nums.setargs.max);
+                SetPage(1,0);
+                return 0;
+              }
+            }
+            else{
+              Test.n = Test.n*10+i;
+            }
+            Nums.Set("102","題数",1,999);
+          }
+        }
+        else{
+          pvs.className = "hidden";
+          cvs.className = "";
+          Nums.showing = 0;
+        }
+      }
+      else if(page.all===1&&page.test===1 && !Test.doing){
+        //  pausing
+        //  時間稼ぎ防止策!!!
+        //  テスト中断!!!
+        pvs.className = "hidden";
+        cvs.className = "";
+        Test.doing = 1;
+      }
+    }
+
+    //  メニューバーcanvasのクリックイベント
+    function MvsClick(x,y){
+      let i = Math.floor(y/128);
+      let p = page[["nums","test","logs","search"][i]];
+      if(!Test.doing){//  テスト中は無効化!!!
+        //  表示中のページのアイコンが押されたときは, 最初のページへ
+        SetPage(i,i===page.all ? 0 : p);
+      }
+    }
+
+    //  角丸矩形の描画
+    function DrawRR(context,x,y,w,h,r){
+      //  素数のときは左下が丸くないとか面白いかも...
+      context.beginPath();
+      context.moveTo(x,y + r);
+      context.arc(x+r,y+h-r,r,Math.PI,Math.PI*0.5,true);
+      context.arc(x+w-r,y+h-r,r,Math.PI*0.5,0,1);
+      context.arc(x+w-r,y+r,r,0,Math.PI*1.5,1);
+      context.arc(x+r,y+r,r,Math.PI*1.5,Math.PI,1);
+      context.closePath();
+      context.fill();
+    }
+
+    //  (x,y)が矩形内にあるかどうか
+    function IsIn(x,y,x0,y0,w,h){
+      let bool = 1;
+      bool = bool && x0 < x;
+      bool = bool && x < x0+w;
+      bool = bool && y0 < y;
+      bool = bool && y < y0+h;
+      return bool;
+    }
+
+
+
+
+
+
+
+  </script>
+</html>
