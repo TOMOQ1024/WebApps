@@ -2687,9 +2687,9 @@
       if(b){
         btx.fillStyle = "#ccc";
         btx.fillRect(0,0,bvs.width,bvs.height);
-        let gra = btx.createLinearGradient(0,0,bvs.width,bvs.height);
+        let gra = btx.createLinearGradient(0,0,bvs.width,0);
         gra.addColorStop(0,"#eee");
-        gra.addColorStop(1,"#999");
+        gra.addColorStop(1,"#bbb");
         btx.fillStyle = gra;
         btx.fillRect(0,0,bvs.width,bvs.height);
       }
