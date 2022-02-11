@@ -12,11 +12,9 @@
     <style>
       *{
         font-size: 0;
-        overflow: hidden;
         display: inline-block;
         text-align: center;
       }
-
       @font-face
       {
         font-family: 'Inconsolata';
@@ -27,10 +25,29 @@
              url('mplus1p-thin.woff') format('woff'),     /* その他のブラウザ */
              url('mplus1p-thin.ttf') format('truetype');  /* 古いiOS */
       }
+      body{
+        width : 100%;
+        margin : 0;
+      }
+      #wrapper{
+        position : relative;
+        overflow: visible;
+        display: inline-block;
+        width : 100%;
+      }
+      canvas{
+        position : absolute;
+        top : 0;
+        left : 0;
+        bottom : 0;
+        right : 0;
+        margin : auto;
+      }
     </style>
   </head>
   <body>
     <div id="wrapper">
+      <canvas id="background_canvas" width="1000" height="1650"></canvas>
       <canvas id="main_canvas" width="1000" height="1650"></canvas>
     </div>
   </body>
@@ -59,7 +76,7 @@
 
     let Sleep = ms => new Promise(r=>setTimeout(r,ms));
     Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
-    let cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0;
+    let bvs,btx,cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0;
 
     //  難易度順に入れ替える!!!
     let problems0 = {
@@ -2331,10 +2348,16 @@
 
     function Resize(){
       let len = Math.min(window.innerWidth/20,window.innerHeight/33)*.95;
+      bvs.style.width = `${len*20}px`;
       cvs.style.width = `${len*20}px`;
+      document.querySelector("#wrapper").style.height = `${innerHeight}px`;
     }
 
     function Init(){
+      bvs = document.querySelector("#background_canvas");
+      btx = bvs.getContext("2d");
+      btx.lineJoin = "round";
+      btx.lineCap = "round";
       cvs = document.querySelector("#main_canvas");
       ctx = cvs.getContext("2d");
       ctx.lineJoin = "round";
@@ -2394,7 +2417,7 @@
 
       //  Resetによる初期化
       Resize();
-      Reset();
+      Reset(2);
     }
 
     //  ボタン設定
@@ -2440,6 +2463,7 @@
       cdata.color = vars[1].value;
       cdata.weight = vars[2].value;
       SaveCookie();
+      DrawAll(1);
     }
 
     //  クリア判定等
@@ -2568,7 +2592,7 @@
     //  問題画面の初期化. 最初の表示にも用いる
     //  設定の初期化!!!
     function Reset(b){
-      if(b){
+      if(b===1){
         //  手動押下時
         if(graph.type === "title"){
           location.reload();
@@ -2614,7 +2638,7 @@
       //  ボタンの設定
       SetButtons();
 
-      DrawAll();
+      DrawAll(b===2);
     }
 
     //  nextボタン押下時の処理
@@ -2651,19 +2675,23 @@
       }
     }
 
-    function DrawAll(){
-      DrawBackground();
-      DrawScreen();
-      DrawControls();
+    //  b:背景も描画するかどうか
+    function DrawAll(b){
+      DrawBackground(b);
+      DrawControls(b);
+      DrawScreen(b);
     }
 
-    function DrawBackground(){
-      ctx.fillStyle = "#ccc";
-      ctx.fillRect(0,0,cvs.width,cvs.height);
+    function DrawBackground(b){
+      ctx.clearRect(0,0,cvs.width,cvs.height)
+      if(b){
+        btx.fillStyle = "#ccc";
+        btx.fillRect(0,0,bvs.width,bvs.height);
+      }
     }
 
     //  ページが真っ暗になるバグ発生(解決済)
-    function DrawScreen(){
+    function DrawScreen(b){
       ctx.save();
 
       //  描画範囲の指定
@@ -2678,7 +2706,7 @@
       ctx.translate(40,40);
 
       //  背景
-      DrawScreenBackground();
+      DrawScreenBackground(b);
 
       //  グラフ
       if(graph.type == "title"){
@@ -3096,18 +3124,22 @@
       ctx.restore();
     }
 
-    function DrawScreenBackground(){
-      if(cdata.analog){
-        let gra = ctx.createRadialGradient(460,370,0,460,370,1000);
-        gra.addColorStop(0.0,"#246347");
-        gra.addColorStop(0.7,"#133828");
-        gra.addColorStop(1.0,"#091c14");
-        ctx.fillStyle = gra;
-        ctx.fillRect(-10,-10,940,760);
-      }
-      else{
-        ctx.fillStyle = "#000";
-        ctx.fillRect(-10,-10,940,760);
+    function DrawScreenBackground(b){
+      if(b){
+        btx.translate(40,40);
+        if(cdata.analog){
+          let gra = btx.createRadialGradient(460,370,0,460,370,1000);
+          gra.addColorStop(0.0,"#246347");
+          gra.addColorStop(0.7,"#133828");
+          gra.addColorStop(1.0,"#091c14");
+          btx.fillStyle = gra;
+          btx.fillRect(-10,-10,940,760);
+        }
+        else{
+          btx.fillStyle = "#000";
+          btx.fillRect(-10,-10,940,760);
+        }
+        btx.translate(-40,-40);
       }
 
       //  グリッド
@@ -3157,7 +3189,6 @@
       let strs0,strs1,chars,x0,w0,w1,w;
       let p = problems[level];
       x = 40;
-      if(cdata.analog)ctx.shadowBlur = 10;
       ctx.strokeStyle = graph.colors.main;
       ctx.setLineDash([]);
       ctx.lineWidth = 5;
@@ -3259,9 +3290,10 @@
           }
         }
         ctx.clearRect(x,20,20,170);
+        if(cdata.analog)ctx.shadowBlur = 10;
         ctx.strokeRect(20,20,x,170);
-        ctx.fillStyle = graph.colors.main_;
         ctx.shadowBlur = 0;
+        ctx.fillStyle = graph.colors.main_;
         ctx.fillRect(20,20,x,170);
       }
       else{//  分数を含まないとき
@@ -3286,9 +3318,10 @@
           x += ctx.measureText(chars[i]).width;
         }
         ctx.clearRect(x,20,20,100);
+        if(cdata.analog)ctx.shadowBlur = 10;
         ctx.strokeRect(20,20,x,100);
-        ctx.fillStyle = graph.colors.main_;
         ctx.shadowBlur = 0;
+        ctx.fillStyle = graph.colors.main_;
         ctx.fillRect(20,20,x,100);
       }
     }
@@ -3331,7 +3364,7 @@
       ctx.stroke();
     }
 
-    function DrawControls(){
+    function DrawControls(b){
       let gra0 = ctx.createLinearGradient(0,-50,0,50);
       gra0.addColorStop(0,"#afa");
       gra0.addColorStop(1,"#5d5");
@@ -3342,27 +3375,33 @@
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       for(let i=0; i<4; i++){
+        if(b){
+          btx.save();
+          btx.translate(500,950+130*i);
+          //  上限と下限のディスプレイ
+          btx.fillStyle = "#000";
+          btx.fillRect(-460,-40,100,80);
+          btx.fillRect(+360,-40,100,80);
+          //  スライダーの背景
+          btx.beginPath();
+          btx.arc(-300,0,5,Math.PI,-Math.PI);
+          btx.arc(+300,0,5,0,Math.PI*2);
+          btx.lineWidth = 10;
+          btx.strokeStyle = "#888";
+          btx.shadowBlur = 5;
+          btx.shadowColor = "#eee";
+          btx.shadowOffsetX = 5;
+          btx.shadowOffsetY = 5;
+          btx.stroke();
+          btx.shadowColor = "#555";
+          btx.shadowOffsetX = -5;
+          btx.shadowOffsetY = -5;
+          btx.stroke();
+          btx.restore();
+        }
         ctx.save();
         ctx.translate(500,950+130*i);
-        ctx.beginPath();
-        ctx.arc(-300,0,5,Math.PI,-Math.PI);
-        ctx.arc(+300,0,5,0,Math.PI*2);
-        ctx.lineWidth = 10;
-        ctx.strokeStyle = "#888";
-        ctx.shadowBlur = 5;
-        ctx.shadowColor = "#eee";
-        ctx.shadowOffsetX = 5;
-        ctx.shadowOffsetY = 5;
-        ctx.stroke();
-        ctx.shadowColor = "#555";
-        ctx.shadowOffsetX = -5;
-        ctx.shadowOffsetY = -5;
-        ctx.stroke();
         //  上限と下限
-        ctx.shadowColor = "#00000000";
-        ctx.fillStyle = "#000";
-        ctx.fillRect(-460,-40,100,80);
-        ctx.fillRect(+360,-40,100,80);
         ctx.fillStyle = "#f00";
         ctx.font = "80px Inconsolata";
         ctx.fillText(vars[i].available ? vars[i].min : "",-410,0,80);
