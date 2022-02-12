@@ -94,7 +94,7 @@
        }
     }
     let problems1 = {
-       1 : {
+      01 : {
         type : "explicit",
         funcstr : "y=a",
         func : (x,a,b,c,d) => {
@@ -110,7 +110,7 @@
         vscale : [0,0,0,0],
         answer : [4,0,0,0]
       },
-       2 : {
+      02 : {
         type : "explicit",
         funcstr : "y=ax+b",
         func : (x,a,b,c,d) => {
@@ -126,7 +126,7 @@
         vscale : [0,0,0,0],
         answer : [3,-2,0,0]
       },
-       3 : {
+      03 : {
         type : "explicit",
         funcstr : "y=a(x-2)+b",
         func : (x,a,b,c,d) => {
@@ -142,7 +142,7 @@
         vscale : [0,0,0,0],
         answer : [.5,2,0,0]
       },
-       4 : {
+      04 : {
         type : "explicit",
         funcstr : "y=a(bx+1)",
         func : (x,a,b,c,d) => {
@@ -158,7 +158,7 @@
         vscale : [0,0,0,0],
         answer : [-6,.25,0,0]
       },
-       5 : {
+      05 : {
         type : "explicit",
         funcstr : "y=ax^2+b",
         func : (x,a,b,c,d) => {
@@ -174,7 +174,7 @@
         vscale : [0,0,0,0],
         answer : [-.25,3,0,0]
       },
-       6 : {
+      06 : {
         type : "explicit",
         funcstr : "y=a(x-b)^2+c",
         func : (x,a,b,c,d) => {
@@ -190,7 +190,7 @@
         vscale : [0,0,0,0],
         answer : [.5,3,-2,0]
       },
-       7 : {
+      07 : {
         type : "explicit",
         funcstr : "y=a(x-b)(x-c)",
         func : (x,a,b,c,d) => {
@@ -206,7 +206,7 @@
         vscale : [0,0,0,0],
         answer : [.125,3,-6,0]
       },
-       8 : {
+      08 : {
         type : "explicit",
         funcstr : "y=ax(x-b)+c",
         func : (x,a,b,c,d) => {
@@ -222,11 +222,11 @@
         vscale : [0,0,0,0],
         answer : [-.25,4,3,0]
       },
-       9 : {
+      09 : {
         type : "explicit",
         hide : 1,
         tangent : 1,
-        funcstr : "y=0.25x^2+a",
+        funcstr : "y=F{1}{4}x^2+a",
         func : (x,a,b,c,d) => {
           return x*x/4+a;
         },
@@ -2182,6 +2182,35 @@
         answer : [-2,3,2,3]
       }
     };
+    let problems8 = {
+      85 : {
+        type : "explicit",
+        skewx : .4,
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=ax^2+bx+c",
+        func : (x,a,b,c,d) => {
+          return a*x*x+b*x+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 200,//370
+        yaxis : 300,//460
+        gscale : 80,
+        vars : [1,1,1,0],
+        min : [0,-1,-3,1],
+        value : [3,0,0,3],
+        max : [6,1,3,5],
+        vscale : [0,0,0,0],
+        answer : [2,.5,-1,2]
+      }
+    };
 
     let problems = {
       ...problems0,
@@ -2191,9 +2220,9 @@
       ...problems4,
       ...problems5,
       ...problems6,
-      ...problems7
-      /*...problems8,
-      ...problems9,
+      ...problems7,
+      ...problems8
+      /*...problems9,
       ...problems10,
       ...problems11,
       ...problems12,*/
@@ -2627,6 +2656,7 @@
       graph.yaxis = p.yaxis;
       graph.scale = p.gscale;
       for(let i=0; i<4; i++){
+        //  スライダー移動の可視化!!!
         vars[i].available = p.vars[i];
         vars[i].min = p.min[i];
         vars[i].value = p.value[i];
@@ -3129,6 +3159,15 @@
       ctx.restore();
     }
 
+    function SkewGraph(r){
+      let p = problems[level];
+      if(p.skewx){
+        ctx.translate(p.yaxis,p.xaxis);
+        ctx.transform(1,0,r ? -p.skewx : p.skewx,1,0,0);
+        ctx.translate(-p.yaxis,-p.xaxis);
+      }
+    }
+
     function DrawScreenBackground(b){
       if(b){
         btx.translate(40,40);
@@ -3152,28 +3191,36 @@
       ctx.strokeStyle = cdata.analog ? "#333" : "#444";
       for(let i=Math.ceil(-graph.yaxis/graph.scale); i<=(920-graph.yaxis)/graph.scale; i++){
         ctx.lineWidth = i%5 ? 4 : 6;
+        SkewGraph();
         ctx.beginPath();
         ctx.moveTo(graph.yaxis+i*graph.scale,0);
         ctx.lineTo(graph.yaxis+i*graph.scale,740);
+        SkewGraph(1);
         ctx.stroke();
       }
       for(let i=Math.ceil(-graph.xaxis/graph.scale); i<=(740-graph.xaxis)/graph.scale; i++){
         ctx.lineWidth = i%5 ? 4 : 6;
+        SkewGraph();
         ctx.beginPath();
         ctx.moveTo(0,graph.xaxis+i*graph.scale);
         ctx.lineTo(920,graph.xaxis+i*graph.scale);
+        SkewGraph(1);
         ctx.stroke();
       }
       //  軸
       ctx.lineWidth = 8;
       ctx.strokeStyle = cdata.analog ? "#333" : "#777";
+      SkewGraph();
       ctx.beginPath();
       ctx.moveTo(graph.yaxis,0);
       ctx.lineTo(graph.yaxis,740);
+      SkewGraph(1);
       ctx.stroke();
+      SkewGraph();
       ctx.beginPath();
       ctx.moveTo(0,graph.xaxis);
       ctx.lineTo(920,graph.xaxis);
+      SkewGraph(1);
       ctx.stroke();
 
       //  レベルの表示
@@ -3338,6 +3385,7 @@
       ctx.setLineDash(ld);
       ctx.beginPath();
       if(graph.type === "explicit"){
+        //  !!!
         for(let i=-10; i<=930; i+=2){
           x = (i-graph.yaxis)/graph.scale;
           if(Number.isNaN(f(x))){
