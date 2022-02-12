@@ -2209,6 +2209,169 @@
         max : [5,3,3,5],
         vscale : [0,0,0,0],
         answer : [3,2,-1,2]
+      },
+      86 : {
+        type : "explicit",
+        skewx : -2,
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=asinbx+cx+d",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(b*x)+c*x+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 200,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,0,-1,-3],
+        value : [0,3,0,0],
+        max : [3,6,1,3],
+        vscale : [0,0,0,0],
+        answer : [-1,4,-.4,-1]
+      },
+      87 : {
+        type : "explicit",
+        skewx : -1,
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=|x-a|-|x-b|+cx+d",
+        func : (x,a,b,c,d) => {
+          return Math.abs(x-a)-Math.abs(x-b)+c*x+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 200,//370
+        yaxis : 600,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,0,-3,-3],
+        value : [0,3,0,0],
+        max : [3,6,3,3],
+        vscale : [0,0,0,0],
+        answer : [-2,4,-2,-2]
+      },
+      88 : {
+        type : "explicit",
+        skewx : 2,
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=cos#(asin(bx)#+c)+d",
+        func : (x,a,b,c,d) => {
+          return Math.cos(a*Math.sin(b*x)+c)+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-2,0,-3,-3],
+        value : [1,2,0,0],
+        max : [4,4,3,3],
+        vscale : [0,0,0,0],
+        answer : [3,1,-1,-1]
+      },
+      89 : {
+        type : "explicit",
+        skewx : 2,
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=2sin#(a#||x-b|-c#|-d#)",
+        func : (x,a,b,c,d) => {
+          return 2*Math.sin(a*Math.abs(Math.abs(x-b)-c)-d);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,0,-3,-1],
+        value : [0,2,0,0],
+        max : [3,4,3,1],
+        vscale : [0,0,0,0],
+        answer : [2,1,1.5,-.5]
+      },
+      90 : {
+        type : "explicit",
+        skewx : 3,
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=#(a#||x-b|-c#|-d#)^2",
+        func : (x,a,b,c,d) => {
+          return (a*Math.abs(Math.abs(x-b)-c)-d)**2;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 470,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [0,0,-3,-2],
+        value : [1,2,0,0],
+        max : [2,4,3,2],
+        vscale : [0,0,0,0],
+        answer : [1,1,2,1]
+      },
+      91 : {
+        type : "explicit",
+        skewx : 1,
+        //skewy : 1,
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=#(a#||x-b|-c#|-d#)^2",
+        func : (x,a,b,c,d) => {
+          return (a*Math.abs(Math.abs(x-b)-c)-d)**2;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 470,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [0,0,-3,-2],
+        value : [1,2,0,0],
+        max : [2,4,3,2],
+        vscale : [0,0,0,0],
+        answer : [1,1,2,1]
       }
     };
 
