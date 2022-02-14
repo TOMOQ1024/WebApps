@@ -2347,15 +2347,15 @@
       },
       91 : {
         type : "explicit",
-        skewx : 1,
-        //skewy : 1,
+        skewx : 0,
+        skewy : -.7,
         hide : 0,
         points : [],
         tangent : 0,
         tangent2 : 0,
-        funcstr : "y=#(a#||x-b|-c#|-d#)^2",
+        funcstr : "y=acosbx+csindx",
         func : (x,a,b,c,d) => {
-          return (a*Math.abs(Math.abs(x-b)-c)-d)**2;
+          return a*Math.cos(b*x)+c*Math.sin(d*x);
         },
         funcTangent : (x,a,b,c,d)=>{
           return 2;
@@ -2363,15 +2363,127 @@
         funcTangent2 : (x,a,b,c,d)=>{
           return -6;
         },
-        xaxis : 470,//370
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [0,-2,0,-2],
+        value : [2,0,2,0],
+        max : [4,2,4,2],
+        vscale : [0,0,0,0],
+        answer : [2,1,1,-2]
+      },
+      92 : {
+        type : "explicit",
+        skewx : 0,
+        skewy : -.7,
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=#||acosbx+c|-d#|",
+        func : (x,a,b,c,d) => {
+          return Math.abs(Math.abs(a*Math.cos(b*x)+c)-d);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return 2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [0,0,-3,-3],
+        value : [2,1,0,0],
+        max : [4,2,3,3],
+        vscale : [0,0,0,0],
+        answer : [4,1,1,3]
+      },
+      93 : {
+        type : "explicit",
+        skewx : 1,
+        skewy : -1,
+        hide : 1,
+        points : [-2,2],
+        tangent : 1,
+        tangent2 : 0,
+        funcstr : "y=F{x(x^2+a)}{b}+c",
+        func : (x,a,b,c,d) => {
+          return x*(x*x+a)/b+c;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return -4/3*x-2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-4,-4,-4,-3],
+        value : [0,0,0,0],
+        max : [4,4,4,3],
+        vscale : [0,0,0,0],
+        answer : [-4,3,-2,3]
+      },
+      94 : {
+        type : "explicit",
+        skewx : .7,
+        skewy : .2,
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{ax+b}{x^2+c}+d",
+        func : (x,a,b,c,d) => {
+          return (a*x+b)/(x*x+c)+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return -4/3*x-2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
         yaxis : 460,//460
         gscale : 80,
         vars : [1,1,1,1],
-        min : [0,0,-3,-2],
-        value : [1,2,0,0],
-        max : [2,4,3,2],
+        min : [-4,-4,-4,-3],
+        value : [0,0,0,0],
+        max : [4,4,4,3],
         vscale : [0,0,0,0],
-        answer : [1,1,2,1]
+        answer : [3,4,-3,-1]
+      },
+      95 : {
+        type : "explicit",
+        skewx : .7,
+        skewy : .2,
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{ax+b}{x^2+c}+d",
+        func : (x,a,b,c,d) => {
+          return (a*x+b)/(x*x+c)+d;
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return -4/3*x-2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-4,-4,-4,-3],
+        value : [0,0,0,0],
+        max : [4,4,4,3],
+        vscale : [0,0,0,0],
+        answer : [3,4,-3,-1]
       }
     };
 
@@ -2864,7 +2976,7 @@
       }
       else{
         level += 1;
-        Reset();
+        Reset(2);
       }
     }
 
@@ -2891,6 +3003,7 @@
     //  ページが真っ暗になるバグ発生(解決済)
     function DrawScreen(b){
       ctx.save();
+      btx.save();
 
       //  描画範囲の指定
       ctx.beginPath();
@@ -2900,6 +3013,13 @@
       ctx.lineTo(960,40);
       ctx.closePath();
       ctx.clip();
+      btx.beginPath();
+      btx.moveTo(40,40);
+      btx.lineTo(40,780);
+      btx.lineTo(960,780);
+      btx.lineTo(960,40);
+      btx.closePath();
+      btx.clip();
       //  スクリーン左上を原点とする
       ctx.translate(40,40);
 
@@ -3278,14 +3398,21 @@
         }
 
         //  通過する点
-        if(problems[level].points){
+        if(p.points){
+          let X,Y;
+          let sx = p.skewx || 0;
+          let sy = p.skewy || 0;
           ctx.lineWidth = cdata.weight;
           ctx.strokeStyle = graph.colors.main;
           for(let i=0; i<problems[level].points.length; i++){
-            x = problems[level].points[i];
+            x = p.points[i];
             y = p.func(x,problems[level].answer[0],problems[level].answer[1],problems[level].answer[2],problems[level].answer[3]);
+            x = x*graph.scale;
+            y = -y*graph.scale;
+            X = x + sx*y;
+            Y = y + sy*x;
             ctx.beginPath();
-            ctx.arc(x*graph.scale+graph.yaxis,-y*graph.scale+graph.xaxis,cdata.weight,0,Math.PI*2);
+            ctx.arc(p.yaxis+X,p.xaxis+Y,cdata.weight,0,Math.PI*2);
             ctx.stroke();
           }
         }
@@ -3320,14 +3447,26 @@
       }
 
       ctx.restore();
+      btx.restore();
     }
 
     function SkewGraph(r){
       let p = problems[level];
-      if(p.skewx){
-        ctx.translate(p.yaxis,p.xaxis);
-        ctx.transform(1,0,r ? -p.skewx : p.skewx,1,0,0);
-        ctx.translate(-p.yaxis,-p.xaxis);
+      let sx = p.skewx || 0;
+      let sy = p.skewy || 0;
+      let x0 = graph.yaxis;
+      let y0 = graph.xaxis;
+      if(r){
+        ctx.transform(1/(1-sx*sy),-sy/(1-sx*sy),-sx/(1-sx*sy),1/(1-sx*sy),0,0);
+        ctx.translate(-x0,-y0);
+        btx.transform(1/(1-sx*sy),-sy/(1-sx*sy),-sx/(1-sx*sy),1/(1-sx*sy),0,0);
+        btx.translate(-x0,-y0);
+      }
+      else{
+        ctx.translate(x0,y0);
+        ctx.transform(1,sy,sx,1,0,0);
+        btx.translate(x0,y0);
+        btx.transform(1,sy,sx,1,0,0);
       }
     }
 
@@ -3346,48 +3485,59 @@
           btx.fillStyle = "#000";
           btx.fillRect(-10,-10,940,760);
         }
-        btx.translate(-40,-40);
+
+        //  グリッド
+        //  レベル選択に戻ったとき，グリッドの設定を戻す!!!
+        let sx = problems[level].skewx || 0;
+        let sy = problems[level].skewy || 0;
+        let x0 = graph.yaxis;
+        let y0 = graph.xaxis;
+        btx.strokeStyle = cdata.analog ? "#333" : "#444";
+        //  縦
+        for(
+          let i=Math.ceil((-x0-Math.max(sx*(-y0),sx*(740-y0)))/(1-sx*sy)/graph.scale);
+          i<=Math.floor((920-x0-Math.min(sx*(-y0),sx*(740-y0)))/(1-sx*sy)/graph.scale);
+          i++
+        ){
+          btx.lineWidth = i%5 ? 4 : 6;
+          SkewGraph();
+          btx.beginPath();
+          btx.moveTo(i*graph.scale,-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy));
+          btx.lineTo(i*graph.scale,-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy));
+          SkewGraph(1);
+          btx.stroke();
+        }
+        //  横
+        for(
+          let i=Math.ceil(-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy)/graph.scale);
+          i<=Math.floor(-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy)/graph.scale);
+          i++
+        ){
+          btx.lineWidth = i%5 ? 4 : 6;
+          SkewGraph();
+          btx.beginPath();
+          btx.moveTo((-x0-Math.max(sx*(-y0),sx*(740-y0)))/(1-sx*sy),i*graph.scale);
+          btx.lineTo((920-x0-Math.min(sx*(-y0),sx*(740-y0)))/(1-sx*sy),i*graph.scale);
+          SkewGraph(1);
+          btx.stroke();
+        }
+        //  軸
+        btx.lineWidth = 8;
+        btx.strokeStyle = cdata.analog ? "#333" : "#777";
+        SkewGraph();
+        btx.beginPath();
+        btx.moveTo(0,-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy));
+        btx.lineTo(0,-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy));
+        SkewGraph(1);
+        btx.stroke();
+        SkewGraph();
+        btx.beginPath();
+        btx.moveTo((-x0-Math.max(sx*(-y0),sx*(740-y0)))/(1-sx*sy),0);
+        btx.lineTo((920-x0-Math.min(sx*(-y0),sx*(740-y0)))/(1-sx*sy),0);
+        SkewGraph(1);
+        btx.stroke();
       }
 
-      //  グリッド
-      //  レベル選択に戻ったとき，グリッドの設定を戻す!!!
-      let s = problems[level].skewx || 0;
-      let x0 = graph.yaxis;
-      let y0 = graph.xaxis;
-      ctx.strokeStyle = cdata.analog ? "#333" : "#444";
-      for(let i=Math.floor((-x0+s*y0+Math.min(0,-740*s))/graph.scale); i<=(920-x0+s*y0+Math.max(0,-740*s))/graph.scale; i++){
-        ctx.lineWidth = i%5 ? 4 : 6;
-        SkewGraph();
-        ctx.beginPath();
-        ctx.moveTo(graph.yaxis+i*graph.scale,0);
-        ctx.lineTo(graph.yaxis+i*graph.scale,740);
-        SkewGraph(1);
-        ctx.stroke();
-      }
-      for(let i=Math.ceil(-graph.xaxis/graph.scale); i<=(740-graph.xaxis)/graph.scale; i++){
-        ctx.lineWidth = i%5 ? 4 : 6;
-        SkewGraph();
-        ctx.beginPath();
-        ctx.moveTo(0-i*graph.scale*s,graph.xaxis+i*graph.scale);
-        ctx.lineTo(920-i*graph.scale*s,graph.xaxis+i*graph.scale);
-        SkewGraph(1);
-        ctx.stroke();
-      }
-      //  軸
-      ctx.lineWidth = 8;
-      ctx.strokeStyle = cdata.analog ? "#333" : "#777";
-      SkewGraph();
-      ctx.beginPath();
-      ctx.moveTo(graph.yaxis,0);
-      ctx.lineTo(graph.yaxis,740);
-      SkewGraph(1);
-      ctx.stroke();
-      SkewGraph();
-      ctx.beginPath();
-      ctx.moveTo(0,graph.xaxis);
-      ctx.lineTo(920,graph.xaxis);
-      SkewGraph(1);
-      ctx.stroke();
 
       //  レベルの表示
       if(graph.type==="explicit"){
@@ -3545,7 +3695,8 @@
     }
 
     function DrawScreenGraph(s,w,ld,f){
-      let sk = problems[level].skewx || 0;
+      let sx = problems[level].skewx || 0;
+      let sy = problems[level].skewy || 0;
       let x0 = graph.yaxis;
       let y0 = graph.xaxis;
       let c;
@@ -3556,8 +3707,8 @@
       ctx.beginPath();
       if(graph.type === "explicit"){
         //  !!!
-        for(let i=Math.min(-y0*sk,(740-y0)*sk); i<=920+Math.max(y0*sk,(y0-740)*sk); i+=2){
-          x = (i-graph.yaxis)/graph.scale;
+        for(let i=(-x0-Math.max(sx*(-y0),sx*(740-y0)))/(1-sx*sy); i<=(920-x0-Math.min(sx*(-y0),sx*(740-y0)))/(1-sx*sy); i+=2){
+          x = i/graph.scale;
           if(Number.isNaN(f(x))){
             SkewGraph(1);
             ctx.stroke();
@@ -3567,21 +3718,21 @@
             c = isContinuous(f,x,2/graph.scale);
             if(c.bool){
               y = f(x);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
+              y = -y*graph.scale;
+              y = Math.min(Math.max(y,-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy)-10),-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy)+10);
               ctx.lineTo(i,y);
             }
             else{
               y = f(c.x);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
+              y = -y*graph.scale;
+              y = Math.min(Math.max(y,-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy)-10),-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy)+10);
               ctx.lineTo(i,y);
               SkewGraph(1);
               ctx.stroke();
               SkewGraph();
               y = f(c.x+c.d);
-              y = -y*graph.scale+graph.xaxis;
-              y = Math.min(Math.max(y,-10),750);
+              y = -y*graph.scale;
+              y = Math.min(Math.max(y,-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy)-10),-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy)+10);
               ctx.beginPath();
               ctx.moveTo(i,y);
             }
