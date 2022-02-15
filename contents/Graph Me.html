@@ -2459,15 +2459,15 @@
       },
       95 : {
         type : "explicit",
-        skewx : .7,
-        skewy : .2,
+        skewx : .2,
+        skewy : -.5,
         hide : 0,
         points : [],
         tangent : 0,
         tangent2 : 0,
-        funcstr : "y=F{ax+b}{x^2+c}+d",
+        funcstr : "y=asinbxsincx+dx",
         func : (x,a,b,c,d) => {
-          return (a*x+b)/(x*x+c)+d;
+          return a*Math.sin(b*x)*Math.sin(c*x)+d*x;
         },
         funcTangent : (x,a,b,c,d)=>{
           return -4/3*x-2;
@@ -2477,13 +2477,41 @@
         },
         xaxis : 370,//370
         yaxis : 460,//460
-        gscale : 80,
+        gscale : 60,
         vars : [1,1,1,1],
-        min : [-4,-4,-4,-3],
-        value : [0,0,0,0],
-        max : [4,4,4,3],
+        min : [-4,0,0,-3],
+        value : [0,2,4,0],
+        max : [4,4,8,3],
         vscale : [0,0,0,0],
-        answer : [3,4,-3,-1]
+        answer : [2,1,8,-1]
+      },
+      96 : {
+        type : "explicit",
+        skewx : .2,
+        skewy : .2,
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=F{ax-bfloor(cx)}{mod(x,d)+1}",
+        func : (x,a,b,c,d) => {
+          return (a*x-b*Math.floor(c*x))/(Math.mod(x,d)+1);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return -4/3*x-2;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return -6;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-4,-4,-2,-3],
+        value : [0,0,0,0],
+        max : [4,4,2,3],
+        vscale : [0,0,.1,.1],
+        answer : [-2,2,-1,2]
       }
     };
 
