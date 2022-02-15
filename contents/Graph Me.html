@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="../Style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inconsolata&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
     <style>
       *{
         font-size: 0;
@@ -17,7 +17,7 @@
       }
       @font-face
       {
-        font-family: 'Inconsolata';
+        font-family: 'Roboto Mono, monospace';
         font-style: normal;
         font-weight: 100;
         src: url('mplus1p-thin.eot');  /* IE9+ */
@@ -59,8 +59,8 @@
     /*
     参考資料等
 
-    使用フォント:Inconsolata(Google fonts)
-    https://fonts.google.com/specimen/Inconsolata?query=inconsola#standard-styles
+    使用フォント:Roboto Mono(Google fonts)
+    https://fonts.google.com/specimen/Roboto+Mono?category=Monospace
 
     フォントのロードの検知:Web Font Loader
     参考:http://ithat.me/2016/12/10/js-web-font-load-start-complete-detection-web-font-loader
@@ -2514,6 +2514,29 @@
         answer : [-2,2,-1,2]
       }
     };
+    let problems9 = {
+      97 : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,-3,2];
+        },
+        funcstr : "r=aθ+b (c<θ<d)",
+        func : (x,a,b,c,d) => {
+          return a*x+b;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [-1,-2,-3,2]
+      }
+    };
 
     let problems = {
       ...problems0,
@@ -2524,9 +2547,9 @@
       ...problems5,
       ...problems6,
       ...problems7,
-      ...problems8
-      /*...problems9,
-      ...problems10,
+      ...problems8,
+      ...problems9
+      /*...problems10,
       ...problems11,
       ...problems12,*/
     }
@@ -2539,7 +2562,7 @@
     WebFont.load({
       //custom : {
       custom : {
-        families : ["Inconsolata"]
+        families : ["Roboto Mono"]
       },
       active : () => {
         Init();
@@ -3262,7 +3285,7 @@
         ctx.fillStyle = graph.colors.main;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.font = "100px Inconsolata";
+        ctx.font = "82px 'Roboto Mono'";
         ctx.fillText(`DISPLAY - ${cdata.analog?"ANALOG ":"DIGITAL"}`,920/2,148*1);
         ctx.fillText(`COLOR   -   ${["Y / C","C / R","P / O","O / Y"][cdata.color]}`,920/2,148*2);
         ctx.fillText(`WEIGHT  -        `,920/2,148*3);
@@ -3375,7 +3398,7 @@
         //  レベル選択
         //  ボタンの枠
         ctx.lineWidth = cdata.weight*1.5;
-        ctx.font = "160px Inconsolata";
+        ctx.font = "160px 'Roboto Mono'";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         for(let y=0; y<3; y++){
@@ -3401,56 +3424,78 @@
           }
         }
       }
-      else if(graph.type == "explicit"){
+      else{
         //  陽関数
         let p = problems[level];
         let x,y;
 
-        //  グラフ  折れ線描画法
         if(cdata.analog)ctx.shadowBlur = 10;
-        if(!p.hide){
-          //  ヒント部分
-          DrawScreenGraph(graph.colors.main,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5],(x)=>p.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]));
-        }
-        if(p.tangent){
-          //  接線
-          DrawScreenGraph(graph.colors.hint,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5,cdata.weight*4.5,cdata.weight*1.5],(x)=>p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]));
-        }
-        if(p.tangent2){
-          //  接線
-          DrawScreenGraph(graph.colors.hint,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5,cdata.weight*4.5,cdata.weight*1.5],(x)=>p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]));
-        }
-        if(1){
-          //  可動グラフ部分
-          DrawScreenGraph(graph.colors.main,cdata.weight,[],(x)=>p.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value));
-        }
+        if(!p.hide)//  ヒント部分
+          DrawScreenGraph(
+            graph.colors.main,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5],
+            (x)=>p.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),p.range&&[p.range[2],p.range[3]]
+          );
+        if(p.tangent)//  接線
+          DrawScreenGraph(
+            graph.colors.hint,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5,
+              cdata.weight*4.5,cdata.weight*1.5],
+              (x)=>p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3])
+            );
+        if(p.tangent2)//  接線
+          DrawScreenGraph(
+            graph.colors.hint,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5,cdata.weight*4.5,cdata.weight*1.5],
+            (x)=>p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3])
+          );
+        if(1)//  可動グラフ部分
+          DrawScreenGraph(
+            graph.colors.main,cdata.weight,[],
+            (x)=>p.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value),p.range&&[p.range[0],p.range[1]]
+          );
 
         //  通過する点
         if(p.points){
-          let X,Y;
-          let sx = p.skewx || 0;
-          let sy = p.skewy || 0;
-          ctx.lineWidth = cdata.weight;
-          ctx.strokeStyle = graph.colors.main;
-          for(let i=0; i<problems[level].points.length; i++){
-            x = p.points[i];
-            y = p.func(x,problems[level].answer[0],problems[level].answer[1],problems[level].answer[2],problems[level].answer[3]);
-            x = x*graph.scale;
-            y = -y*graph.scale;
-            X = x + sx*y;
-            Y = y + sy*x;
-            ctx.beginPath();
-            ctx.arc(p.yaxis+X,p.xaxis+Y,cdata.weight,0,Math.PI*2);
-            ctx.stroke();
+          if(graph.type == "explicit"){
+            let X,Y;
+            let sx = p.skewx || 0;
+            let sy = p.skewy || 0;
+            ctx.lineWidth = cdata.weight;
+            ctx.strokeStyle = graph.colors.main;
+            for(let i=0; i<problems[level].points.length; i++){
+              x = p.points[i];
+              y = p.func(x,problems[level].answer[0],problems[level].answer[1],problems[level].answer[2],problems[level].answer[3]);
+              x = x*graph.scale;
+              y = -y*graph.scale;
+              X = x + sx*y;
+              Y = y + sy*x;
+              ctx.beginPath();
+              ctx.arc(p.yaxis+X,p.xaxis+Y,cdata.weight,0,Math.PI*2);
+              ctx.stroke();
+            }
+          }
+          else if(graph.type == "polar"){
+            let X,Y;
+            let sx = p.skewx || 0;
+            let sy = p.skewy || 0;
+            ctx.lineWidth = cdata.weight;
+            ctx.strokeStyle = graph.colors.main;
+            for(let i=0; i<problems[level].points.length; i++){
+              x = p.points[i];
+              y = p.func(x,problems[level].answer[0],problems[level].answer[1],problems[level].answer[2],problems[level].answer[3]);
+              x = x*graph.scale;
+              y = -y*graph.scale;
+              X = x + sx*y;
+              Y = y + sy*x;
+              ctx.beginPath();
+              ctx.arc(p.yaxis+X,p.xaxis+Y,cdata.weight,0,Math.PI*2);
+              ctx.stroke();
+            }
           }
         }
 
-        ctx.shadowBlur = 0;
 
         //  式の表示
         DrawScreenFuncStr();
       }
-
 
       //  クリアメッセージ
       if(clear){
@@ -3464,11 +3509,11 @@
         ctx.fillStyle = graph.colors.message_;
         ctx.strokeStyle = graph.colors.message;
         ctx.lineWidth = 5;
-        ctx.font = "160px Inconsolata";
+        ctx.font = "130px 'Roboto Mono'";
         ctx.fillText(`${txt}`,460,200);
         if(cdata.analog)ctx.shadowBlur = 10;
         ctx.strokeText(`${txt}`,460,200);
-        ctx.font = "300px Inconsolata";
+        ctx.font = "240px 'Roboto Mono'";
         ctx.strokeText(`CLEAR!`,460,500);
         ctx.shadowBlur = 0;
         ctx.fillText(`CLEAR!`,460,500);
@@ -3521,33 +3566,54 @@
         let x0 = graph.yaxis;
         let y0 = graph.xaxis;
         btx.strokeStyle = cdata.analog ? "#333" : "#444";
-        //  縦
-        for(
-          let i=Math.ceil((-x0-Math.max(sx*(-y0),sx*(740-y0)))/(1-sx*sy)/graph.scale);
-          i<=Math.floor((920-x0-Math.min(sx*(-y0),sx*(740-y0)))/(1-sx*sy)/graph.scale);
-          i++
-        ){
-          btx.lineWidth = i%5 ? 4 : 6;
-          SkewGraph();
-          btx.beginPath();
-          btx.moveTo(i*graph.scale,-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy));
-          btx.lineTo(i*graph.scale,-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy));
-          SkewGraph(1);
-          btx.stroke();
+        if(graph.type==="title"||graph.type==="explicit"){
+          //  縦
+          for(
+            let i=Math.ceil((-x0-Math.max(sx*(-y0),sx*(740-y0)))/(1-sx*sy)/graph.scale);
+            i<=Math.floor((920-x0-Math.min(sx*(-y0),sx*(740-y0)))/(1-sx*sy)/graph.scale);
+            i++
+          )
+          {
+            btx.lineWidth = i%5 ? 4 : 6;
+            SkewGraph();
+            btx.beginPath();
+            btx.moveTo(i*graph.scale,-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy));
+            btx.lineTo(i*graph.scale,-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy));
+            SkewGraph(1);
+            btx.stroke();
+          }
+          //  横
+          for(
+            let i=Math.ceil(-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy)/graph.scale);
+            i<=Math.floor(-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy)/graph.scale);
+            i++
+          )
+          {
+            btx.lineWidth = i%5 ? 4 : 6;
+            SkewGraph();
+            btx.beginPath();
+            btx.moveTo((-x0-Math.max(sx*(-y0),sx*(740-y0)))/(1-sx*sy),i*graph.scale);
+            btx.lineTo((920-x0-Math.min(sx*(-y0),sx*(740-y0)))/(1-sx*sy),i*graph.scale);
+            SkewGraph(1);
+            btx.stroke();
+          }
         }
-        //  横
-        for(
-          let i=Math.ceil(-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy)/graph.scale);
-          i<=Math.floor(-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy)/graph.scale);
-          i++
-        ){
-          btx.lineWidth = i%5 ? 4 : 6;
-          SkewGraph();
+        else if(graph.type==="polar"){
+          //  縦
           btx.beginPath();
-          btx.moveTo((-x0-Math.max(sx*(-y0),sx*(740-y0)))/(1-sx*sy),i*graph.scale);
-          btx.lineTo((920-x0-Math.min(sx*(-y0),sx*(740-y0)))/(1-sx*sy),i*graph.scale);
-          SkewGraph(1);
+          for(let i=0; i<6; i++){
+            btx.lineWidth = 4;
+            btx.moveTo(x0+1200*Math.cos(Math.PI/6*i),y0-1200*Math.sin(Math.PI/6*i));
+            btx.lineTo(x0-1200*Math.cos(Math.PI/6*i),y0+1200*Math.sin(Math.PI/6*i));
+          }
           btx.stroke();
+          //  横
+          for(let i=1; i<=1200/graph.scale; i++){
+            btx.lineWidth = i%5 ? 4 : 6;
+            btx.beginPath();
+            btx.arc(x0,y0,graph.scale*i,0,Math.PI*2);
+            btx.stroke();
+          }
         }
         //  軸
         btx.lineWidth = 8;
@@ -3568,11 +3634,11 @@
 
 
       //  レベルの表示
-      if(graph.type==="explicit"){
+      if(graph.type==="explicit"||graph.type==="polar"){
         ctx.fillStyle = cdata.analog ? "#222" : "#888";
         ctx.textAlign = "left";
         ctx.textBaseline = "bottom";
-        ctx.font = "70px Inconsolata";
+        ctx.font = "70px 'Roboto Mono'";
         ctx.fillText(
           `${(Math.floor((level-1)/12)+1).toString(16).toUpperCase()}-${((level-1)%12+1).toString(16).toUpperCase()}`,
           10,740-10
@@ -3586,6 +3652,7 @@
       let p = problems[level];
       x = 40;
       ctx.strokeStyle = graph.colors.main;
+      ctx.shadowBlur = 0;
       ctx.setLineDash([]);
       ctx.lineWidth = 5;
       ctx.textAlign = "left";
@@ -3598,13 +3665,13 @@
             //  この行の所為で一日費やした^^  strs1 = strs0[i].match(/(?<={)[^\}]*(?=})/g);//  [分子,分母]
             //  strs0[i]は"F{...}{...}"の形だから，splitで分ける．
             strs1 = strs0[i].replace(/^F{|}$/g,"").split("}{");//  [分子,分母]
-            ctx.font = "60px Inconsolata";
+            ctx.font = "60px 'Roboto Mono'";
             w0 = ctx.measureText(strs1[0].replace(/\^.|#./g,"")).width;
             w1 = ctx.measureText(strs1[1].replace(/\^.|#./g,"")).width;
-            ctx.font = "75px Inconsolata";
+            ctx.font = "75px 'Roboto Mono'";
             w0 += ctx.measureText(strs1[0].replace(/[^#]/g,"")).width;
             w1 += ctx.measureText(strs1[1].replace(/[^#]/g,"")).width;
-            ctx.font = "40px Inconsolata";
+            ctx.font = "40px 'Roboto Mono'";
             w0 += ctx.measureText(strs1[0].replace(/[^^]/g,"")).width;
             w1 += ctx.measureText(strs1[1].replace(/[^^]/g,"")).width;
             w = Math.max(w0,w1);
@@ -3621,14 +3688,14 @@
               if(chars[j].match(/\^/)){
                 chars[j] = chars[j].replace("^","");
                 y = 60;
-                ctx.font = "40px Inconsolata";
+                ctx.font = "40px 'Roboto Mono'";
               }else if(chars[j].match(/\#/)){
                 chars[j] = chars[j].replace("#","");
                 y = 65;
-                ctx.font = "75px Inconsolata";
+                ctx.font = "75px 'Roboto Mono'";
               }else{
                 y = 70;
-                ctx.font = "60px Inconsolata";
+                ctx.font = "60px 'Roboto Mono'";
               }
               ctx.fillStyle = graph.colors.main;
               ctx.fillText(chars[j],x,y);
@@ -3641,14 +3708,14 @@
               if(chars[j].match(/\^/)){
                 chars[j] = chars[j].replace("^","");
                 y = 60+70;
-                ctx.font = "40px Inconsolata";
+                ctx.font = "40px 'Roboto Mono'";
               }else if(chars[j].match(/\#/)){
                 chars[j] = chars[j].replace("#","");
                 y = 65+70;
-                ctx.font = "75px Inconsolata";
+                ctx.font = "75px 'Roboto Mono'";
               }else{
                 y = 70+70;
-                ctx.font = "60px Inconsolata";
+                ctx.font = "60px 'Roboto Mono'";
               }
               ctx.fillStyle = graph.colors.main;
               ctx.fillText(chars[j],x,y);
@@ -3659,24 +3726,24 @@
           }
           else{//  一般部分
             chars = strs0[i].match(/[\^\#\$]?./g);
-            ctx.font = "60px Inconsolata";
+            ctx.font = "60px 'Roboto Mono'";
             w = ctx.measureText("|").width;//  普通のフォントの横幅
             for(let j=0; j<chars.length; j++){
               if(chars[j].match(/\^/)){
                 chars[j] = chars[j].replace("^","");
                 y = 60+35;
-                ctx.font = "40px Inconsolata";//  一回り小さい
+                ctx.font = "40px 'Roboto Mono'";//  一回り小さい
               }else if(chars[j].match(/\#/)){
                 chars[j] = chars[j].replace("#","");
                 y = 65+35;
-                ctx.font = "75px Inconsolata";//  大きめ
+                ctx.font = "75px 'Roboto Mono'";//  大きめ
               }else if(chars[j].match(/\$/)){
                 chars[j] = chars[j].replace("$","");
                 y = 65+35;
-                ctx.font = "150px Inconsolata";//  一回り大きい
+                ctx.font = "150px 'Roboto Mono'";//  一回り大きい
               }else{
                 y = 70+35;
-                ctx.font = "60px Inconsolata";//  普通
+                ctx.font = "60px 'Roboto Mono'";//  普通
               }
               ctx.clearRect(x,20,ctx.measureText(chars[j]).width,180);
               ctx.fillStyle = graph.colors.main;
@@ -3699,14 +3766,14 @@
           if(chars[i].match(/\^/)){
             chars[i] = chars[i].replace("^","");
             y = 60;
-            ctx.font = "40px Inconsolata";
+            ctx.font = "40px 'Roboto Mono'";
           }else if(chars[i].match(/\#/)){
             chars[i] = chars[i].replace("#","");
             y = 65;
-            ctx.font = "75px Inconsolata";
+            ctx.font = "75px 'Roboto Mono'";
           }else{
             y = 70;
-            ctx.font = "60px Inconsolata";
+            ctx.font = "60px 'Roboto Mono'";
           }
           ctx.clearRect(x,20,ctx.measureText(chars[i]).width,100);
           ctx.fillStyle = graph.colors.main;
@@ -3722,7 +3789,7 @@
       }
     }
 
-    function DrawScreenGraph(s,w,ld,f){
+    function DrawScreenGraph(s,w,ld,f,r){
       let sx = problems[level].skewx || 0;
       let sy = problems[level].skewy || 0;
       let x0 = graph.yaxis;
@@ -3734,6 +3801,7 @@
       SkewGraph();
       ctx.beginPath();
       if(graph.type === "explicit"){
+        //  グラフ  折れ線描画法
         //  !!!
         for(let i=(-x0-Math.max(sx*(-y0),sx*(740-y0)))/(1-sx*sy); i<=(920-x0-Math.min(sx*(-y0),sx*(740-y0)))/(1-sx*sy); i+=2){
           x = i/graph.scale;
@@ -3763,6 +3831,32 @@
               y = Math.min(Math.max(y,-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy)-10),-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy)+10);
               ctx.beginPath();
               ctx.moveTo(i,y);
+            }
+          }
+        }
+      }
+      else if(graph.type === "polar"){
+        for(let i=r[0]; i<r[1]; i+=.01){
+          if(Number.isNaN(f(i))){
+            SkewGraph(1);
+            ctx.stroke();
+            SkewGraph();
+            ctx.beginPath();
+          }else{
+            c = isContinuous(f,i,.01);
+            if(c.bool){
+              y = f(i)*graph.scale;
+              ctx.lineTo(y*Math.cos(i),-y*Math.sin(i));
+            }
+            else{
+              y = f(c.x)*graph.scale;
+              ctx.lineTo(y*Math.cos(i),-y*Math.sin(i));
+              SkewGraph(1);
+              ctx.stroke();
+              SkewGraph();
+              y = f(c.x+c.d)*graph.scale;
+              ctx.beginPath();
+              ctx.moveTo(y*Math.cos(i),-y*Math.sin(i));
             }
           }
         }
@@ -3810,7 +3904,7 @@
         ctx.translate(500,950+130*i);
         //  上限と下限
         ctx.fillStyle = "#f00";
-        ctx.font = "80px Inconsolata";
+        ctx.font = "60px 'Roboto Mono'";
         ctx.fillText(vars[i].available ? vars[i].min : "",-410,0,80);
         ctx.fillText(vars[i].available ? vars[i].max : "",+410,0,80);
         //  可動部
@@ -3827,7 +3921,7 @@
         ctx.shadowColor = "#00000000";
         ctx.stroke();
         ctx.fillStyle = "#333";
-        ctx.font = "50px Inconsolata";
+        ctx.font = "50px 'Roboto Mono'";
         ctx.fillText("abcd"[i],0,0);
         ctx.restore();
       }
@@ -3837,7 +3931,7 @@
       //  ボタン
       ctx.lineWidth = 5;
       ctx.strokeStyle = "#333";
-      ctx.font = "70px Inconsolata";
+      ctx.font = "70px 'Roboto Mono'";
       for(let i=0; i<3; i++){
         ctx.save();
         ctx.translate(180+320*i,1560);
