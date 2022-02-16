@@ -94,7 +94,7 @@
        }
     }
     let problems1 = {
-      01 : {
+      1  : {
         type : "explicit",
         funcstr : "y=a",
         func : (x,a,b,c,d) => {
@@ -110,7 +110,7 @@
         vscale : [0,0,0,0],
         answer : [4,0,0,0]
       },
-      02 : {
+      2  : {
         type : "explicit",
         funcstr : "y=ax+b",
         func : (x,a,b,c,d) => {
@@ -126,7 +126,7 @@
         vscale : [0,0,0,0],
         answer : [3,-2,0,0]
       },
-      03 : {
+      3  : {
         type : "explicit",
         funcstr : "y=a(x-2)+b",
         func : (x,a,b,c,d) => {
@@ -142,7 +142,7 @@
         vscale : [0,0,0,0],
         answer : [.5,2,0,0]
       },
-      04 : {
+      4  : {
         type : "explicit",
         funcstr : "y=a(bx+1)",
         func : (x,a,b,c,d) => {
@@ -158,7 +158,7 @@
         vscale : [0,0,0,0],
         answer : [-6,.25,0,0]
       },
-      05 : {
+      5  : {
         type : "explicit",
         funcstr : "y=ax^2+b",
         func : (x,a,b,c,d) => {
@@ -174,7 +174,7 @@
         vscale : [0,0,0,0],
         answer : [-.25,3,0,0]
       },
-      06 : {
+      6  : {
         type : "explicit",
         funcstr : "y=a(x-b)^2+c",
         func : (x,a,b,c,d) => {
@@ -190,7 +190,7 @@
         vscale : [0,0,0,0],
         answer : [.5,3,-2,0]
       },
-      07 : {
+      7  : {
         type : "explicit",
         funcstr : "y=a(x-b)(x-c)",
         func : (x,a,b,c,d) => {
@@ -206,7 +206,7 @@
         vscale : [0,0,0,0],
         answer : [.125,3,-6,0]
       },
-      08 : {
+      8  : {
         type : "explicit",
         funcstr : "y=ax(x-b)+c",
         func : (x,a,b,c,d) => {
@@ -222,7 +222,7 @@
         vscale : [0,0,0,0],
         answer : [-.25,4,3,0]
       },
-      09 : {
+      9  : {
         type : "explicit",
         hide : 1,
         tangent : 1,
@@ -2515,7 +2515,7 @@
       }
     };
     let problems9 = {
-      97 : {
+      97  : {
         type : "polar",
         hide : 0,
         points : [],
@@ -2535,6 +2535,237 @@
         max : [3,3,3,3],
         vscale : [0,0,0,0],
         answer : [-1,-2,-3,2]
+      },
+      98  : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,-1,3];
+        },
+        funcstr : "r=asinθ+b (c<θ<d)",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(x)+b;
+        },
+        xaxis : 570,//370
+        yaxis : 460,//460
+        gscale : 40,
+        vars : [1,1,1,1],
+        min : [-5,-5,-3,-3],
+        value : [0,0,0,0],
+        max : [5,5,3,3],
+        vscale : [0,0,0,0],
+        answer : [5,-3,-1,3]
+      },
+      99  : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,-2,1];
+        },
+        funcstr : "r=asinbθ (c<θ<d)",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(b*x);
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-2,-5,-3,-3],
+        value : [2,0,0,0],
+        max : [6,5,3,3],
+        vscale : [0,0,0,0],
+        answer : [4,-4,-2,1]
+      },
+      100 : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [0,Math.PI*2,0,Math.PI*2];
+        },
+        funcstr : "r=a#|sinbθ+c#|+d (0<θ<2π)",
+        func : (x,a,b,c,d) => {
+          return a*Math.abs(Math.sin(b*x)+c)+d;
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [0,-5,0,-3],
+        value : [2,0,2,0],
+        max : [4,5,4,3],
+        vscale : [0,0,0,0],
+        answer : [1,5,.5,-3]
+      },
+      101 : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [0,Math.PI*2,0,Math.PI*2];
+        },
+        funcstr : "r=F{asinθ+b}{ccosθ+d} (0<θ<2π)",
+        func : (x,a,b,c,d) => {
+          return (a*Math.sin(x)+b)/(c*Math.sin(x)+d);
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [0,-3,-3,-3],
+        value : [2,0,0,0],
+        max : [4,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [4,-2,-3,1]
+      },
+      102 : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [0,Math.PI*2,0,Math.PI*2];
+        },
+        funcstr : "r=amod(θ,b)+c (0<θ<2π)",
+        func : (x,a,b,c,d) => {
+          return a*Math.mod(x,b)+c;
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [3,1,2,1]
+      },
+      103 : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value*Math.PI,vars[3].value*Math.PI,-Math.PI*3,Math.PI*5];
+        },
+        funcstr : "r=afloor(bθ) (cπ<θ<dπ)",
+        func : (x,a,b,c,d) => {
+          return a*Math.floor(b*x);
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-1,-1,-8,0],
+        value : [0,0,-4,4],
+        max : [1,1,0,8],
+        vscale : [0,.05,.1,.1],
+        answer : [.5,-.6,-3,5]
+      },
+      104 : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [0,Math.PI*2,0,Math.PI*2];
+        },
+        funcstr : "r=F{a}{1+b|coscθ|sindθ} (0<θ<2π)",
+        func : (x,a,b,c,d) => {
+          return a/(1+b*Math.abs(Math.cos(c*x))*Math.sin(d*x));
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-5,0,0,0],
+        value : [0,2,3,3],
+        max : [5,4,6,6],
+        vscale : [0,0,.1,.1],
+        answer : [-3,.6,1,1]
+      },
+      105 : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [0,Math.PI*2,0,Math.PI*2];
+        },
+        funcstr : "r=a|cosbθ|-c|sindθ| (0<θ<2π)",
+        func : (x,a,b,c,d) => {
+          return a*Math.abs(Math.cos(b*x))-c*Math.abs(Math.sin(d*x));
+        },
+        xaxis : 450,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-3,0,-5,0],
+        value : [0,3,0,3],
+        max : [3,6,5,6],
+        vscale : [0,.1,0,.1],
+        answer : [2,6,-3,3]
+      },
+      106 : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [0,Math.PI*10,0,Math.PI*10];
+        },
+        funcstr : "r=a#|mod(θ,b)-c#|+d (0<θ<10π)",
+        func : (x,a,b,c,d) => {
+          return a*Math.abs(Math.mod(x,b)-c)+d;
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 50,
+        vars : [1,1,1,1],
+        min : [-5,0,0,-5],
+        value : [0,3,3,0],
+        max : [5,6,6,5],
+        vscale : [.2,Math.PI/32,Math.PI/32,.1],
+        answer : [4,Math.PI*.625,Math.PI*.3125,2]
+      },
+      107 : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [0,Math.PI*2,0,Math.PI*2];
+        },
+        funcstr : "r=F{aθ+b}{#|sin#(mod(θ,c)+d#)#|} (0<θ<2π)",
+        func : (x,a,b,c,d) => {
+          return (a*x+b)/(Math.abs(Math.sin(Math.mod(x,c)+d)));
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 50,
+        vars : [1,1,1,1],
+        min : [0,0,0,0],
+        value : [3,3,3,3],
+        max : [6,6,6,6],
+        vscale : [0,0,Math.PI/14,Math.PI/14],
+        answer : [0,4,Math.PI*2/7,Math.PI*5/14]
+      },
+      108 : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,2,5];
+        },
+        funcstr : "r=acos5θ+bcos3θ (c<θ<d)",
+        func : (x,a,b,c,d) => {
+          return a*Math.cos(5*x)+b*Math.cos(3*x);
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [0,0,0,0],
+        value : [3,3,3,3],
+        max : [6,6,6,6],
+        vscale : [0,0,0,0],
+        answer : [3,1,2,5]
       }
     };
 
@@ -2566,6 +2797,12 @@
       },
       active : () => {
         Init();
+
+        //  URLパラメータがあれば, 適用する
+        //  自信ない表現???
+        if(location.search.match(/from=(\d+|Infinity)/)){
+          Unlock(+location.search.match(/from=(\d+|Infinity)/)[1]);
+        }
 
         //  リサイズ時, canvasを画面の大きさに合わせる
         window.onresize = () => {Resize();}
@@ -2936,6 +3173,10 @@
       }
       else{
         //  任意のレベル
+        let lvl = level;
+        level = 0;
+        Reset(2);
+        level = lvl;
         graph.type = "levels";
         clear = 0;
         SetButtons();
@@ -3657,6 +3898,7 @@
       ctx.lineWidth = 5;
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
+      ctx.scale(4/5,4/5);
       if(p.funcstr.match(/F/)){//  分数を含むとき
         strs0 = p.funcstr.match(/F\{[^\}]*\}\{[^\}]*\}|[^F]+/g);//  分数部分または一般部分
         ctx.clearRect(20,20,40,170);
@@ -3787,6 +4029,7 @@
         ctx.fillStyle = graph.colors.main_;
         ctx.fillRect(20,20,x,100);
       }
+      ctx.scale(5/4,5/4);
     }
 
     function DrawScreenGraph(s,w,ld,f,r){
@@ -3904,7 +4147,7 @@
         ctx.translate(500,950+130*i);
         //  上限と下限
         ctx.fillStyle = "#f00";
-        ctx.font = "60px 'Roboto Mono'";
+        ctx.font = "50px 'Roboto Mono'";
         ctx.fillText(vars[i].available ? vars[i].min : "",-410,0,80);
         ctx.fillText(vars[i].available ? vars[i].max : "",+410,0,80);
         //  可動部
