@@ -76,7 +76,7 @@
 
     let Sleep = ms => new Promise(r=>setTimeout(r,ms));
     Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
-    let bvs,btx,cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0;
+    let bvs,btx,cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0,save;
 
     //  難易度順に入れ替える!!!
     let problems0 = {
@@ -2796,6 +2796,7 @@
         families : ["Roboto Mono"]
       },
       active : () => {
+        save = 1;
         Init();
 
         //  URLパラメータがあれば, 適用する
@@ -2803,6 +2804,7 @@
         if(location.search.match(/from=(\d+|Infinity)/)){
           let l = +location.search.match(/from=(\d+|Infinity)/)[1];
           if(!Number.isNaN(l)){
+            save = 0;
             level = Math.min(l,Object.keys(problems).reduce((a,b)=>Math.max(+a,+b)));
             Unlock(level);
             Reset(2);
@@ -2931,6 +2933,7 @@
     }
 
     function SaveCookie(){
+      if(!save)return 0;
       for(let k in cdata){
         document.cookie =  `${k}=${encodeURIComponent(String(cdata[k]))};max_age=315360000;`;//  10年
       }
