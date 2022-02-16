@@ -2604,21 +2604,21 @@
         hide : 0,
         points : [],
         get range(){
-          return [0,Math.PI*2,0,Math.PI*2];
+          return [vars[2].value,vars[3].value,-2,2];
         },
-        funcstr : "r=F{asinθ+b}{ccosθ+d} (0<θ<2π)",
+        funcstr : "r=F{asinθ+1}{bsinθ+1} (c<θ<d)",
         func : (x,a,b,c,d) => {
-          return (a*Math.sin(x)+b)/(c*Math.sin(x)+d);
+          return (a*Math.sin(x)+1)/(b*Math.sin(x)+1);
         },
         xaxis : 420,//370
         yaxis : 460,//460
-        gscale : 60,
+        gscale : 160,
         vars : [1,1,1,1],
-        min : [0,-3,-3,-3],
+        min : [0,-5,-3,-3],
         value : [2,0,0,0],
-        max : [4,3,3,3],
+        max : [4,5,3,3],
         vscale : [0,0,0,0],
-        answer : [4,-2,-3,1]
+        answer : [2,4,-2,2]
       },
       102 : {
         type : "polar",
