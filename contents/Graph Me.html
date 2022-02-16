@@ -2803,8 +2803,8 @@
         if(location.search.match(/from=(\d+|Infinity)/)){
           let l = +location.search.match(/from=(\d+|Infinity)/)[1];
           if(!Number.isNaN(l)){
-            Unlock(l);
             level = Math.min(l,Object.keys(problems).reduce((a,b)=>Math.max(+a,+b)));
+            Unlock(level);
             Reset(2);
           }
         }
