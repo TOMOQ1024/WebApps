@@ -2911,7 +2911,7 @@
       }
       else{
         let cookies = document.cookie.split(";");
-        if(cookies.length < Object.keys(cdata0).reduce((a,b)=>Math.max(+a,+b))){
+        if(cookies.length < Object.keys(cdata0).length){
           ClearCookie();
           LoadCookie();
           return 0;
