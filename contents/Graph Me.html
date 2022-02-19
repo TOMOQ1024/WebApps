@@ -2806,7 +2806,7 @@
           if(!Number.isNaN(l)){
             save = 0;
             level = Math.min(l,Object.keys(problems).reduce((a,b)=>Math.max(+a,+b)));
-            Unlock(level);
+            Unlock(Infinity);
             Reset(2);
           }
         }
