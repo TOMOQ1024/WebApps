@@ -2884,8 +2884,77 @@
             Check();
             ctrl = 1;
           }
-        }else{
+        }
+        else{
           //  マウス操作
+          cvs.onmousedown = (e) => {
+            if(!ctrl)return 0;
+            e.preventDefault();
+            let x = e.offsetX;//  canvas左上からのpx値
+            let y = e.offsetY;
+            let wp = cvs.width;
+            let wr = cvs.getBoundingClientRect().width;
+            let hp = cvs.height;
+            let hr = cvs.getBoundingClientRect().height;
+            let r = Math.min(window.innerWidth/20,window.innerHeight/33);
+
+            //  スライダーの判定
+            for(let i=0; i<4; i++){
+              ctx.fillStyle = "#ff00ff20";
+              ctx.fillRect(vars[i].proportion*600+200-50,950+i*130-50,100,100);
+              if(IsIn(x,y,(vars[i].proportion*600+200)/wp*wr-r,(950+i*130)/wp*wr-r,r*2,r*2)){//  canvas内の点の座標を戻す
+                buttons.slider = i;
+                break;
+              }
+            }
+
+            //  ボタンの判定
+            if(IsIn(x,y,40/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.prev.available){
+              Prev(1);
+            };
+            if(IsIn(x,y,360/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.reset.available){
+              Reset(1);
+            };
+            if(IsIn(x,y,680/wp*wr,1510/wp*wr,280/wp*wr,100/wp*wr)&&buttons.next.available){
+              Next(1);
+            };
+
+            //  タッチ操作は一つのみ有効
+            ctrl = 0;
+            DrawAll();
+          }
+          cvs.onmousemove = (e) => {
+            e.preventDefault();
+            let x = e.offsetX;
+            x *= cvs.width;
+            x /= cvs.getBoundingClientRect().width;
+            let v;
+
+            //  スライダー操作
+            if(0<=buttons.slider){
+              v = vars[buttons.slider];
+              let d = Math.round(v.proportion*10)/10;
+              v.value = (v.max-v.min)*Math.min(Math.max((x-200)/600,0),1)+v.min;
+              v.adapt();
+              d = Math.round(v.proportion*10)/10-d;
+              if(.04<Math.abs(d)){
+              }
+              SetButtons();
+            }
+            DrawAll();
+
+            if(graph.type === "title"){
+              Check();
+            }
+            else if(graph.type === "settings"){
+              AdaptSettings();
+            }
+          }
+          cvs.onmouseup = () => {
+            buttons.slider = -1;
+            Check();
+            ctrl = 1;
+          }
         }
       },
       inactive : () => {
@@ -3160,6 +3229,7 @@
       vars[3].value = cdata.sound;
       */
       SetButtons();
+      AdaptSettings();
       DrawAll();
     }
 
@@ -3167,10 +3237,10 @@
     function Prev(){
       if(graph.type === "title"){
         //  ホームページへ
-        location.href = "https://tomoq1024.github.io/WebApps/";
+        location.href = "../index.html"
       }
       else if(graph.type === "settings"){
-        Reset();
+        Reset(2);
       }
       else if(graph.type === "stages"){
         level = 0;
@@ -3274,7 +3344,7 @@
       }
       else if(graph.type === "levels"){
         level = Math.floor((level-1)/12)*12 + vars[0].value-1+(vars[1].value-1)*4 + 1;
-        Reset();
+        Reset(2);
       }
       else{
         level += 1;
@@ -3817,7 +3887,7 @@
         let x0 = graph.yaxis;
         let y0 = graph.xaxis;
         btx.strokeStyle = cdata.analog ? "#333" : "#444";
-        if(graph.type==="title"||graph.type==="explicit"){
+        if(graph.type!=="polar"){
           //  縦
           for(
             let i=Math.ceil((-x0-Math.max(sx*(-y0),sx*(740-y0)))/(1-sx*sy)/graph.scale);
