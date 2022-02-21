@@ -2768,6 +2768,71 @@
         answer : [3,1,2,5]
       }
     };
+    let problems10 = {
+      109 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,2,5];
+        },
+        funcstr : "a(x-b)^2+c(y-d)^2=1",
+        func : (x,y,a,b,c,d) => {
+          return a*(x-b)**2+c*(y-d)**2-1;
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 120,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [2,-1,1,-1]
+      },
+      110 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,2,5];
+        },
+        funcstr : "F{(x-a)^2}{b}+F{(y-c)^2}{d}=1",
+        func : (x,y,a,b,c,d) => {
+          return (x-a)**2/b+(y-c)**2/d-1;
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [2,-2,-1,1]
+      },
+      111 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,2,5];
+        },
+        funcstr : "F{(x-a)^2}{b}+F{(y-c)^2}{d}=1",
+        func : (x,y,a,b,c,d) => {
+          return (x-a)**2/b+(y-c)**2/d-1;
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [2,-2,-1,1]
+      }
+    }
 
     let problems = {
       ...problems0,
@@ -2779,9 +2844,9 @@
       ...problems6,
       ...problems7,
       ...problems8,
-      ...problems9
-      /*...problems10,
-      ...problems11,
+      ...problems9,
+      ...problems10
+      /*...problems11,
       ...problems12,*/
     }
 
@@ -3399,7 +3464,7 @@
       DrawScreenBackground(b);
 
       //  グラフ
-      if(graph.type == "title"){
+      if(graph.type==="title"){
         //  タイトル画面
         //  quitはprevボタンで代用できるため，sandbox等に置き換えるべき!!!
         ctx.strokeStyle = graph.colors.main;
@@ -3601,12 +3666,13 @@
 
         ctx.shadowBlur = 0;
       }
-      else if(graph.type == "settings"){
+      else if(graph.type==="settings"){
         //  設定画面
         ctx.fillStyle = graph.colors.main;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.font = "82px 'Roboto Mono'";
+        if(cdata.analog)ctx.shadowBlur = 10;
         ctx.fillText(`DISPLAY - ${cdata.analog?"ANALOG ":"DIGITAL"}`,920/2,148*1);
         ctx.fillText(`COLOR   -   ${["Y / C","C / R","P / O","O / Y"][cdata.color]}`,920/2,148*2);
         ctx.fillText(`WEIGHT  -        `,920/2,148*3);
@@ -3628,8 +3694,9 @@
         ctx.moveTo(920*.75+  0,148*3+50);
         ctx.lineTo(920*.75+160,148*3-50);
         ctx.stroke();
+        ctx.shadowBlur = 0;
       }
-      else if(graph.type == "stages"){
+      else if(graph.type==="stages"){
         //  ステージ選択
         //  ボタンの枠
         ctx.lineWidth = cdata.weight*1.5;
@@ -3715,7 +3782,7 @@
         ctx.lineTo(130+220*0+0,150+220*2-40);
         ctx.stroke();
       }
-      else if(graph.type == "levels"){
+      else if(graph.type==="levels"){
         //  レベル選択
         //  ボタンの枠
         ctx.lineWidth = cdata.weight*1.5;
@@ -3746,37 +3813,46 @@
         }
       }
       else{
-        //  陽関数
+        //  陽関数，極座標，陰関数
         let p = problems[level];
-        let x,y;
 
         if(cdata.analog)ctx.shadowBlur = 10;
-        if(!p.hide)//  ヒント部分
-          DrawScreenGraph(
-            graph.colors.main,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5],
-            (x)=>p.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),p.range&&[p.range[2],p.range[3]]
-          );
-        if(p.tangent)//  接線
-          DrawScreenGraph(
-            graph.colors.hint,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5,
-              cdata.weight*4.5,cdata.weight*1.5],
-              (x)=>p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3])
+        if(b){
+          if(!p.hide)//  ヒント部分
+            DrawScreenGraph(
+              graph.colors.main,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5],
+              graph.type==="implicit"
+              ? (x,y)=>p.func(x,y,p.answer[0],p.answer[1],p.answer[2],p.answer[3])
+              : (x)=>p.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3],p.range&&[p.range[2],p.range[3]])
             );
-        if(p.tangent2)//  接線
-          DrawScreenGraph(
-            graph.colors.hint,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5,cdata.weight*4.5,cdata.weight*1.5],
-            (x)=>p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3])
-          );
+          if(p.tangent)//  接線
+            DrawScreenGraph(
+              graph.colors.hint,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5,
+              cdata.weight*4.5,cdata.weight*1.5],
+              graph.type==="implicit"
+              ? (x,y)=>p.funcTangent(x,y,p.answer[0],p.answer[1],p.answer[2],p.answer[3])
+              : (x)=>p.funcTangent(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3])
+            );
+          if(p.tangent2)//  接線
+            DrawScreenGraph(
+              graph.colors.hint,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5,cdata.weight*4.5,cdata.weight*1.5],
+              graph.type==="implicit"
+              ? (x,y)=>p.funcTangent2(x,y,p.answer[0],p.answer[1],p.answer[2],p.answer[3])
+              : (x)=>p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3])
+            );
+        }
         if(1)//  可動グラフ部分
           DrawScreenGraph(
             graph.colors.main,cdata.weight,[],
-            (x)=>p.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value),p.range&&[p.range[0],p.range[1]]
+            graph.type==="implicit"
+            ? (x,y)=>p.func(x,y,vars[0].value,vars[1].value,vars[2].value,vars[3].value)
+            : (x)=>p.func(x,vars[0].value,vars[1].value,vars[2].value,vars[3].value),p.range&&[p.range[0],p.range[1]]
           );
 
         //  通過する点
         if(p.points){
           if(graph.type == "explicit"){
-            let X,Y;
+            let x,y,X,Y;
             let sx = p.skewx || 0;
             let sy = p.skewy || 0;
             ctx.lineWidth = cdata.weight;
@@ -3968,6 +4044,16 @@
     }
 
     function DrawScreenFuncStr(){
+      let bgs;
+      if(cdata.analog){
+        bgs = ctx.createRadialGradient(460-40,370-40,0,460-40,370-40,1000);//  ずれる可能性あり．未確認!!!
+        bgs.addColorStop(0.0,"#246347");
+        bgs.addColorStop(0.7,"#133828");
+        bgs.addColorStop(1.0,"#091c14");
+      }
+      else{
+        bgs = "#000";
+      }
       //  影を落とす!!!
       let strs0,strs1,chars,x0,w0,w1,w;
       let p = problems[level];
@@ -3981,7 +4067,8 @@
       ctx.scale(4/5,4/5);
       if(p.funcstr.match(/F/)){//  分数を含むとき
         strs0 = p.funcstr.match(/F\{[^\}]*\}\{[^\}]*\}|[^F]+/g);//  分数部分または一般部分
-        ctx.clearRect(20,20,40,170);
+        ctx.fillStyle = bgs;
+        ctx.fillRect(20,20,40,170);
         for(let i=0; i<strs0.length; i++){
           if(strs0[i].match(/F/)){//  分数部分
             //  この行の所為で一日費やした^^  strs1 = strs0[i].match(/(?<={)[^\}]*(?=})/g);//  [分子,分母]
@@ -3997,7 +4084,8 @@
             w0 += ctx.measureText(strs1[0].replace(/[^^]/g,"")).width;
             w1 += ctx.measureText(strs1[1].replace(/[^^]/g,"")).width;
             w = Math.max(w0,w1);
-            ctx.clearRect(x,20,w+40,170);
+            ctx.fillStyle = bgs;
+            ctx.fillRect(x,20,w+40,170);
             x0 = x+20;
             ctx.beginPath();
             ctx.moveTo(x+10,100);
@@ -4067,14 +4155,16 @@
                 y = 70+35;
                 ctx.font = "60px 'Roboto Mono'";//  普通
               }
-              ctx.clearRect(x,20,ctx.measureText(chars[j]).width,180);
+              ctx.fillStyle = bgs;
+              ctx.fillRect(x,20,ctx.measureText(chars[j]).width,180);
               ctx.fillStyle = graph.colors.main;
               ctx.fillText(chars[j],x,y,w);
               x += Math.min(ctx.measureText(chars[j]).width,w);
             }
           }
         }
-        ctx.clearRect(x,20,20,170);
+        ctx.fillStyle = bgs;
+        ctx.fillRect(x,20,20,170);
         if(cdata.analog)ctx.shadowBlur = 10;
         ctx.strokeRect(20,20,x,170);
         ctx.shadowBlur = 0;
@@ -4082,7 +4172,8 @@
         ctx.fillRect(20,20,x,170);
       }
       else{//  分数を含まないとき
-        ctx.clearRect(20,20,40,100);
+        ctx.fillStyle = bgs;
+        ctx.fillRect(20,20,40,100);
         chars = p.funcstr.match(/[\^\#]?./g);
         for(let i=0; i<chars.length; i++){
           if(chars[i].match(/\^/)){
@@ -4097,12 +4188,14 @@
             y = 70;
             ctx.font = "60px 'Roboto Mono'";
           }
-          ctx.clearRect(x,20,ctx.measureText(chars[i]).width,100);
+          ctx.fillStyle = bgs;
+          ctx.fillRect(x,20,ctx.measureText(chars[i]).width,100);
           ctx.fillStyle = graph.colors.main;
           ctx.fillText(chars[i],x,y);
           x += ctx.measureText(chars[i]).width;
         }
-        ctx.clearRect(x,20,20,100);
+        ctx.fillStyle = bgs;
+        ctx.fillRect(x,20,20,100);
         if(cdata.analog)ctx.shadowBlur = 10;
         ctx.strokeRect(20,20,x,100);
         ctx.shadowBlur = 0;
@@ -4113,16 +4206,19 @@
     }
 
     function DrawScreenGraph(s,w,ld,f,r){
+      let context = ld.length ? btx : ctx;
+      let x,y;
       let sx = problems[level].skewx || 0;
       let sy = problems[level].skewy || 0;
       let x0 = graph.yaxis;
       let y0 = graph.xaxis;
       let c;
-      ctx.strokeStyle = s;
-      ctx.lineWidth = w;
-      ctx.setLineDash(ld);
+      context.strokeStyle = s;
+      context.fillStyle = s;
+      context.lineWidth = w;
+      context.setLineDash(ld);
       SkewGraph();
-      ctx.beginPath();
+      context.beginPath();
       if(graph.type === "explicit"){
         //  グラフ  折れ線描画法
         //  !!!
@@ -4130,30 +4226,30 @@
           x = i/graph.scale;
           if(Number.isNaN(f(x))){
             SkewGraph(1);
-            ctx.stroke();
+            context.stroke();
             SkewGraph();
-            ctx.beginPath();
+            context.beginPath();
           }else{
             c = isContinuous(f,x,2/graph.scale);
             if(c.bool){
               y = f(x);
               y = -y*graph.scale;
               y = Math.min(Math.max(y,-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy)-10),-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy)+10);
-              ctx.lineTo(i,y);
+              context.lineTo(i,y);
             }
             else{
               y = f(c.x);
               y = -y*graph.scale;
               y = Math.min(Math.max(y,-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy)-10),-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy)+10);
-              ctx.lineTo(i,y);
+              context.lineTo(i,y);
               SkewGraph(1);
-              ctx.stroke();
+              context.stroke();
               SkewGraph();
               y = f(c.x+c.d);
               y = -y*graph.scale;
               y = Math.min(Math.max(y,-(y0-Math.min(sy*(-x0),sy*(920-x0)))/(1-sx*sy)-10),-(y0-740-Math.max(sy*(-x0),sy*(920-x0)))/(1-sx*sy)+10);
-              ctx.beginPath();
-              ctx.moveTo(i,y);
+              context.beginPath();
+              context.moveTo(i,y);
             }
           }
         }
@@ -4162,30 +4258,58 @@
         for(let i=r[0]; i<r[1]; i+=.01){
           if(Number.isNaN(f(i))){
             SkewGraph(1);
-            ctx.stroke();
+            context.stroke();
             SkewGraph();
-            ctx.beginPath();
+            context.beginPath();
           }else{
             c = isContinuous(f,i,.01);
             if(c.bool){
               y = f(i)*graph.scale;
-              ctx.lineTo(y*Math.cos(i),-y*Math.sin(i));
+              context.lineTo(y*Math.cos(i),-y*Math.sin(i));
             }
             else{
               y = f(c.x)*graph.scale;
-              ctx.lineTo(y*Math.cos(i),-y*Math.sin(i));
+              context.lineTo(y*Math.cos(i),-y*Math.sin(i));
               SkewGraph(1);
-              ctx.stroke();
+              context.stroke();
               SkewGraph();
               y = f(c.x+c.d)*graph.scale;
-              ctx.beginPath();
-              ctx.moveTo(y*Math.cos(i),-y*Math.sin(i));
+              context.beginPath();
+              context.moveTo(y*Math.cos(i),-y*Math.sin(i));
             }
           }
         }
       }
+      else if(graph.type === "implicit"){
+        SkewGraph(1);
+        let v = [];
+        let d = ld.length ? 6 : 4;
+        for(let j=0; j<=740/d; j++){
+          v.push([]);
+          y = (y0-j*d)/graph.scale;
+          for(let i=0; i<=920/d; i++){
+            x = (i*d-x0)/graph.scale;
+            v[j].push(Math.sign(f(x,y)));
+          }
+        }
+        for(let j=0; j<=740/d-1; j++){
+          for(let i=0; i<=920/d-1; i++){
+            if(v[j][i]*v[j][i+1]<=0){
+              context.moveTo(i*d+d/2,j*d);
+              context.arc(i*d+d/2,j*d,w/2,0,Math.PI*2);
+            }
+            if(v[j][i]*v[j+1][i]<=0){
+              context.moveTo(i*d,j*d+d/2);
+              context.arc(i*d,j*d+d/2,w/2,0,Math.PI*2);
+            }
+          }
+        }
+        context.fill();
+        context.beginPath();
+        SkewGraph();
+      }
       SkewGraph(1);
-      ctx.stroke();
+      context.stroke();
     }
 
     function DrawControls(b){
