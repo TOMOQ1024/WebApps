@@ -2914,7 +2914,6 @@
         let cookies = document.cookie.split(";");
         if(cookies.length < Object.keys(cdata0).length){
           //  cookieの数が足りない => 更新をまたいだ
-          alert("クッキーをクリアしました．");
           ClearCookie();
           LoadCookie();
           return 0;
