@@ -2770,12 +2770,32 @@
     };
     let problems10 = {
       109 : {
-        type : "implicit",
+        type : "parameter",
         hide : 0,
         points : [],
         get range(){
-          return [vars[2].value,vars[3].value,2,5];
+          return [vars[2].value,vars[3].value,1,4];
         },
+        funcstr : "P{x=acost}{y=bsint} (c<t<d)",
+        func : (t,a,b,c,d) => {
+          return [a*Math.cos(t),b*Math.sin(t)];
+        },
+        xaxis : 370,//370
+        yaxis : 460,//460
+        gscale : 120,
+        vars : [1,1,1,1],
+        min : [-3,-3,0,0],
+        value : [0,0,3,3],
+        max : [3,3,6,6],
+        vscale : [0,0,0,0],
+        answer : [-2,1,1,4]
+      }
+    }
+    let problems11 = {
+      121 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
         funcstr : "a(x-b)^2+c(y-d)^2=1",
         func : (x,y,a,b,c,d) => {
           return a*(x-b)**2+c*(y-d)**2-1;
@@ -2790,13 +2810,10 @@
         vscale : [0,0,0,0],
         answer : [2,-1,1,-1]
       },
-      110 : {
+      122 : {
         type : "implicit",
         hide : 0,
         points : [],
-        get range(){
-          return [vars[2].value,vars[3].value,2,5];
-        },
         funcstr : "F{(x-a)^2}{b}+F{(y-c)^2}{d}=1",
         func : (x,y,a,b,c,d) => {
           return (x-a)**2/b+(y-c)**2/d-1;
@@ -2811,18 +2828,15 @@
         vscale : [0,0,0,0],
         answer : [2,-2,-1,1]
       },
-      111 : {
+      123 : {
         type : "implicit",
         hide : 0,
         points : [],
-        get range(){
-          return [vars[2].value,vars[3].value,2,5];
-        },
-        funcstr : "F{(x-a)^2}{b}+F{(y-c)^2}{d}=1",
+        funcstr : "(y-a)^2=b(x-c)(x-d)^2",
         func : (x,y,a,b,c,d) => {
-          return (x-a)**2/b+(y-c)**2/d-1;
+          return (y-a)**2-b*(x-c)*(x-d)**2;
         },
-        xaxis : 420,//370
+        xaxis : 200,//370
         yaxis : 460,//460
         gscale : 80,
         vars : [1,1,1,1],
@@ -2830,8 +2844,191 @@
         value : [0,0,0,0],
         max : [3,3,3,3],
         vscale : [0,0,0,0],
-        answer : [2,-2,-1,1]
+        answer : [-2,1,-2,1]
+      },
+      124 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "(x-a)(x+b)+(y-c)(y+d)=1",
+        func : (x,y,a,b,c,d) => {
+          return (x-a)*(x+b)+(y-c)*(y+d)-1;
+        },
+        xaxis : 330,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [0,0,0,0],
+        value : [2,2,2,2],
+        max : [4,4,4,4],
+        vscale : [0,0,0,0],
+        answer : [2,1,1,3]
+      },
+      125 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "sin(ax)sin(by)sin(cx+dy)=0",
+        func : (x,y,a,b,c,d) => {
+          return Math.sin(a*x)*Math.sin(b*y)*Math.sin(c*x+d*y);
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 100,
+        vars : [1,1,1,1],
+        min : [0,0,0,0],
+        value : [1,1,1,1],
+        max : [2,2,2,2],
+        vscale : [0,0,0,0],
+        answer : [1,1,1,2]
+      },
+      126 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "((x-a)^2+(y-b)^2-c)(x^2+y^2-1)=d",
+        func : (x,y,a,b,c,d) => {
+          return ((x-a)**2+(y-b)**2-c)*(x**2+y**2-1)-d;
+        },
+        xaxis : 300,//370
+        yaxis : 460,//460
+        gscale : 100,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [2,-2,2,1]
+      },
+      127 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "max((x-a)^2+(y-b)^2,(x-c)^2+(y-d)^2)=1",
+        func : (x,y,a,b,c,d) => {
+          return Math.max((x-a)**2+(y-b)**2,(x-c)**2+(y-d)**2)-1;
+        },
+        xaxis : 300,//370
+        yaxis : 460,//460
+        gscale : 120,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [-2,0,-1,-1]
+      },
+      128 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "min$((x-a)^2+(y-b)^2,F{(x-c)^2+(y-d)^2}{2}$)=1",
+        func : (x,y,a,b,c,d) => {
+          return Math.min((x-a)**2+(y-b)**2,((x-c)**2+(y-d)**2)/2)-1;
+        },
+        xaxis : 300,//370
+        yaxis : 460,//460
+        gscale : 120,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [1,0,1,-2]
+      },
+      129 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "max$(F{x^2}{a}+F{y^2}{b}+1,F{x^2}{c}+F{y^2}{d}-1$)=0",
+        func : (x,y,a,b,c,d) => {
+          return Math.max(x*x/a+y*y/b+1,x*x/c+y*y/d-1);
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 120,
+        vars : [1,1,1,1],
+        min : [-4,-4,-4,-4],
+        value : [0,0,0,0],
+        max : [4,4,4,4],
+        vscale : [0,0,0,0],
+        answer : [3,-1,4,3]
+      },
+      130 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "(y-a)^2=bx+c",
+        func : (x,y,a,b,c,d) => {
+          return (y-a)**2-b*x-c;
+        },
+        xaxis : 270,//370
+        yaxis : 460,//460
+        gscale : 120,
+        vars : [1,1,1,0],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [-1,-2,2,0]
+      },
+      131 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "(y+a)(xsinb+ycosb+c)=d",
+        func : (x,y,a,b,c,d) => {
+          return (y+a)*(x*Math.sin(b)+y*Math.cos(b)+c)-d;
+        },
+        xaxis : 300,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-3,-1,-3,-3],
+        value : [0,0,0,0],
+        max : [3,1,3,3],
+        vscale : [0,0,0,0],
+        answer : [2,-.7,2,-1]
+      },
+      132 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "x^2+y^2+axy+bx+cy=1",
+        func : (x,y,a,b,c,d) => {
+          return x*x+y*y+a*x*y+b*x+c*y-1;
+        },
+        xaxis : 300,//370
+        yaxis : 600,//460
+        gscale : 80,
+        vars : [1,1,1,0],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [-1.2,1.5,1,-1]
       }
+    }
+    let problems12 = {
+      133 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "a#||x|+b#|+c#||y|+d#|=1",
+        func : (x,y,a,b,c,d) => {
+          return a*Math.abs(Math.abs(x)+b)+c*Math.abs(Math.abs(y)+d)-1;
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 120,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [1,-2,3,-1]
+      }
+      //  ハート!!!!!!!!!!!!!!!!
     }
 
     let problems = {
@@ -2845,9 +3042,9 @@
       ...problems7,
       ...problems8,
       ...problems9,
-      ...problems10
-      /*...problems11,
-      ...problems12,*/
+      ...problems10,
+      ...problems11,
+      ...problems12
     }
 
 
@@ -3015,7 +3212,7 @@
               AdaptSettings();
             }
           }
-          cvs.onmouseup = () => {
+          window.onmouseup = () => {
             buttons.slider = -1;
             Check();
             ctrl = 1;
@@ -3069,9 +3266,10 @@
     }
 
     function SaveCookie(){
+      //  2038年問題???!!!
       if(!save)return 0;
       for(let k in cdata){
-        document.cookie =  `${k}=${encodeURIComponent(String(cdata[k]))};max_age=315360000;`;//  10年
+        document.cookie =  `${k}=${encodeURIComponent(String(cdata[k]))}; max-age=315360000;`;//  10年
       }
     }
 
@@ -3781,6 +3979,14 @@
         ctx.lineTo(130+220*0-40,150+220*2+40);
         ctx.lineTo(130+220*0+0,150+220*2-40);
         ctx.stroke();
+        ctx.strokeStyle = 9<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.beginPath();
+        ctx.moveTo(130+220*1+40,150+220*2+0);//  10:陰
+        ctx.lineTo(130+220*1+0,150+220*2-40);
+        ctx.lineTo(130+220*1-40,150+220*2+0);
+        ctx.lineTo(130+220*1+0,150+220*2+40);
+        ctx.lineTo(130+220*1+40,150+220*2+0);
+        ctx.stroke();
       }
       else if(graph.type==="levels"){
         //  レベル選択
@@ -3813,7 +4019,7 @@
         }
       }
       else{
-        //  陽関数，極座標，陰関数
+        //  陽関数，極座標，媒介変数，陰関数
         let p = problems[level];
 
         if(cdata.analog)ctx.shadowBlur = 10;
@@ -3823,7 +4029,7 @@
               graph.colors.main,cdata.weight/2,[cdata.weight*1.5,cdata.weight*1.5],
               graph.type==="implicit"
               ? (x,y)=>p.func(x,y,p.answer[0],p.answer[1],p.answer[2],p.answer[3])
-              : (x)=>p.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3],p.range&&[p.range[2],p.range[3]])
+              : (x)=>p.func(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3]),p.range&&[p.range[2],p.range[3]]
             );
           if(p.tangent)//  接線
             DrawScreenGraph(
@@ -3841,7 +4047,8 @@
               : (x)=>p.funcTangent2(x,p.answer[0],p.answer[1],p.answer[2],p.answer[3])
             );
         }
-        if(1)//  可動グラフ部分
+        if(1)
+          //  可動グラフ部分
           DrawScreenGraph(
             graph.colors.main,cdata.weight,[],
             graph.type==="implicit"
@@ -3941,6 +4148,7 @@
     }
 
     function DrawScreenBackground(b){
+      //  角丸にする!!!
       if(b){
         btx.translate(40,40);
         if(cdata.analog){
@@ -4064,7 +4272,7 @@
       ctx.lineWidth = 5;
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.scale(4/5,4/5);
+      ctx.scale(2/3,2/3);
       if(p.funcstr.match(/F/)){//  分数を含むとき
         strs0 = p.funcstr.match(/F\{[^\}]*\}\{[^\}]*\}|[^F]+/g);//  分数部分または一般部分
         ctx.fillStyle = bgs;
@@ -4202,7 +4410,7 @@
         ctx.fillStyle = graph.colors.main_;
         ctx.fillRect(20,20,x,100);
       }
-      ctx.scale(5/4,5/4);
+      ctx.scale(3/2,3/2);
     }
 
     function DrawScreenGraph(s,w,ld,f,r){
@@ -4276,6 +4484,32 @@
               y = f(c.x+c.d)*graph.scale;
               context.beginPath();
               context.moveTo(y*Math.cos(i),-y*Math.sin(i));
+            }
+          }
+        }
+      }
+      else if(graph.type === "parameter"){
+        for(let i=r[0]; i<r[1]; i+=.1){
+          if(Number.isNaN(f(i))){
+            SkewGraph(1);
+            context.stroke();
+            SkewGraph();
+            context.beginPath();
+          }else{
+            c = isContinuous(f,i,.01);
+            if(c.bool){
+              y = f(i);
+              context.lineTo(y[0]*graph.scale,-y[1]*graph.scale);
+            }
+            else{
+              y = f(c.x);
+              context.lineTo(y[0]*graph.scale,-y[1]*graph.scale);
+              SkewGraph(1);
+              context.stroke();
+              SkewGraph();
+              y = f(c.x+c.d);
+              context.beginPath();
+              context.moveTo(y[0]*graph.scale,-y[1]*graph.scale);
             }
           }
         }
