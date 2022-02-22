@@ -2785,8 +2785,8 @@
         gscale : 120,
         vars : [1,1,1,1],
         min : [-3,-3,0,0],
-        value : [0,0,3,3],
-        max : [3,3,6,6],
+        value : [0,0,2.5,2.5],
+        max : [3,3,5,5],
         vscale : [0,0,0,0],
         answer : [-2,1,1,4]
       }
@@ -4379,6 +4379,107 @@
         ctx.fillStyle = graph.colors.main_;
         ctx.fillRect(20,20,x,170);
       }
+      if(p.funcstr.match(/P/)){//  媒介変数
+        strs0 = p.funcstr.match(/P\{[^\}]*\}\{[^\}]*\}|[^P]+/g);//  上下の式または条件式
+        strs0.unshift("${");//  おっきい括弧
+        ctx.fillStyle = bgs;
+        ctx.fillRect(20,20,40,170);
+        for(let i=0; i<strs0.length; i++){
+          if(strs0[i].match(/P/)){//  上下の式部分
+            strs1 = strs0[i].replace(/^P{|}$/g,"").split("}{");//  [上式,下式]
+            ctx.font = "60px 'Roboto Mono'";
+            w0 = ctx.measureText(strs1[0].replace(/\^.|#./g,"")).width;
+            w1 = ctx.measureText(strs1[1].replace(/\^.|#./g,"")).width;
+            ctx.font = "75px 'Roboto Mono'";
+            w0 += ctx.measureText(strs1[0].replace(/[^#]/g,"")).width;
+            w1 += ctx.measureText(strs1[1].replace(/[^#]/g,"")).width;
+            ctx.font = "40px 'Roboto Mono'";
+            w0 += ctx.measureText(strs1[0].replace(/[^^]/g,"")).width;
+            w1 += ctx.measureText(strs1[1].replace(/[^^]/g,"")).width;
+            w = Math.max(w0,w1);
+            ctx.fillStyle = bgs;
+            ctx.fillRect(x,20,w+40,170);
+            x0 = x+20;
+            //  上式の描画
+            x = x0+(w-w0)/2;
+            chars = strs1[0].match(/[\^\#]?./g);
+            for(let j=0; j<chars.length; j++){
+              if(chars[j].match(/\^/)){
+                chars[j] = chars[j].replace("^","");
+                y = 60;
+                ctx.font = "40px 'Roboto Mono'";
+              }else if(chars[j].match(/\#/)){
+                chars[j] = chars[j].replace("#","");
+                y = 65;
+                ctx.font = "75px 'Roboto Mono'";
+              }else{
+                y = 70;
+                ctx.font = "60px 'Roboto Mono'";
+              }
+              ctx.fillStyle = graph.colors.main;
+              ctx.fillText(chars[j],x,y);
+              x += ctx.measureText(chars[j]).width;
+            }
+            //  下式の描画
+            x = x0+(w-w1)/2;
+            chars = strs1[1].match(/[\^\#]?./g);
+            for(let j=0; j<chars.length; j++){
+              if(chars[j].match(/\^/)){
+                chars[j] = chars[j].replace("^","");
+                y = 60+70;
+                ctx.font = "40px 'Roboto Mono'";
+              }else if(chars[j].match(/\#/)){
+                chars[j] = chars[j].replace("#","");
+                y = 65+70;
+                ctx.font = "75px 'Roboto Mono'";
+              }else{
+                y = 70+70;
+                ctx.font = "60px 'Roboto Mono'";
+              }
+              ctx.fillStyle = graph.colors.main;
+              ctx.fillText(chars[j],x,y);
+              x += ctx.measureText(chars[j]).width;
+            }
+            x = x0+w+20;
+
+          }
+          else{//  一般部分
+            chars = strs0[i].match(/[\^\#\$]?./g);
+            ctx.font = "60px 'Roboto Mono'";
+            w = ctx.measureText("|").width;//  普通のフォントの横幅
+            for(let j=0; j<chars.length; j++){
+              if(chars[j].match(/\^/)){
+                chars[j] = chars[j].replace("^","");
+                y = 60+35;
+                ctx.font = "40px 'Roboto Mono'";//  一回り小さい
+              }else if(chars[j].match(/\#/)){
+                chars[j] = chars[j].replace("#","");
+                y = 65+35;
+                ctx.font = "75px 'Roboto Mono'";//  大きめ
+              }else if(chars[j].match(/\$/)){
+                chars[j] = chars[j].replace("$","");
+                y = 65+35;
+                ctx.font = "150px 'Roboto Mono'";//  一回り大きい
+              }else{
+                y = 70+35;
+                ctx.font = "60px 'Roboto Mono'";//  普通
+              }
+              ctx.fillStyle = bgs;
+              ctx.fillRect(x,20,ctx.measureText(chars[j]).width,180);
+              ctx.fillStyle = graph.colors.main;
+              ctx.fillText(chars[j],x,y,w);
+              x += Math.min(ctx.measureText(chars[j]).width,w);
+            }
+          }
+        }
+        ctx.fillStyle = bgs;
+        ctx.fillRect(x,20,20,170);
+        if(cdata.analog)ctx.shadowBlur = 10;
+        ctx.strokeRect(20,20,x,170);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = graph.colors.main_;
+        ctx.fillRect(20,20,x,170);
+      }
       else{//  分数を含まないとき
         ctx.fillStyle = bgs;
         ctx.fillRect(20,20,40,100);
@@ -4489,25 +4590,26 @@
         }
       }
       else if(graph.type === "parameter"){
-        for(let i=r[0]; i<r[1]; i+=.1){
+        for(let i=r[0]; i<r[1]+.1; i+=.1){
+          if(r[1]<=i)i = r[1];//  最後の点
           if(Number.isNaN(f(i))){
             SkewGraph(1);
             context.stroke();
             SkewGraph();
             context.beginPath();
           }else{
-            c = isContinuous(f,i,.01);
-            if(c.bool){
+            c = [isContinuous((t)=>f(t)[0],i,.1),isContinuous((t)=>f(t)[1],i,.1)];
+            if(c[0].bool&&c[1].bool){
               y = f(i);
               context.lineTo(y[0]*graph.scale,-y[1]*graph.scale);
             }
             else{
-              y = f(c.x);
+              y = c[0].bool ? f(c[1].x) : f(c[0].x);
               context.lineTo(y[0]*graph.scale,-y[1]*graph.scale);
               SkewGraph(1);
               context.stroke();
               SkewGraph();
-              y = f(c.x+c.d);
+              y = c[0].bool ? f(c[1].x+c[1].d) : f(c[0].x+c[0].d);
               context.beginPath();
               context.moveTo(y[0]*graph.scale,-y[1]*graph.scale);
             }
