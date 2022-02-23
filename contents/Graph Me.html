@@ -79,6 +79,7 @@
     let bvs,btx,cvs,ctx,touches,buttons,vars,graph,ctrl,level,clear,colors,cdata,cdata0,save;
 
     //  難易度順に入れ替える!!!
+    //  式が一致しているかの確認!!!
     let problems0 = {
        0 : {
          type : "title",
@@ -2789,6 +2790,238 @@
         max : [3,3,5,5],
         vscale : [0,0,0,0],
         answer : [-2,1,1,4]
+      },
+      110 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [-Math.PI,Math.PI,-Math.PI,Math.PI];
+        },
+        funcstr : "P{x=acosbt}{y=csindt} (-π<t<π)",
+        func : (t,a,b,c,d) => {
+          return [a*Math.cos(b*t),c*Math.sin(d*t)];
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 120,
+        vars : [1,1,1,1],
+        min : [-2,0,0,0],
+        value : [0,2,2,2],
+        max : [2,4,4,4],
+        vscale : [0,.05,0,.05],
+        answer : [-2,3.5,2,3]
+      },
+      111 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [-5,5,-5,5];
+        },
+        funcstr : "P{x=|t-a|-b}{y=#||t|-c#|-d} (-5<t<5)",
+        func : (t,a,b,c,d) => {
+          return [Math.abs(t-a)-b,Math.abs(Math.abs(t)-c)-d];
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 120,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [1,2,2,1]
+      },
+      112 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,0,3.5];
+        },
+        funcstr : "P{x=2cosat+sinbt}{y=2sinat+cosbt} (c<t<d)",
+        func : (t,a,b,c,d) => {
+          return [2*Math.cos(a*t)+Math.sin(b*t),2*Math.sin(a*t)+Math.cos(b*t)];
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [0,0,0,0],
+        value : [2,2,2,2],
+        max : [4,4,4,4],
+        vscale : [.25,.25,0,0],
+        answer : [2.5,3.75,0,3.5]
+      },
+      113 : {
+        //  これは悪問かもしれない
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [0,8*Math.PI,0,8*Math.PI];
+        },
+        funcstr : "P{x=4cosat+2sinbt+cosct}{y=4sinat+2cosbt+sinct} (0<t<8π)",
+        func : (t,a,b,c,d) => {
+          return [4*Math.cos(a*t)+2*Math.sin(b*t)+Math.cos(c*t),4*Math.sin(a*t)+2*Math.cos(b*t)+Math.sin(c*t)];
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 40,
+        vars : [1,1,1,0],
+        min : [0,0,0,0],
+        value : [2,2,2,2],
+        max : [4,4,4,4],
+        vscale : [.25,.25,.25,0],
+        answer : [.25,3.5,4,0]
+      },
+      114 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,-Math.PI/2,Math.PI/2];
+        },
+        funcstr : "P{x=4at-bsin4t}{y=a-bcos4t} (c<t<d)",
+        func : (t,a,b,c,d) => {
+          return [4*a*t-b*Math.sin(4*t),a-b*Math.cos(4*t)];
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-2,-2,-3,-3],
+        value : [0,0,0,0],
+        max : [2,2,3,3],
+        vscale : [0,0,0,0],
+        answer : [.6,-.6,-Math.PI/2,Math.PI/2]
+      },
+      115 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,-1,3];
+        },
+        funcstr : "P{x=asin^3t}{y=bcos^3t} (c<t<d)",
+        func : (t,a,b,c,d) => {
+          return [a*Math.sin(t)**3,b*Math.cos(t)**3];
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 100,
+        vars : [1,1,1,1],
+        min : [0,0,-3,-3],
+        value : [2,2,0,0],
+        max : [4,4,3,3],
+        vscale : [0,0,0,0],
+        answer : [1,3,-1,3]
+      },
+      116 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,0,2];
+        },
+        funcstr : "P{x=ae^b^tcost}{y=ae^b^tsint} (c<t<d)",
+        func : (t,a,b,c,d) => {
+          return [a*Math.exp(b*t)*Math.cos(t),a*Math.exp(b*t)*Math.sin(t)];
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 100,
+        vars : [1,1,1,1],
+        min : [-4,-2,0,0],
+        value : [0,0,3,3],
+        max : [4,2,6,6],
+        vscale : [0,0,0,0],
+        answer : [3,-1,0,2]
+      },
+      117 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [-1,2,-1,2];
+        },
+        funcstr : "P{x=at+bt^3}{y=c+dt^4} (-1<t<2)",
+        func : (t,a,b,c,d) => {
+          return [a*t+b*t**3,c+d*t**4];
+        },
+        xaxis : 240,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,.25,0,.2],
+        answer : [3,-1.5,1,-.4]
+      },
+      118 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,-2.4,2.6];
+        },
+        funcstr : "P{x=cos(t+acost)}{y=sin(t+bsint)} (c<t<d)",
+        func : (t,a,b,c,d) => {
+          return [Math.cos(t+a*Math.cos(t)),Math.sin(t+b*Math.sin(t))];
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 200,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [2,-.5,-2.4,2.6]
+      },
+      119 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,-2,-1];
+        },
+        funcstr : "P{x=t^2+a}{y=t^2+bt} (c<t<d)",
+        func : (t,a,b,c,d) => {
+          return [t*t+a,t*t+b*t];
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [-2,3,-2,-1]
+      },
+      120 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,0,6];
+        },
+        funcstr : "P{x=cos(2t+a)}{y=t^0^.^3sin(t+b)} (c<t<d)",
+        func : (t,a,b,c,d) => {
+          return [Math.cos(2*t+a),t**.3*Math.sin(t+b)];
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 120,
+        vars : [1,1,1,1],
+        min : [-3,-3,0,0],
+        value : [0,0,4,4],
+        max : [3,3,8,8],
+        vscale : [0,0,0,0],
+        answer : [.5,-2,0,6]
       }
     }
     let problems11 = {
@@ -3027,6 +3260,96 @@
         max : [3,3,3,3],
         vscale : [0,0,0,0],
         answer : [1,-2,3,-1]
+      },
+      134 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "x^2+y^2+a|x|+b|y|+cx+dy=1",
+        func : (x,y,a,b,c,d) => {
+          return x*x+y*y+a*Math.abs(x)+b*Math.abs(y)+c*x+d*y-1;
+        },
+        xaxis : 330,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [-2,-1.5,-1,1]
+      },
+      135 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "#||x|+y-a#|=bx^2+cy^2-|x|-y+d^2",
+        func : (x,y,a,b,c,d) => {
+          return b*x*x+c*y*y-Math.abs(x)-y+d*d-Math.abs(Math.abs(x)+y-a);
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-5,-2,-2,0],
+        value : [0,0,0,1.5],
+        max : [5,2,2,3],
+        vscale : [0,1/9,1/9,0],
+        answer : [4,1/3,1/3,1]
+      },
+      136 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "#|x^2+a#(|y|+b#)^2+c#|=d",
+        func : (x,y,a,b,c,d) => {
+          return Math.abs(x*x+a*(Math.abs(y)+b)**2+c)-d;
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-5,-3],
+        value : [0,0,0,0],
+        max : [3,3,5,3],
+        vscale : [0,0,0,0],
+        answer : [1.6,-1.5,-4,1]
+      },
+      137 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "#||x+y+a|+b#|+#||x-y|+c#|=d",
+        func : (x,y,a,b,c,d) => {
+          return Math.abs(Math.abs(x+y+a)+b)+Math.abs(Math.abs(x-y)+c)-d;
+        },
+        xaxis : 320,//370
+        yaxis : 500,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [2,-3,-2,3]
+      },
+      138 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "a|x|+b|y|+#||x-y|+c|x|#|=d",
+        func : (x,y,a,b,c,d) => {
+          return a*Math.abs(x)+b*Math.abs(y)+Math.abs(Math.abs(x-y)+c*Math.abs(x))-d;
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [.1,0,.1,0],
+        answer : [1.5,0,-1.5,2]
       }
       //  ハート!!!!!!!!!!!!!!!!
     }
@@ -3080,6 +3403,10 @@
           //  タッチ操作
           cvs.ontouchstart = (e) => {
             if(!ctrl)return 0;
+            if(clear===1){
+              clear = 2;
+              DrawAll();
+            }
             e.preventDefault();
             let x = e.touches[0].clientX-cvs.getBoundingClientRect().left;//  canvas左上からのpx値
             let y = e.touches[0].clientY-cvs.getBoundingClientRect().top;
@@ -3151,6 +3478,10 @@
           //  マウス操作
           cvs.onmousedown = (e) => {
             if(!ctrl)return 0;
+            if(clear===1){
+              clear = 2;
+              DrawAll();
+            }
             e.preventDefault();
             let x = e.offsetX;//  canvas左上からのpx値
             let y = e.offsetY;
@@ -3414,6 +3745,7 @@
       }
       if(graph.type === "stages")return 0;
       if(graph.type === "levels")return 0;
+      if(clear===2)return 0;
       let bool = 1;
       for(let i=0; i<4; i++){
         if(!vars[i].available)continue;
@@ -3529,7 +3861,6 @@
 
     //  resetボタン押下時の処理
     //  問題画面の初期化. 最初の表示にも用いる
-    //  設定の初期化!!!
     function Reset(b){
       if(b===1){
         //  手動押下時
@@ -3641,19 +3972,9 @@
       btx.save();
 
       //  描画範囲の指定
-      ctx.beginPath();
-      ctx.moveTo(40,40);
-      ctx.lineTo(40,780);
-      ctx.lineTo(960,780);
-      ctx.lineTo(960,40);
-      ctx.closePath();
+      SetRRPath(ctx,40,40,920,740,20);
       ctx.clip();
-      btx.beginPath();
-      btx.moveTo(40,40);
-      btx.lineTo(40,780);
-      btx.lineTo(960,780);
-      btx.lineTo(960,40);
-      btx.closePath();
+      SetRRPath(btx,40,40,920,740,20);
       btx.clip();
       //  スクリーン左上を原点とする
       ctx.translate(40,40);
@@ -3981,11 +4302,32 @@
         ctx.stroke();
         ctx.strokeStyle = 9<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
         ctx.beginPath();
-        ctx.moveTo(130+220*1+40,150+220*2+0);//  10:陰
-        ctx.lineTo(130+220*1+0,150+220*2-40);
-        ctx.lineTo(130+220*1-40,150+220*2+0);
-        ctx.lineTo(130+220*1+0,150+220*2+40);
-        ctx.lineTo(130+220*1+40,150+220*2+0);
+        ctx.moveTo(130+220*1+40,150+220*2-40);//  10:媒
+        ctx.lineTo(130+220*1-40,150+220*2+40);
+        ctx.lineTo(130+220*1-40,150+220*2-40);
+        ctx.lineTo(130+220*1+40,150+220*2+40);
+        ctx.lineTo(130+220*1+40,150+220*2-40);
+        ctx.stroke();
+        ctx.strokeStyle = 10<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.beginPath();
+        ctx.moveTo(130+220*2+40,150+220*2+0);//  11:陰
+        ctx.lineTo(130+220*2+0,150+220*2-40);
+        ctx.lineTo(130+220*2-40,150+220*2+0);
+        ctx.lineTo(130+220*2+0,150+220*2+40);
+        ctx.lineTo(130+220*2+40,150+220*2+0);
+        ctx.stroke();
+        ctx.strokeStyle = 11<=Math.ceil(cdata.maxlevel/12)-1 ? graph.colors.main : graph.colors.disabled;
+        ctx.beginPath();
+        ctx.moveTo(130+220*3+40,150+220*2+0);//  12:陰+
+        ctx.lineTo(130+220*3+0,150+220*2-40);
+        ctx.lineTo(130+220*3-40,150+220*2+0);
+        ctx.lineTo(130+220*3+0,150+220*2+40);
+        ctx.lineTo(130+220*3+40,150+220*2+0);
+        ctx.moveTo(130+220*3+40,150+220*2+40);
+        ctx.lineTo(130+220*3+40,150+220*2-40);
+        ctx.lineTo(130+220*3-40,150+220*2-40);
+        ctx.lineTo(130+220*3-40,150+220*2+40);
+        ctx.lineTo(130+220*3+40,150+220*2+40);
         ctx.stroke();
       }
       else if(graph.type==="levels"){
@@ -4102,7 +4444,7 @@
       }
 
       //  クリアメッセージ
-      if(clear){
+      if(clear === 1){
         ctx.fillStyle = "#000000c0";
         ctx.fillRect(-10,-10,940,760);
         let txt = "LEVEL ";
@@ -4123,6 +4465,13 @@
         ctx.fillText(`CLEAR!`,460,500);
       }
 
+
+      //  枠
+      ctx.strokeStyle = "#333";
+      ctx.setLineDash([]);
+      ctx.lineWidth = 10;
+      SetRRPath(ctx,0,0,920,740,20);
+      ctx.stroke();
       ctx.restore();
       btx.restore();
     }
@@ -4239,7 +4588,7 @@
 
 
       //  レベルの表示
-      if(graph.type==="explicit"||graph.type==="polar"){
+      if(graph.type.match(/explicit|polar|parameter|implicit/)){
         ctx.fillStyle = cdata.analog ? "#222" : "#888";
         ctx.textAlign = "left";
         ctx.textBaseline = "bottom";
@@ -4251,6 +4600,7 @@
       }
     }
 
+    //  最初の描画時にフォントがおかしくなる!!!
     function DrawScreenFuncStr(){
       let bgs;
       if(cdata.analog){
@@ -4364,7 +4714,7 @@
                 ctx.font = "60px 'Roboto Mono'";//  普通
               }
               ctx.fillStyle = bgs;
-              ctx.fillRect(x,20,ctx.measureText(chars[j]).width,180);
+              ctx.fillRect(x,20,ctx.measureText(chars[j]).width,170);
               ctx.fillStyle = graph.colors.main;
               ctx.fillText(chars[j],x,y,w);
               x += Math.min(ctx.measureText(chars[j]).width,w);
@@ -4465,7 +4815,7 @@
                 ctx.font = "60px 'Roboto Mono'";//  普通
               }
               ctx.fillStyle = bgs;
-              ctx.fillRect(x,20,ctx.measureText(chars[j]).width,180);
+              ctx.fillRect(x,20,ctx.measureText(chars[j]).width,170);
               ctx.fillStyle = graph.colors.main;
               ctx.fillText(chars[j],x,y,w);
               x += Math.min(ctx.measureText(chars[j]).width,w);
@@ -4590,7 +4940,8 @@
         }
       }
       else if(graph.type === "parameter"){
-        for(let i=r[0]; i<r[1]+.1; i+=.1){
+        //  滑らかにしたい!!!
+        for(let i=r[0]; i<r[1]+Math.min(.1,(r[1]-r[0])/1000); i+=Math.min(.1,(r[1]-r[0])/1000)){
           if(r[1]<=i)i = r[1];//  最後の点
           if(Number.isNaN(f(i))){
             SkewGraph(1);
@@ -4664,8 +5015,14 @@
           btx.translate(500,950+130*i);
           //  上限と下限のディスプレイ
           btx.fillStyle = "#000";
-          btx.fillRect(-460,-40,100,80);
-          btx.fillRect(+360,-40,100,80);
+          btx.strokeStyle = "#333";
+          btx.lineWidth = 5;
+          SetRRPath(btx,-460,-40,100,80,15);
+          btx.fill();
+          btx.stroke();
+          SetRRPath(btx,+360,-40,100,80,15);
+          btx.fill();
+          btx.stroke();
           //  スライダーの背景
           btx.beginPath();
           btx.arc(-300,0,5,Math.PI,-Math.PI);
