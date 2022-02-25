@@ -3350,8 +3350,115 @@
         max : [3,3,3,3],
         vscale : [.1,0,.1,0],
         answer : [1.5,0,-1.5,2]
+      },
+      139 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "(|x|+a)#(#||x|+b#|+c#)+dy^2=1",
+        func : (x,y,a,b,c,d) => {
+          return (Math.abs(x)+a)*(Math.abs(Math.abs(x)+b)+c)+d*y*y-1;
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [-3,-3,-2,1]
+      },
+      140 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "#||x+a|+b#|=#||y|+c#|+d",
+        func : (x,y,a,b,c,d) => {
+          return Math.abs(Math.abs(x+a)+b)-Math.abs(Math.abs(y)+c)-d;
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [1,-1.5,-1,1]
+      },
+      141 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "max#(#||ax|-y#|,#||by|+x+c#|#)=d",
+        func : (x,y,a,b,c,d) => {
+          return Math.max(Math.abs(Math.abs(a*x)-y),Math.abs(Math.abs(b*y)+x+c))-d;
+        },
+        xaxis : 460,//370
+        yaxis : 460,//460
+        gscale : 100,
+        vars : [1,1,1,1],
+        min : [0,0,-3,-3],
+        value : [3,3,0,0],
+        max : [6,6,3,3],
+        vscale : [0,0,0,0],
+        answer : [3,2,-3,1.5]
+      },
+      142 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "max#(#||ax+by|-x#|,|y+c|#)=d",
+        func : (x,y,a,b,c,d) => {
+          return Math.max(Math.abs(Math.abs(a*x+b*y)-x),Math.abs(y+c))-d;
+        },
+        xaxis : 600,//370
+        yaxis : 100,//460
+        gscale : 50,
+        vars : [1,1,1,1],
+        min : [0,-3,-3,-3],
+        value : [2,0,0,0],
+        max : [4,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [2,-2,-3,3]
+      },
+      143 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "min#(a#||x|+by#|-y,#||x|+cy#|+|x|#)=d",
+        func : (x,y,a,b,c,d) => {
+          return Math.min(a*Math.abs(Math.abs(x)+b*y)-y,Math.abs(Math.abs(x)+c*y)+Math.abs(x))-d;
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 90,
+        vars : [1,1,1,1],
+        min : [-2,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [2,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [2,1,-3,3]
+      },
+      144 : {
+        type : "implicit",
+        hide : 0,
+        points : [],
+        funcstr : "#|a(|x|+by)^2+y^2+c#|=d",
+        func : (x,y,a,b,c,d) => {
+          return Math.abs(a*(Math.abs(x)+b*y)**2+y*y+c)-d;
+        },
+        xaxis : 460,//370
+        yaxis : 460,//460
+        gscale : 120,
+        vars : [1,1,1,1],
+        min : [-5,-2,-5,-5],
+        value : [0,0,0,0],
+        max : [5,2,5,5],
+        vscale : [0,0,0,0],
+        answer : [4,-.5,-4,2]
       }
-      //  ハート!!!!!!!!!!!!!!!!
     }
 
     let problems = {
@@ -3829,6 +3936,7 @@
     }
 
     //  prevボタン押下時の処理
+    //  ステージセレクトに戻るときの変数の値を適切に設定する!!!
     function Prev(){
       if(graph.type === "title"){
         //  ホームページへ
