@@ -3786,10 +3786,12 @@
 
       //  クッキーがあれば，そのデータを代入する
       LoadCookie();
+      let lvl = cdata.maxlevel;
 
       //  Resetによる初期化
       Resize();
       Reset(2);
+      level = lvl;
     }
 
     //  ボタン設定
@@ -3887,17 +3889,18 @@
     }
 
     //  ステージ・レベル選択画面の描画
-    function DrawSelect(b){
+    function DrawSelect(){
+      let b = graph.type==="levels";
       graph.scale = 55;
       vars[0].available = 1;
       vars[0].min = 1;
       vars[0].max = 4;
-      vars[0].value = b ? ((level-1)%12)%4+1 : 1;
+      vars[0].value = b ? ((level-1)%12)%4+1 : Math.floor((level-1)/12)%4+1;
       vars[0].scale = 1;
       vars[1].available = 1;
       vars[1].min = 1;
       vars[1].max = 3;
-      vars[1].value = b ? Math.floor(((level-1)%12)/4)+1 : 1;
+      vars[1].value = b ? Math.floor(((level-1)%12)/4)+1 : Math.floor(Math.floor((level-1)/12)/4)+1;
       vars[1].scale = 1;
       vars[2].available = 0;
       vars[3].available = 0;
@@ -3923,7 +3926,7 @@
       vars[2].max = 20;
       vars[2].scale = 0;
       vars[2].value = cdata.weight;
-      /*  !!!
+      /*  スマホで綺麗に音が出なかったため，音なしにした!!!
       vars[3].available = 1;
       vars[3].min = 0;
       vars[3].max = 1;
@@ -3943,16 +3946,20 @@
         location.href = "../index.html"
       }
       else if(graph.type === "settings"){
+        let lvl = level;
+        level = 0;
         Reset(2);
+        level = lvl;
       }
       else if(graph.type === "stages"){
+        let lvl = level;
         level = 0;
-        Reset();
+        Reset(2);
+        level = lvl;
       }
       else if(graph.type === "levels"){
         graph.type = "stages";
-        SetButtons();
-        DrawAll();
+        DrawSelect();
       }
       else{
         //  任意のレベル
@@ -3963,7 +3970,7 @@
         graph.type = "levels";
         clear = 0;
         SetButtons();
-        DrawSelect(1);
+        DrawSelect();
       }
     }
 
@@ -4041,7 +4048,9 @@
       }
       else if(graph.type === "stages"){
         graph.type = "levels";
-        level = (vars[0].value-1+(vars[1].value-1)*4)*12+1;
+        if(vars[0].value-1+(vars[1].value-1)*4!==Math.floor((level-1)/12)){
+          level = (vars[0].value-1+(vars[1].value-1)*4)*12+1;
+        }
         DrawSelect();
       }
       else if(graph.type === "levels"){
@@ -4088,7 +4097,15 @@
       ctx.translate(40,40);
 
       //  背景
-      DrawScreenBackground(b);
+      if(graph.type==="settings"){
+        let lvl = level;
+        level = 0;
+        DrawScreenBackground(b);
+        level = lvl;
+      }
+      else{
+        DrawScreenBackground(b);
+      }
 
       //  グラフ
       if(graph.type==="title"){
