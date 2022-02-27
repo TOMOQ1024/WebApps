@@ -2592,7 +2592,7 @@
         },
         xaxis : 420,//370
         yaxis : 460,//460
-        gscale : 60,
+        gscale : 80,
         vars : [1,1,1,1],
         min : [0,-5,0,-3],
         value : [2,0,2,0],
@@ -2647,6 +2647,48 @@
         hide : 0,
         points : [],
         get range(){
+          return [0,Math.PI*2,0,Math.PI*2];
+        },
+        funcstr : "r=F{aθ+b}{#|sin#(mod(θ,c)+d#)#|} (0<θ<2π)",
+        func : (x,a,b,c,d) => {
+          return (a*x+b)/(Math.abs(Math.sin(Math.mod(x,c)+d)));
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 50,
+        vars : [1,1,1,1],
+        min : [0,0,0,0],
+        value : [3,3,3,3],
+        max : [6,6,6,6],
+        vscale : [0,0,Math.PI/14,Math.PI/14],
+        answer : [0,4,Math.PI*2/7,Math.PI*5/14]
+      },
+      104 : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,2,5];
+        },
+        funcstr : "r=acos5θ+bcos3θ (c<θ<d)",
+        func : (x,a,b,c,d) => {
+          return a*Math.cos(5*x)+b*Math.cos(3*x);
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [0,0,0,0],
+        value : [3,3,3,3],
+        max : [6,6,6,6],
+        vscale : [0,0,0,0],
+        answer : [3,1,2,5]
+      },
+      105 : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
           return [vars[2].value*Math.PI,vars[3].value*Math.PI,-Math.PI*3,Math.PI*5];
         },
         funcstr : "r=afloor(bθ) (cπ<θ<dπ)",
@@ -2663,28 +2705,7 @@
         vscale : [0,.05,.1,.1],
         answer : [.5,-.6,-3,5]
       },
-      104 : {
-        type : "polar",
-        hide : 0,
-        points : [],
-        get range(){
-          return [0,Math.PI*2,0,Math.PI*2];
-        },
-        funcstr : "r=F{a}{1+b|coscθ|sindθ} (0<θ<2π)",
-        func : (x,a,b,c,d) => {
-          return a/(1+b*Math.abs(Math.cos(c*x))*Math.sin(d*x));
-        },
-        xaxis : 500,//370
-        yaxis : 460,//460
-        gscale : 60,
-        vars : [1,1,1,1],
-        min : [-5,0,0,0],
-        value : [0,2,3,3],
-        max : [5,4,6,6],
-        vscale : [0,0,.1,.1],
-        answer : [-3,.6,1,1]
-      },
-      105 : {
+      106 : {
         type : "polar",
         hide : 0,
         points : [],
@@ -2705,7 +2726,28 @@
         vscale : [0,.1,0,.1],
         answer : [2,6,-3,3]
       },
-      106 : {
+      107 : {
+        type : "polar",
+        hide : 0,
+        points : [],
+        get range(){
+          return [0,Math.PI*2,0,Math.PI*2];
+        },
+        funcstr : "r=F{a}{1+b|coscθ|sindθ} (0<θ<2π)",
+        func : (x,a,b,c,d) => {
+          return a/(1+b*Math.abs(Math.cos(c*x))*Math.sin(d*x));
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-5,0,0,0],
+        value : [0,2,3,3],
+        max : [5,4,6,6],
+        vscale : [0,0,.1,.1],
+        answer : [-3,.6,1,1]
+      },
+      108 : {
         type : "polar",
         hide : 0,
         points : [],
@@ -2725,48 +2767,6 @@
         max : [5,6,6,5],
         vscale : [.2,Math.PI/32,Math.PI/32,.1],
         answer : [4,Math.PI*.625,Math.PI*.3125,2]
-      },
-      107 : {
-        type : "polar",
-        hide : 0,
-        points : [],
-        get range(){
-          return [0,Math.PI*2,0,Math.PI*2];
-        },
-        funcstr : "r=F{aθ+b}{#|sin#(mod(θ,c)+d#)#|} (0<θ<2π)",
-        func : (x,a,b,c,d) => {
-          return (a*x+b)/(Math.abs(Math.sin(Math.mod(x,c)+d)));
-        },
-        xaxis : 420,//370
-        yaxis : 460,//460
-        gscale : 50,
-        vars : [1,1,1,1],
-        min : [0,0,0,0],
-        value : [3,3,3,3],
-        max : [6,6,6,6],
-        vscale : [0,0,Math.PI/14,Math.PI/14],
-        answer : [0,4,Math.PI*2/7,Math.PI*5/14]
-      },
-      108 : {
-        type : "polar",
-        hide : 0,
-        points : [],
-        get range(){
-          return [vars[2].value,vars[3].value,2,5];
-        },
-        funcstr : "r=acos5θ+bcos3θ (c<θ<d)",
-        func : (x,a,b,c,d) => {
-          return a*Math.cos(5*x)+b*Math.cos(3*x);
-        },
-        xaxis : 420,//370
-        yaxis : 460,//460
-        gscale : 80,
-        vars : [1,1,1,1],
-        min : [0,0,0,0],
-        value : [3,3,3,3],
-        max : [6,6,6,6],
-        vscale : [0,0,0,0],
-        answer : [3,1,2,5]
       },
     };
     let problems10 = {
@@ -2796,44 +2796,23 @@
         hide : 0,
         points : [],
         get range(){
-          return [-Math.PI,Math.PI,-Math.PI,Math.PI];
+          return [vars[2].value,vars[3].value,0,2];
         },
-        funcstr : "P{x=acosbt}{y=csindt} (-π<t<π)",
+        funcstr : "P{x=ae^b^tcost}{y=ae^b^tsint} (c<t<d)",
         func : (t,a,b,c,d) => {
-          return [a*Math.cos(b*t),c*Math.sin(d*t)];
+          return [a*Math.exp(b*t)*Math.cos(t),a*Math.exp(b*t)*Math.sin(t)];
         },
         xaxis : 420,//370
         yaxis : 460,//460
-        gscale : 120,
+        gscale : 100,
         vars : [1,1,1,1],
-        min : [-2,0,0,0],
-        value : [0,2,2,2],
-        max : [2,4,4,4],
-        vscale : [0,.05,0,.05],
-        answer : [-2,3.5,2,3]
+        min : [-4,-2,0,0],
+        value : [0,0,3,3],
+        max : [4,2,6,6],
+        vscale : [0,0,0,0],
+        answer : [3,-1,0,2]
       },
       111 : {
-        type : "parameter",
-        hide : 0,
-        points : [],
-        get range(){
-          return [-5,5,-5,5];
-        },
-        funcstr : "P{x=|t-a|-b}{y=#||t|-c#|-d} (-5<t<5)",
-        func : (t,a,b,c,d) => {
-          return [Math.abs(t-a)-b,Math.abs(Math.abs(t)-c)-d];
-        },
-        xaxis : 420,//370
-        yaxis : 460,//460
-        gscale : 120,
-        vars : [1,1,1,1],
-        min : [-3,-3,-3,-3],
-        value : [0,0,0,0],
-        max : [3,3,3,3],
-        vscale : [0,0,0,0],
-        answer : [1,2,2,1]
-      },
-      112 : {
         type : "parameter",
         hide : 0,
         points : [],
@@ -2854,7 +2833,133 @@
         vscale : [.25,.25,0,0],
         answer : [2.5,3.75,0,3.5]
       },
+      112 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,-Math.PI/2,Math.PI/2];
+        },
+        funcstr : "P{x=4at-bsin4t}{y=a-bcos4t} (c<t<d)",
+        func : (t,a,b,c,d) => {
+          return [4*a*t-b*Math.sin(4*t),a-b*Math.cos(4*t)];
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-2,-2,-3,-3],
+        value : [0,0,0,0],
+        max : [2,2,3,3],
+        vscale : [0,0,0,0],
+        answer : [.6,-.6,-Math.PI/2,Math.PI/2]
+      },
       113 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,-1,3];
+        },
+        funcstr : "P{x=asin^3t}{y=bcos^3t} (c<t<d)",
+        func : (t,a,b,c,d) => {
+          return [a*Math.sin(t)**3,b*Math.cos(t)**3];
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 100,
+        vars : [1,1,1,1],
+        min : [0,0,-3,-3],
+        value : [2,2,0,0],
+        max : [4,4,3,3],
+        vscale : [0,0,0,0],
+        answer : [1,3,-1,3]
+      },
+      114 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [-Math.PI,Math.PI,-Math.PI,Math.PI];
+        },
+        funcstr : "P{x=acosbt}{y=csindt} (-π<t<π)",
+        func : (t,a,b,c,d) => {
+          return [a*Math.cos(b*t),c*Math.sin(d*t)];
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 120,
+        vars : [1,1,1,1],
+        min : [-2,0,0,0],
+        value : [0,2,2,2],
+        max : [2,4,4,4],
+        vscale : [0,.05,0,.05],
+        answer : [-2,3.5,2,3]
+      },
+      115 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [-5,4,-5,4];
+        },
+        funcstr : "P{x=|t-a|-b}{y=#||t|-c#|-d} (-5<t<4)",
+        func : (t,a,b,c,d) => {
+          return [Math.abs(t-a)-b,Math.abs(Math.abs(t)-c)-d];
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 120,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [-1,2,2,1]
+      },
+      116 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [-1,2,-1,2];
+        },
+        funcstr : "P{x=at+bt^3}{y=c+dt^4} (-1<t<2)",
+        func : (t,a,b,c,d) => {
+          return [a*t+b*t**3,c+d*t**4];
+        },
+        xaxis : 240,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,.25,0,.2],
+        answer : [3,-1.5,1,-.4]
+      },
+      117 : {
+        type : "parameter",
+        hide : 0,
+        points : [],
+        get range(){
+          return [vars[2].value,vars[3].value,-2,-1];
+        },
+        funcstr : "P{x=t^2+a}{y=t^2+bt} (c<t<d)",
+        func : (t,a,b,c,d) => {
+          return [t*t+a,t*t+b*t];
+        },
+        xaxis : 420,//370
+        yaxis : 460,//460
+        gscale : 80,
+        vars : [1,1,1,1],
+        min : [-3,-3,-3,-3],
+        value : [0,0,0,0],
+        max : [3,3,3,3],
+        vscale : [0,0,0,0],
+        answer : [-2,3,-2,-1]
+      },
+      118 : {
         //  これは悪問かもしれない
         type : "parameter",
         hide : 0,
@@ -2876,91 +2981,7 @@
         vscale : [.25,.25,.25,0],
         answer : [.25,3.5,4,0]
       },
-      114 : {
-        type : "parameter",
-        hide : 0,
-        points : [],
-        get range(){
-          return [vars[2].value,vars[3].value,-Math.PI/2,Math.PI/2];
-        },
-        funcstr : "P{x=4at-bsin4t}{y=a-bcos4t} (c<t<d)",
-        func : (t,a,b,c,d) => {
-          return [4*a*t-b*Math.sin(4*t),a-b*Math.cos(4*t)];
-        },
-        xaxis : 500,//370
-        yaxis : 460,//460
-        gscale : 80,
-        vars : [1,1,1,1],
-        min : [-2,-2,-3,-3],
-        value : [0,0,0,0],
-        max : [2,2,3,3],
-        vscale : [0,0,0,0],
-        answer : [.6,-.6,-Math.PI/2,Math.PI/2]
-      },
-      115 : {
-        type : "parameter",
-        hide : 0,
-        points : [],
-        get range(){
-          return [vars[2].value,vars[3].value,-1,3];
-        },
-        funcstr : "P{x=asin^3t}{y=bcos^3t} (c<t<d)",
-        func : (t,a,b,c,d) => {
-          return [a*Math.sin(t)**3,b*Math.cos(t)**3];
-        },
-        xaxis : 420,//370
-        yaxis : 460,//460
-        gscale : 100,
-        vars : [1,1,1,1],
-        min : [0,0,-3,-3],
-        value : [2,2,0,0],
-        max : [4,4,3,3],
-        vscale : [0,0,0,0],
-        answer : [1,3,-1,3]
-      },
-      116 : {
-        type : "parameter",
-        hide : 0,
-        points : [],
-        get range(){
-          return [vars[2].value,vars[3].value,0,2];
-        },
-        funcstr : "P{x=ae^b^tcost}{y=ae^b^tsint} (c<t<d)",
-        func : (t,a,b,c,d) => {
-          return [a*Math.exp(b*t)*Math.cos(t),a*Math.exp(b*t)*Math.sin(t)];
-        },
-        xaxis : 420,//370
-        yaxis : 460,//460
-        gscale : 100,
-        vars : [1,1,1,1],
-        min : [-4,-2,0,0],
-        value : [0,0,3,3],
-        max : [4,2,6,6],
-        vscale : [0,0,0,0],
-        answer : [3,-1,0,2]
-      },
-      117 : {
-        type : "parameter",
-        hide : 0,
-        points : [],
-        get range(){
-          return [-1,2,-1,2];
-        },
-        funcstr : "P{x=at+bt^3}{y=c+dt^4} (-1<t<2)",
-        func : (t,a,b,c,d) => {
-          return [a*t+b*t**3,c+d*t**4];
-        },
-        xaxis : 240,//370
-        yaxis : 460,//460
-        gscale : 60,
-        vars : [1,1,1,1],
-        min : [-3,-3,-3,-3],
-        value : [0,0,0,0],
-        max : [3,3,3,3],
-        vscale : [0,.25,0,.2],
-        answer : [3,-1.5,1,-.4]
-      },
-      118 : {
+      119 : {
         type : "parameter",
         hide : 0,
         points : [],
@@ -2980,27 +3001,6 @@
         max : [3,3,3,3],
         vscale : [0,0,0,0],
         answer : [2,-.5,-2.4,2.6]
-      },
-      119 : {
-        type : "parameter",
-        hide : 0,
-        points : [],
-        get range(){
-          return [vars[2].value,vars[3].value,-2,-1];
-        },
-        funcstr : "P{x=t^2+a}{y=t^2+bt} (c<t<d)",
-        func : (t,a,b,c,d) => {
-          return [t*t+a,t*t+b*t];
-        },
-        xaxis : 420,//370
-        yaxis : 460,//460
-        gscale : 80,
-        vars : [1,1,1,1],
-        min : [-3,-3,-3,-3],
-        value : [0,0,0,0],
-        max : [3,3,3,3],
-        vscale : [0,0,0,0],
-        answer : [-2,3,-2,-1]
       },
       120 : {
         type : "parameter",
