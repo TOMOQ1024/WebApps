@@ -3497,9 +3497,16 @@
           let l = +location.search.match(/from=(\d+|Infinity)/)[1];
           if(!Number.isNaN(l)){
             save = 0;
-            level = Math.min(l,Object.keys(problems).reduce((a,b)=>Math.max(+a,+b)));
             Unlock(Infinity);
-            Reset(2);
+            if(l === Infinity){
+              level = 0;
+              Reset(2);
+              level = 1;
+            }
+            else{
+              level = Math.min(l,Object.keys(problems).reduce((a,b)=>Math.max(+a,+b)));
+              Reset(2);
+            }
           }
         }
 
@@ -3704,7 +3711,7 @@
     }
 
     function SaveCookie(){
-      //  2038年問題???!!!
+      //  2038年問題???!!
       if(!save)return 0;
       for(let k in cdata){
         document.cookie =  `${k}=${encodeURIComponent(String(cdata[k]))}; max-age=315360000;`;//  10年
@@ -3926,7 +3933,7 @@
       vars[2].max = 20;
       vars[2].scale = 0;
       vars[2].value = cdata.weight;
-      /*  スマホで綺麗に音が出なかったため，音なしにした!!!
+      /*  スマホで綺麗に音が出なかったため，音なしにした!!
       vars[3].available = 1;
       vars[3].min = 0;
       vars[3].max = 1;
@@ -3939,7 +3946,6 @@
     }
 
     //  prevボタン押下時の処理
-    //  ステージセレクトに戻るときの変数の値を適切に設定する!!!
     function Prev(){
       if(graph.type === "title"){
         //  ホームページへ
@@ -4043,7 +4049,7 @@
           DrawSettings();
         }
         else if(Math.abs(vars[2].value-2)<=2/30){
-          //  砂場にする!!!
+          //!!
         }
       }
       else if(graph.type === "stages"){
@@ -4622,7 +4628,6 @@
     }
 
     function DrawScreenBackground(b){
-      //  角丸にする!!!
       if(b){
         btx.translate(40,40);
         if(cdata.analog){
@@ -4639,7 +4644,6 @@
         }
 
         //  グリッド
-        //  レベル選択に戻ったとき，グリッドの設定を戻す!!!
         let sx = problems[level].skewx || 0;
         let sy = problems[level].skewy || 0;
         let x0 = graph.yaxis;
@@ -4737,7 +4741,7 @@
       else{
         bgs = "#000";
       }
-      //  影を落とす!!!
+      //  影を落とす!!
       let strs0,strs1,chars,x0,w0,w1,w;
       let p = problems[level];
       x = 40;
@@ -4791,7 +4795,9 @@
                 ctx.font = "60px 'Roboto Mono'";
               }
               ctx.fillStyle = graph.colors.main;
+              if(cdata.analog)ctx.shadowBlur = 10;
               ctx.fillText(chars[j],x,y);
+              ctx.shadowBlur = 0;
               x += ctx.measureText(chars[j]).width;
             }
             //  分母の描画
@@ -4811,7 +4817,9 @@
                 ctx.font = "60px 'Roboto Mono'";
               }
               ctx.fillStyle = graph.colors.main;
+              if(cdata.analog)ctx.shadowBlur = 10;
               ctx.fillText(chars[j],x,y);
+              ctx.shadowBlur = 0;
               x += ctx.measureText(chars[j]).width;
             }
             x = x0+w+20;
@@ -4841,7 +4849,9 @@
               ctx.fillStyle = bgs;
               ctx.fillRect(x,20,ctx.measureText(chars[j]).width,170);
               ctx.fillStyle = graph.colors.main;
+              if(cdata.analog)ctx.shadowBlur = 10;
               ctx.fillText(chars[j],x,y,w);
+              ctx.shadowBlur = 0;
               x += Math.min(ctx.measureText(chars[j]).width,w);
             }
           }
@@ -4854,7 +4864,7 @@
         ctx.fillStyle = graph.colors.main_;
         ctx.fillRect(20,20,x,170);
       }
-      if(p.funcstr.match(/P/)){//  媒介変数
+      else if(p.funcstr.match(/P/)){//  媒介変数
         strs0 = p.funcstr.match(/P\{[^\}]*\}\{[^\}]*\}|[^P]+/g);//  上下の式または条件式
         strs0.unshift("${");//  おっきい括弧
         ctx.fillStyle = bgs;
@@ -4892,7 +4902,9 @@
                 ctx.font = "60px 'Roboto Mono'";
               }
               ctx.fillStyle = graph.colors.main;
+              if(cdata.analog)ctx.shadowBlur = 10;
               ctx.fillText(chars[j],x,y);
+              ctx.shadowBlur = 0;
               x += ctx.measureText(chars[j]).width;
             }
             //  下式の描画
@@ -4912,7 +4924,9 @@
                 ctx.font = "60px 'Roboto Mono'";
               }
               ctx.fillStyle = graph.colors.main;
+              if(cdata.analog)ctx.shadowBlur = 10;
               ctx.fillText(chars[j],x,y);
+              ctx.shadowBlur = 0;
               x += ctx.measureText(chars[j]).width;
             }
             x = x0+w+20;
@@ -4942,7 +4956,9 @@
               ctx.fillStyle = bgs;
               ctx.fillRect(x,20,ctx.measureText(chars[j]).width,170);
               ctx.fillStyle = graph.colors.main;
+              if(cdata.analog)ctx.shadowBlur = 10;
               ctx.fillText(chars[j],x,y,w);
+              ctx.shadowBlur = 0;
               x += Math.min(ctx.measureText(chars[j]).width,w);
             }
           }
@@ -4975,7 +4991,9 @@
           ctx.fillStyle = bgs;
           ctx.fillRect(x,20,ctx.measureText(chars[i]).width,100);
           ctx.fillStyle = graph.colors.main;
+          if(cdata.analog)ctx.shadowBlur = 10;
           ctx.fillText(chars[i],x,y);
+          ctx.shadowBlur = 0;
           x += ctx.measureText(chars[i]).width;
         }
         ctx.fillStyle = bgs;
@@ -5005,7 +5023,6 @@
       context.beginPath();
       if(graph.type === "explicit"){
         //  グラフ  折れ線描画法
-        //  !!!
         for(let i=(-x0-Math.max(sx*(-y0),sx*(740-y0)))/(1-sx*sy); i<=(920-x0-Math.min(sx*(-y0),sx*(740-y0)))/(1-sx*sy); i+=2){
           x = i/graph.scale;
           if(Number.isNaN(f(x))){
@@ -5065,7 +5082,6 @@
         }
       }
       else if(graph.type === "parameter"){
-        //  滑らかにしたい!!!
         for(let i=r[0]; i<r[1]+Math.min(.1,(r[1]-r[0])/1000); i+=Math.min(.1,(r[1]-r[0])/1000)){
           if(r[1]<=i)i = r[1];//  最後の点
           if(Number.isNaN(f(i))){
