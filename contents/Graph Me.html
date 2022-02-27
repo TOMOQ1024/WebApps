@@ -105,9 +105,9 @@
         yaxis : 460,
         gscale : 60,
         vars : [1,0,0,0],
-        min : [-10,-1,-1,-1],
+        min : [-6,-1,-1,-1],
         value : [0,0,0,0],
-        max : [10,1,1,1],
+        max : [6,1,1,1],
         vscale : [0,0,0,0],
         answer : [4,0,0,0]
       },
@@ -121,27 +121,27 @@
         yaxis : 460,
         gscale : 60,
         vars : [1,1,0,0],
-        min : [-10,-10,-1,-1],
+        min : [-6,-6,-1,-1],
         value : [0,0,0,0],
-        max : [10,10,1,1],
+        max : [6,6,1,1],
         vscale : [0,0,0,0],
         answer : [3,-2,0,0]
       },
       3  : {
         type : "explicit",
-        funcstr : "y=a(x-2)+b",
+        funcstr : "y=a+b(x-2)",
         func : (x,a,b,c,d) => {
-          return a*(x-2)+b;
+          return a+b*(x-2);
         },
         xaxis : 550,
         yaxis : 320,
         gscale : 60,
         vars : [1,1,0,0],
-        min : [-3,-10,-1,-1],
+        min : [-6,-3,-1,-1],
         value : [0,0,0,0],
-        max : [3,10,1,1],
+        max : [6,3,1,1],
         vscale : [0,0,0,0],
-        answer : [.5,2,0,0]
+        answer : [2,.5,0,0]
       },
       4  : {
         type : "explicit",
@@ -153,8 +153,8 @@
         yaxis : 460,
         gscale : 60,
         vars : [1,1,0,0],
-        min : [-10,-1,-1,-1],
-        value : [0,0,0,0],
+        min : [-9,-1,-1,-1],
+        value : [-3,0,0,0],
         max : [3,1,1,1],
         vscale : [0,0,0,0],
         answer : [-6,.25,0,0]
@@ -185,9 +185,9 @@
         yaxis : 460,
         gscale : 60,
         vars : [1,1,1,0],
-        min : [-3,-10,-10,-1],
+        min : [-3,-6,-6,-1],
         value : [0,0,0,0],
-        max : [3,10,10,1],
+        max : [3,6,6,1],
         vscale : [0,0,0,0],
         answer : [.5,3,-2,0]
       },
@@ -282,8 +282,8 @@
         yaxis : 400,
         gscale : 60,
         vars : [1,1,0,0],
-        min : [-1,-5,-10,-1],
-        value : [0,0,0,0],
+        min : [-1,-2,-10,-1],
+        value : [0,4,0,0],
         max : [1,10,10,1],
         vscale : [0,0,0,0],
         answer : [.5,10,3,0]
@@ -293,9 +293,9 @@
         hide : 1,
         points : [-3,1,5],
         tangent : 0,
-        funcstr : "y=ax^2+bx+c",
+        funcstr : "y=F{x^2}{a}+F{x}{b}+c",
         func : (x,a,b,c,d) => {
-          return a*x*x+b*x+c;
+          return x*x/a+x/b+c;
         },
         funcTangent : (x,a,b,c,d)=>{
           return -5;
@@ -304,12 +304,12 @@
         yaxis : 400,
         gscale : 60,
         vars : [1,1,1,0],
-        min : [-1,-1,-5,-1],
+        min : [-5,-2,-5,-1],
         value : [0,0,0,0],
-        max : [1,1,5,1],
+        max : [5,2,5,1],
         vscale : [0,0,0,0],
-        answer : [.25,-.5,-3.75,0]
-      }
+        answer : [4,-2,-3.75,0]
+      },
     };
     let problems2 = {
       13 : {
@@ -351,7 +351,7 @@
         gscale : 60,
         vars : [1,1,1,0],
         min : [-5,0,-5,-1],
-        value : [0,0,0,0],
+        value : [0,2.5,0,0],
         max : [5,5,5,1],
         vscale : [0,0,0,0],
         answer : [2,5,1,0]
@@ -373,7 +373,7 @@
         gscale : 61,
         vars : [1,1,1,0],
         min : [-2,0,-5,-1],
-        value : [0,0,0,0],
+        value : [0,1.5,0,0],
         max : [2,3,5,1],
         vscale : [0,0,0,0],
         answer : [-1,.5,3,0]
@@ -395,10 +395,10 @@
         gscale : 60,
         vars : [1,1,0,0],
         min : [0,-2,-5,-1],
-        value : [0,1,0,0],
+        value : [2.5,0,0,0],
         max : [5,2,5,1],
         vscale : [0,0,0,0],
-        answer : [3,0,3,0]
+        answer : [3,-1,3,0]
       },
       17 : {
         type : "explicit",
@@ -421,7 +421,7 @@
         gscale : 60,
         vars : [1,1,1,0],
         min : [0,0,-5,-1],
-        value : [0,0,0,0],
+        value : [2.5,2.5,0,0],
         max : [5,5,5,1],
         vscale : [0,0,0,0],
         answer : [3,4,-4,0]
@@ -447,7 +447,7 @@
         gscale : 60,
         vars : [1,1,0,0],
         min : [0,-2,-5,-1],
-        value : [0,0,0,0],
+        value : [1,0,0,0],
         max : [2,2,5,1],
         vscale : [0,0,0,0],
         answer : [.5,2,-4,0]
@@ -458,9 +458,9 @@
         points : [],
         tangent : 0,
         tangent2 : 0,
-        funcstr : "y=2sinax+sinbx",
+        funcstr : "y=acos(bx-c)+d",
         func : (x,a,b,c,d) => {
-          return 2*Math.sin(a*x)+Math.sin(b*x);
+          return a*Math.cos(b*x-c)+d;
         },
         funcTangent : (x,a,b,c,d)=>{
           return x/2;
@@ -468,15 +468,15 @@
         funcTangent2 : (x,a,b,c,d)=>{
           return -x/2;
         },
-        xaxis : 370,//370
+        xaxis : 500,//370
         yaxis : 460,//460
-        gscale : 80,
-        vars : [1,1,0,0],
-        min : [0,0,-5,-1],
-        value : [0,0,0,0],
-        max : [5,10,5,1],
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-5,0,-1,-5],
+        value : [0,2.5,0,0],
+        max : [5,5,1,5],
         vscale : [0,0,0,0],
-        answer : [2,10,-4,0]
+        answer : [-3,3,1,3]
       },
       20 : {
         type : "explicit",
@@ -499,7 +499,7 @@
         gscale : 60,
         vars : [1,1,1,0],
         min : [0,-10,-3,-1],
-        value : [0,0,0,0],
+        value : [2.5,0,0,0],
         max : [5,10,3,1],
         vscale : [0,0,0,0],
         answer : [4,-5,.75,0]
@@ -524,10 +524,10 @@
         yaxis : 460,//460
         gscale : 60,
         vars : [1,1,1,0],
-        min : [0,-10,-3,-1],
-        value : [0,0,0,0],
-        max : [5,10,3,1],
-        vscale : [0,0,0,0],
+        min : [0,-9,-3,-1],
+        value : [2.5,0,0,0],
+        max : [5,9,3,1],
+        vscale : [0,.5,0,0],
         answer : [2,7,1,0]
       },
       22 : {
@@ -536,9 +536,9 @@
         points : [],
         tangent : 0,
         tangent2 : 0,
-        funcstr : "y=acos(bx-c)+d",
+        funcstr : "y=2sinax+sinbx",
         func : (x,a,b,c,d) => {
-          return a*Math.cos(b*x-c)+d;
+          return 2*Math.sin(a*x)+Math.sin(b*x);
         },
         funcTangent : (x,a,b,c,d)=>{
           return x/2;
@@ -546,15 +546,15 @@
         funcTangent2 : (x,a,b,c,d)=>{
           return -x/2;
         },
-        xaxis : 500,//370
+        xaxis : 370,//370
         yaxis : 460,//460
-        gscale : 60,
-        vars : [1,1,1,1],
-        min : [-5,0,-1,-5],
-        value : [0,2.5,1,0],
-        max : [5,5,1,5],
+        gscale : 80,
+        vars : [1,1,0,0],
+        min : [0,0,-5,-1],
+        value : [2.5,5,0,0],
+        max : [5,10,5,1],
         vscale : [0,0,0,0],
-        answer : [-3,3,1,3]
+        answer : [2,10,-4,0]
       },
       23 : {
         type : "explicit",
@@ -603,11 +603,11 @@
         gscale : 80,
         vars : [1,1,1,0],
         min : [0,0,0,-5],
-        value : [0,0,0,0],
+        value : [2.5,2.5,5,0],
         max : [5,5,10,5],
         vscale : [0,0,0,0],
         answer : [3,3,8,3]
-      }
+      },
     };
     let problems3 = {
       25 : {
@@ -694,58 +694,6 @@
         points : [],
         tangent : 0,
         tangent2 : 0,
-        funcstr : "y=|asinbx+c|",
-        func : (x,a,b,c,d) => {
-          return Math.abs(a*Math.sin(b*x)+c);
-        },
-        funcTangent : (x,a,b,c,d)=>{
-          return x-3;
-        },
-        funcTangent2 : (x,a,b,c,d)=>{
-          return 7-x;
-        },
-        xaxis : 500,//370
-        yaxis : 460,//460
-        gscale : 60,
-        vars : [1,1,1,0],
-        min : [-5,0,-5,-5],
-        value : [0,3,0,0],
-        max : [5,6,5,5],
-        vscale : [0,0,0,0],
-        answer : [4,2,1,5]
-      },
-      29 : {
-        type : "explicit",
-        hide : 0,
-        points : [],
-        tangent : 0,
-        tangent2 : 0,
-        funcstr : "y=asin#||bx-c|-d#|",
-        func : (x,a,b,c,d) => {
-          return a*Math.sin(Math.abs(Math.abs(b*x-c)-d));
-        },
-        funcTangent : (x,a,b,c,d)=>{
-          return x-3;
-        },
-        funcTangent2 : (x,a,b,c,d)=>{
-          return 7-x;
-        },
-        xaxis : 400,//370
-        yaxis : 460,//460
-        gscale : 60,
-        vars : [1,1,1,1],
-        min : [-5,-3,0,-10],
-        value : [0,0,3,0],
-        max : [5,3,6,10],
-        vscale : [0,0,0,0],
-        answer : [4,2,2,7]
-      },
-      30 : {
-        type : "explicit",
-        hide : 0,
-        points : [],
-        tangent : 0,
-        tangent2 : 0,
         funcstr : "y=a|x^2+bx|+cx",
         func : (x,a,b,c,d) => {
           return a*Math.abs(x*x+b*x)+c*x;
@@ -766,7 +714,7 @@
         vscale : [0,0,0,0],
         answer : [1,3,-1,7]
       },
-      31 : {
+      29 : {
         type : "explicit",
         hide : 0,
         points : [],
@@ -792,7 +740,7 @@
         vscale : [0,0,0,0],
         answer : [-1,2,1,7]
       },
-      32 : {
+      30 : {
         type : "explicit",
         hide : 0,
         points : [],
@@ -818,7 +766,33 @@
         vscale : [0,0,0,0],
         answer : [-2,0,-1,-2]
       },
-      33 : {
+      31 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=|asinbx+c|",
+        func : (x,a,b,c,d) => {
+          return Math.abs(a*Math.sin(b*x)+c);
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 500,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,0],
+        min : [-5,0,-5,-5],
+        value : [0,3,0,0],
+        max : [5,6,5,5],
+        vscale : [0,0,0,0],
+        answer : [4,2,1,5]
+      },
+      32 : {
         type : "explicit",
         hide : 0,
         points : [],
@@ -844,7 +818,7 @@
         vscale : [0,0,0,0],
         answer : [1,3,1,-1]
       },
-      34 : {
+      33 : {
         type : "explicit",
         hide : 0,
         points : [],
@@ -870,7 +844,7 @@
         vscale : [0,0,0,0],
         answer : [2,3,-1,2]
       },
-      35 : {
+      34 : {
         type : "explicit",
         hide : 0,
         points : [],
@@ -896,7 +870,7 @@
         vscale : [0,0,0,0],
         answer : [-1,1,-2,-1]
       },
-      36 : {
+      35 : {
         type : "explicit",
         hide : 0,
         points : [],
@@ -921,7 +895,33 @@
         max : [5,1,5,5],
         vscale : [0,0,0,0],
         answer : [4,-.6,3,-5]
-      }
+      },
+      36 : {
+        type : "explicit",
+        hide : 0,
+        points : [],
+        tangent : 0,
+        tangent2 : 0,
+        funcstr : "y=asin#||bx-c|-d#|",
+        func : (x,a,b,c,d) => {
+          return a*Math.sin(Math.abs(Math.abs(b*x-c)-d));
+        },
+        funcTangent : (x,a,b,c,d)=>{
+          return x-3;
+        },
+        funcTangent2 : (x,a,b,c,d)=>{
+          return 7-x;
+        },
+        xaxis : 400,//370
+        yaxis : 460,//460
+        gscale : 60,
+        vars : [1,1,1,1],
+        min : [-5,-3,0,-10],
+        value : [0,0,3,0],
+        max : [5,3,6,10],
+        vscale : [0,0,0,0],
+        answer : [4,2,2,7]
+      },
     };
     let problems4 = {
       37 : {
@@ -945,7 +945,7 @@
         gscale : 60,
         vars : [1,1,0,0],
         min : [-5,-5,0,-5],
-        value : [0,0,0,0],
+        value : [0,0,5,0],
         max : [5,5,10,5],
         vscale : [0,0,0,0],
         answer : [2,2,8,3]
@@ -1239,7 +1239,7 @@
         max : [3,5,5,5],
         vscale : [0,0,0,0],
         answer : [1,-4,-2,-3]
-      }
+      },
     };
     let problems5 = {
       49 : {
@@ -1419,7 +1419,7 @@
         gscale : 60,
         vars : [1,1,1,1],
         min : [-5,0,-6,-5],
-        value : [0,0,0,0],
+        value : [0,3,-3,0],
         max : [5,6,0,5],
         vscale : [0,0,0,0],
         answer : [-2,2,-1,-1]
@@ -1445,7 +1445,7 @@
         gscale : 80,
         vars : [1,1,0,0],
         min : [-5,-2,-6,-5],
-        value : [0,0,0,0],
+        value : [0,0,-3,0],
         max : [5,2,0,5],
         vscale : [0,0,0,0],
         answer : [4,1,-1,-1]
@@ -1549,11 +1549,11 @@
         gscale : 60,
         vars : [1,1,0,0],
         min : [-3,-5,-5,1],
-        value : [0,-1,3,3],
+        value : [0,0,0,3],
         max : [3,5,5,5],
         vscale : [0,0,0,0],
         answer : [2,-2,-2,2]
-      }
+      },
     };
     let problems6 = {
       61 : {
@@ -1867,7 +1867,7 @@
         max : [5,3,1,2],
         vscale : [0,0,0,0],
         answer : [-3,3,.5,1]
-      }
+      },
     };
     let problems7 = {
       73 : {
@@ -2181,7 +2181,7 @@
         max : [3,3,5,5],
         vscale : [0,0,0,0],
         answer : [-2,3,2,3]
-      }
+      },
     };
     let problems8 = {
       85 : {
@@ -2513,7 +2513,7 @@
         max : [4,4,2,3],
         vscale : [0,0,.1,.1],
         answer : [-2,2,-1,2]
-      }
+      },
     };
     let problems9 = {
       97  : {
@@ -2767,7 +2767,7 @@
         max : [6,6,6,6],
         vscale : [0,0,0,0],
         answer : [3,1,2,5]
-      }
+      },
     };
     let problems10 = {
       109 : {
@@ -3022,7 +3022,7 @@
         max : [3,3,8,8],
         vscale : [0,0,0,0],
         answer : [.5,-2,0,6]
-      }
+      },
     }
     let problems11 = {
       121 : {
@@ -3240,7 +3240,7 @@
         max : [3,3,3,3],
         vscale : [0,0,0,0],
         answer : [-1.2,1.5,1,-1]
-      }
+      },
     }
     let problems12 = {
       133 : {
@@ -3458,7 +3458,7 @@
         max : [5,2,5,5],
         vscale : [0,0,0,0],
         answer : [4,-.5,-4,2]
-      }
+      },
     }
 
     let problems = {
@@ -3480,7 +3480,6 @@
 
 
 
-    //  マウス対応!!!
     //  フォントの読み込み後に開始
     WebFont.load({
       //custom : {
