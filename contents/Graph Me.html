@@ -92,7 +92,19 @@
          max : [1,1,1,1],//  最大値  いつか2にする!!!
          vscale : [0,0,0,0],//  変数値の目盛
          answer : [0,0,0,0]//  各変数の解答値
-       }
+       },
+       145 : {
+         type : "congrats",
+         xaxis : 370,//  0...740
+         yaxis : 460,//  0...920
+         gscale : 175/2,//  グラフの目盛
+         vars : [0,0,1,0],//  各変数を使用するかどうか
+         min : [-1,-1,0,-1],//  最小値
+         value : [0,0,1,0],//  初期値
+         max : [1,1,2,1],//  最大値  いつか2にする!!!
+         vscale : [0,0,0,0],//  変数値の目盛
+         answer : [0,0,-1,0]//  各変数の解答値
+       },
     }
     let problems1 = {
       1  : {
@@ -3574,7 +3586,7 @@
             }
             DrawAll();
 
-            if(graph.type === "title"){
+            if(graph.type === "title" || graph.type === "congrats"){
               Check();
             }
             else if(graph.type === "settings"){
@@ -3649,7 +3661,7 @@
             }
             DrawAll();
 
-            if(graph.type === "title"){
+            if(graph.type === "title" || graph.type === "congrats"){
               Check();
             }
             else if(graph.type === "settings"){
@@ -3854,6 +3866,19 @@
           buttons.next.available = 1;
         }else{
           buttons.next.available = 0;
+        }
+        DrawAll();
+        return 0;
+      }
+      else if(graph.type === "congrats"){
+        //  完全クリア画面スライド後の処理
+        if((vars[2].value-0)*(vars[2].value-2)==0){
+          //  タイトル画面または追加ステージに遷移!!!
+          let b = vars[2].value-1 > 0;
+          level = 0;
+          Reset(2);
+          vars[2].value = b;
+          level = 1;
         }
         DrawAll();
         return 0;
@@ -4405,6 +4430,207 @@
             ctx.shadowBlur = 0;
           }
         }
+      }
+      else if(graph.type==="congrats"){
+        //  完全クリア画面
+        ctx.strokeStyle = graph.colors.main;
+        ctx.lineWidth = cdata.weight;
+        if(cdata.analog)ctx.shadowBlur = 10;
+
+        //  タイトル画面(改)
+        let t = vars[2].value;
+        for(let i=0; i<8; i++){
+          for(let j=0; j<2; j++){
+            ctx.save();
+            ctx.translate(35+110*i,120+340*j);
+            ctx.scale(80/2,160/2);
+            switch(`${j}${i}`){
+              case "00":
+                //  G
+                ctx.beginPath();
+                ctx.moveTo(2,0);
+                ctx.lineTo(0,0);
+                ctx.lineTo(0,2);
+                ctx.lineTo(2,2);
+                ctx.lineTo(2,1);
+                ctx.lineTo(1,1);
+                break;
+              case "01":
+                //  R
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.lineTo(2,0);
+                ctx.lineTo(2,1);
+                ctx.lineTo(0,1);
+                ctx.moveTo(1,1);
+                ctx.lineTo(2,2);
+                break;
+              case "02":
+                //  A
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.lineTo(2,0);
+                ctx.lineTo(2,2);
+                ctx.moveTo(0,1);
+                ctx.lineTo(2,1);
+                break;
+              case "03":
+                //  P
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.lineTo(2,0);
+                ctx.lineTo(2,1);
+                ctx.lineTo(0,1);
+                break;
+              case "04":
+                //  H
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.moveTo(2,0);
+                ctx.lineTo(2,2);
+                ctx.moveTo(0,1);
+                ctx.lineTo(2,1);
+                break;
+              case "05":
+                //  _
+                ctx.moveTo(0,2);
+                ctx.lineTo(2,2);
+                break;
+              case "06":
+                //  M
+                ctx.beginPath();
+                ctx.moveTo(0,2);
+                ctx.lineTo(0,0);
+                ctx.lineTo(2,0);
+                ctx.lineTo(2,2);
+                ctx.moveTo(1,0);
+                ctx.lineTo(1,2);
+                break;
+              case "07":
+                //  E
+                ctx.beginPath();
+                ctx.moveTo(2,0);
+                ctx.lineTo(0,0);
+                ctx.lineTo(0,2);
+                ctx.lineTo(2,2);
+                ctx.moveTo(0,1);
+                ctx.lineTo(2,1);
+                break;
+
+              case "10":
+                //  _S_
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,2,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,2,0,2),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,0,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,0,2,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,0,2,0),Smooth(t,2,2,2));
+                break;
+              case "11":
+                //  _E_
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,0,2),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,0,0,0),Smooth(t,2,2,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,2,0,2),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,1,2));
+                break;
+              case "12":
+                //  PTQ
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,1,0),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,1,0),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,2,1,2),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,2,1,2),Smooth(t,1,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,0,0,0));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,1,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,1,0,2));
+                ctx.moveTo(Smooth(t,0,1,1),Smooth(t,1,0,1));
+                ctx.lineTo(Smooth(t,0,1,2),Smooth(t,2,2,2));
+                break;
+              case "13":
+                //  LTU
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,1,0),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,1,0),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,1,2),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,1,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                break;
+              case "14":
+                //  AII
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,1,1),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,1,1),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,2,1,1),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,2,1,1),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,0,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,0,0,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,1,2,0));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,1,2,0));
+                break;
+              case "15":
+                //  YNT
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,0,1),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,0,0,1),Smooth(t,1,2,2));
+                ctx.moveTo(Smooth(t,2,2,1),Smooth(t,0,0,0));
+                ctx.lineTo(Smooth(t,2,2,1),Smooth(t,1,2,2));
+                ctx.moveTo(Smooth(t,1,1,1),Smooth(t,1,0,0));
+                ctx.lineTo(Smooth(t,1,1,1),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,1,0,0));
+                ctx.lineTo(Smooth(t,1,1,1),Smooth(t,1,0,0));
+                ctx.moveTo(Smooth(t,1,1,1),Smooth(t,1,2,0));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,1,2,0));
+                break;
+              case "16":
+                //  _G_
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,2,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,1,1,1),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,2,0,2),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,0,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,1,2,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,1,2,0),Smooth(t,2,2,2));
+                break;
+              case "17":
+                //  _S_
+                ctx.beginPath();
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,0,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,2,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                ctx.moveTo(Smooth(t,0,0,0),Smooth(t,2,0,2));
+                ctx.lineTo(Smooth(t,2,0,2),Smooth(t,2,1,2));
+                ctx.moveTo(Smooth(t,0,2,0),Smooth(t,2,1,2));
+                ctx.lineTo(Smooth(t,2,2,2),Smooth(t,2,2,2));
+                break;
+            }
+            ctx.restore();
+            ctx.stroke();
+          }
+        }
+
+        ctx.shadowBlur = 0;
       }
       else{
         //  陽関数，極座標，媒介変数，陰関数
