@@ -5137,7 +5137,7 @@
             ctx.fillRect(x,20,w+40,170);
             x0 = x+20;
             //  上式の描画
-            x = x0+(w-w0)/2;
+            x = x0;
             chars = strs1[0].match(/[\^\#]?./g);
             for(let j=0; j<chars.length; j++){
               if(chars[j].match(/\^/)){
@@ -5159,7 +5159,7 @@
               x += ctx.measureText(chars[j]).width;
             }
             //  下式の描画
-            x = x0+(w-w1)/2;
+            x = x0;
             chars = strs1[1].match(/[\^\#]?./g);
             for(let j=0; j<chars.length; j++){
               if(chars[j].match(/\^/)){
