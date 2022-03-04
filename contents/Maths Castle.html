@@ -17,7 +17,7 @@
       }
       @font-face
       {
-        font-family: 'Roboto Mono, monospace';
+        font-family: 'font-family: "Kosugi Maru", monospace, sans-serif';
         font-style: normal;
         font-weight: 100;
         src: url('mplus1p-thin.eot');  /* IE9+ */
@@ -28,14 +28,13 @@
       body{
         width : 100%;
         margin : 0;
+        position : relative;
+        display: inline-block;
       }
       #wrapper{
         position : relative;
-        overflow: visible;
+        overflow: hidden;
         display: inline-block;
-        width : 100%;
-      }
-      canvas{
         position : absolute;
         top : 0;
         left : 0;
@@ -43,12 +42,18 @@
         right : 0;
         margin : auto;
       }
+      .cvs{
+        position : absolute;
+        top : 0;
+        left : 0;
+        /*image-rendering : pixelated;*/
+      }
     </style>
   </head>
   <body>
     <div id="wrapper">
-      <canvas id="background_canvas" width="1000" height="1650"></canvas>
-      <canvas id="main_canvas" width="1000" height="1650"></canvas>
+      <canvas class="cvs"></canvas>
+      <canvas class="cvs"></canvas>
     </div>
   </body>
   <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
@@ -57,8 +62,148 @@
 
 
 
+    /*定数変数メモ*\
+    L : 画面上の1マス。
+    W,H : canvasのマス数。
+    l : 元画像の1マス。
+    w,h : スクリーンのマス数。
+    cvs : canvas配列。ctxも同様。
+    img : 画像の連想配列。
+    fcount : フレームカウンター。
+    player : プレイヤーのデータ。
+    keys : キーの押下状態。
+    state : ゲームの状態。
+    =>"free":自由に動ける状態。
+    \*********/
+    let Sleep = ms => new Promise(r=>setTimeout(r,ms));
+    Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
+    const L=64,W=40,H=30,l=32,w=15,h=10;
+    let cvs,ctx,img,fcount,player,keys,state;
+    img = {
+      bg : new Image(),
+      ct : new Image()
+    };
+    img.bg.src = "images/Maths Castle/bg.png";
+    img.ct.src = "images/Maths Castle/ct.png";
 
-    //
+    //  フォントの読み込み後に開始
+    WebFont.load({
+      //custom : {
+      custom : {
+        families : ["Kosugi Maru"]
+      },
+      active : () => {
+        Init();
+
+        //  リサイズ時, canvasを画面の大きさに合わせる
+        window.onresize = () => {Resize();}
+        //  操作
+        window.onkeydown = (e) => keys[e.key] = 1;
+        window.onkeyup = (e) => keys[e.key] = 0;
+      },
+      inactive : () => {
+        alert("フォント読み込み失敗");
+      }
+    });
+
+
+    function Resize(){
+      let len = Math.min(window.innerWidth/w,window.innerHeight/h)*.95;
+      cvs.forEach((v,i)=>v.style.width=`${len*W}px`);
+      document.body.style.height = `${window.innerHeight}px`;
+      document.querySelector("#wrapper").style.width = `${len*w}px`;
+      document.querySelector("#wrapper").style.height = `${len*h}px`;
+    }
+
+    function Init(){
+      cvs = document.querySelectorAll(".cvs");
+      ctx = [];
+      cvs.forEach(
+        (v,i)=>{
+          v.width = L*W;
+          v.height = L*H;
+          ctx.push(v.getContext("2d"));
+          ctx[i].mozImageSmoothingEnabled = false;
+          ctx[i].webkitImageSmoothingEnabled = false;
+          ctx[i].msImageSmoothingEnabled = false;
+          ctx[i].imageSmoothingEnabled = false;
+        }
+      );
+      player = {
+        x : 3,
+        y : 3,
+        s : .25,
+        move : (x,y) => {
+          player.x += player.s*x;
+          player.y += player.s*y;
+        }
+      };
+      keys = {};
+      state = "free";
+
+      Resize();
+      fcount = 0;
+      Render(1);
+      Main();
+    }
+
+    //  ループ, フレームの制御
+    async function Main(){
+      fcount = (fcount+1)%64;
+      Update();
+      Render();
+      await Sleep(1000/60);
+      Main();
+    }
+
+    function Update(){
+      //  キー操作
+      if(state === "free"){
+        //  方向
+        let d = {
+          u : keys["w"]||keys["ArrowUp"],
+          l : keys["a"]||keys["ArrowLeft"],
+          d : keys["s"]||keys["ArrowDown"],
+          r : keys["d"]||keys["ArrowRight"]
+        }
+        if(d.u&&!d.d)player.move(0,-1);
+        if(d.l&&!d.r)player.move(-1,0);
+        if(d.d&&!d.u)player.move(0,+1);
+        if(d.r&&!d.l)player.move(+1,0);
+      }
+    }
+
+    function Render(b){
+      if(b){
+        //  強い描画
+        ctx[0].clearRect(0,0,L*W,L*H);
+        //  背景
+        for(let y=0; y<H; y++){
+          for(let x=0; x<W; x++){
+            //ctx[0].drawImage(img.bg,l*1,l*2,l,l,L*x,L*y,L,L);
+            if(y<3)ctx[0].drawImage(img.bg,l*0,l*0,l,l,L*x,L*y,L,L);
+            else if(y<6)ctx[0].drawImage(img.bg,l*1,l*2,l,l,L*x,L*y,L,L);
+            else if(y<7)ctx[0].drawImage(img.bg,l*1,l*3,l,l,L*x,L*y,L,L);
+            else if(y<10)ctx[0].drawImage(img.bg,l*1,l*0,l,l,L*x,L*y,L,L);
+          }
+        }
+      }
+      else{
+        //  弱い描画
+        ctx[1].clearRect(0,0,L*W,L*H);
+        //  プレイヤー
+        ctx[1].drawImage(img.ct,0,0,l,l*2,L*player.x,L*player.y,L,L*2);
+        ctx[1].drawImage(img.ct,l,0,l,l*2,L*player.x,L*player.y,L,L*2);
+      }
+    }
+
+
+
+
+
+
+    //  キャラクタ
+
 
 
 
