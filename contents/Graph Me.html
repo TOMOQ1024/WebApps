@@ -3804,7 +3804,7 @@
 
       //  クッキーがあれば，そのデータを代入する
       LoadCookie();
-      let lvl = cdata.maxlevel===145 ? 1 : cdata.maxlevel;
+      let lvl = cdata.maxlevel>=145 ? 1 : cdata.maxlevel;
 
       //  Resetによる初期化
       Resize();
@@ -3843,7 +3843,7 @@
         buttons.reset.available = 1;
       }
       else{
-        buttons.prev.available = 1;
+        buttons.prev.available = level<=144 ? 1 : 0;
         buttons.reset.available = 1;
         buttons.next.available = +(level<cdata.maxlevel);
       }
