@@ -1769,8 +1769,8 @@
         yaxis : 460,//460
         gscale : 50.1,//  綺麗な値にしない．
         vars : [1,1,1,0],
-        min : [-5,-3,-1,-2],
-        value : [0,0,0,0],
+        min : [-1,-3,-1,-2],
+        value : [2,0,0,0],
         max : [5,3,1,2],
         vscale : [0,0,0,0],
         answer : [-3,3,.5,1]
@@ -2031,9 +2031,9 @@
         yaxis : 460,//460
         gscale : 70,
         vars : [1,1,1,1],
-        min : [-2,-2,-3,-1],
-        value : [0,0,0,0],
-        max : [2,2,3,1],
+        min : [-2,0,-3,-1],
+        value : [0,2,0,0],
+        max : [2,4,3,1],
         vscale : [0,0,0,.1],
         answer : [1.5,1.3,-2,-.4]
       },
@@ -2520,9 +2520,9 @@
         yaxis : 460,//460
         gscale : 60,
         vars : [1,1,1,1],
-        min : [0,-2,0,-2],
-        value : [2,0,2,0],
-        max : [4,2,4,2],
+        min : [0,0,0,-2],
+        value : [2,1.5,2,0],
+        max : [4,3,4,2],
         vscale : [0,0,0,0],
         answer : [2,1,1,-2]
       },
@@ -2670,9 +2670,9 @@
         gscale : 50,
         vars : [1,1,1,1],
         min : [0,0,0,0],
-        value : [3,3,3,3],
-        max : [6,6,6,6],
-        vscale : [0,0,Math.PI/14,Math.PI/14],
+        value : [3,3,3,1.5],
+        max : [6,6,6,3],
+        vscale : [0,0,Math.PI/14,Math.PI/28],
         answer : [0,4,Math.PI*2/7,Math.PI*5/14]
       },
       104 : {
@@ -3095,19 +3095,19 @@
         type : "implicit",
         hide : 0,
         points : [],
-        funcstr : "(x-a)(x+b)+(y-c)(y+d)=1",
+        funcstr : "x^2+y^2-1=max(ax+by,cx+dy)",
         func : (x,y,a,b,c,d) => {
-          return (x-a)*(x+b)+(y-c)*(y+d)-1;
+          return x*x+y*y-1-Math.max(a*x+b*y,c*x+d*y);
         },
-        xaxis : 330,//370
+        xaxis : 500,//370
         yaxis : 460,//460
-        gscale : 80,
+        gscale : 100,
         vars : [1,1,1,1],
-        min : [0,0,0,0],
-        value : [2,2,2,2],
-        max : [4,4,4,4],
+        min : [-4,-4,0,0],
+        value : [-2,-2,2,2],
+        max : [0,0,4,4],
         vscale : [0,0,0,0],
-        answer : [2,1,1,3]
+        answer : [-2,-1,1,3]
       },
       125 : {
         type : "implicit",
@@ -3804,7 +3804,7 @@
 
       //  クッキーがあれば，そのデータを代入する
       LoadCookie();
-      let lvl = cdata.maxlevel;
+      let lvl = cdata.maxlevel===145 ? 1 : cdata.maxlevel;
 
       //  Resetによる初期化
       Resize();
