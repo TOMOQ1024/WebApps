@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+    <title>DON'T STOP!</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="../Style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
+    <style>
+      *{
+        font-size: 0;
+        display: inline-block;
+        text-align: center;
+      }
+      @font-face
+      {
+        font-family: 'font-family: "Kosugi Maru", monospace, sans-serif';
+        font-style: normal;
+        font-weight: 100;
+        src: url('mplus1p-thin.eot');  /* IE9+ */
+        src: url('mplus1p-thin.eot?#iefix') format('embedded-opentype'),  /* IE8- */
+             url('mplus1p-thin.woff') format('woff'),     /* その他のブラウザ */
+             url('mplus1p-thin.ttf') format('truetype');  /* 古いiOS */
+      }
+      body{
+        width : 100%;
+        margin : 0;
+        position : relative;
+        display: inline-block;
+      }
+      #wrapper{
+        position : absolute;
+        display: inline-block;
+        top : 0;
+        left : 0;
+        bottom : 0;
+        right : 0;
+        margin : auto;
+      }
+      canvas{
+        position : absolute;
+        top : 0;
+        left : 0;
+        width : 100%;
+        height : 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+    </div>
+  </body>
+  <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+  <script type="text/javascript">
+    //
+
+
+
+    /*定数変数メモ*\
+    loop - ループしてよいか．緊急停止用．
+    count - フレームのカウンタ．
+    \*********/
+    let Sleep = ms => new Promise(r=>setTimeout(r,ms));
+    Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
+    const L=64,W=17,H=25;
+    let colors = {
+      white : "#ddd",
+      gray : "#888",
+      black : "#111",
+      red : "#d00",
+      pink : "#f6a",
+      orange : "#f70",
+      yellow : "#ee0",
+      green : "#090",
+      lime : "#5d4",
+      cyan : "#0df",
+      sky : "#58f",
+      blue : "#21f",
+      purple : "#82e",
+      magenta : "#e09",
+    };
+    let cvs,ctx,count,loop,state,value,blocks,t;
+    cvs = [];
+    ctx = [];
+    for(let i=0; i<4; i++){
+      cvs.push(document.createElement("canvas"));
+      cvs[i].width = L*W;
+      cvs[i].height = L*H;
+      document.querySelector("#wrapper").append(cvs[i]);
+      ctx.push(cvs[i].getContext("2d"));
+      ctx[i].textAlign = "center";
+      ctx[i].textBaseline = "middle";
+      ctx[i].font = `bold ${L}px 'Kosugi Maru'`;
+    }
+
+    //  フォントの読み込み後に開始
+    WebFont.load({
+      //custom : {
+      custom : {
+        families : ["Kosugi Maru"]
+      },
+      active : () => {
+        Init();
+
+        //  リサイズ時, canvasを画面の大きさに合わせる
+        window.onresize = () => {Resize();}
+        //  操作
+      },
+      inactive : () => {
+        alert("フォント読み込み失敗");
+      }
+    });
+
+
+
+    class Block{
+      //  定義の例 : blocks.push(new Block(0,()=>t,1,1,3,0,"cyan"));
+      constructor(...arg){
+        const keys = "xyzwhacs";
+        for(let i=0; i<keys.length; i++){
+          if(typeof arg[i] === "function"){
+            Object.defineProperty(this,keys[i],{
+              get : arg[i],
+              writable : 1
+            });
+          }
+          else{
+            Object.defineProperty(this,keys[i],{
+              value : arg[i],
+              writable : 1
+            });
+          }
+        }
+        this.state = "slidein";
+        this.f0 = count;
+        this.x1 = this.x;
+        this.y1 = this.y;
+        if(Math.random()<.5){
+          this.x0 = Math.random()<.5 ? -W/2 : W/2*3;
+          this.y0 = Math.random()*H*2-H/5;
+        }
+        else{
+          this.x0 = Math.random()*W*2-W/5;
+          this.y0 = Math.random()<.5 ? -H/2 : H/2*3;
+        }
+      }
+
+      update(){
+        let f = Math.mod(count-this.f0,3600);//  現在フレームの相対位置
+        if(this.state === "slidein"){
+          if(f/60*2<1){
+            this.x = Smooth(f/60*2,this.x0,this.x1);
+            this.y = Smooth(f/60*2,this.y0,this.y1);
+          }
+          else{
+            this.x = this.x1;
+            this.y = this.y1;
+            this.state = "stable";
+          }
+        }
+      }
+    }
+
+
+
+    function Resize(){
+      let len = Math.min(window.innerWidth/W,window.innerHeight/H)*.95;
+      let s;
+      cvs.forEach((v,i)=>{
+        s = i%2?len/30:len/20;
+        v.style.filter = `
+        drop-shadow(${s*1.5}px ${s*1.5}px ${s}px #33333366)
+        drop-shadow(${s*3}px ${s*3}px ${s}px #33333366)
+        `;
+      });
+      document.body.style.height = `${window.innerHeight}px`;
+      document.querySelector("#wrapper").style.width = `${len*W}px`;
+      document.querySelector("#wrapper").style.height = `${len*H}px`;
+    }
+
+    async function Init(){
+      blocks = []
+      blocks.state = "";
+      blocks.reset = ()=>{
+        //  背景
+        blocks.push(new Block(W/2,H/2,0,W,H,0,"gray"));
+        //  枠
+        blocks.push(new Block(W/2,.5,1,W,1,0,"white"));
+        blocks.push(new Block(W/2,H-.5,1,W,1,0,"white"));
+        blocks.push(new Block(.5,H/2,1,1,H-2,0,"white"));
+        blocks.push(new Block(W-.5,H/2,1,1,H-2,0,"white"));
+        blocks.push(new Block(W/2,H-3.5,1,W-2,1,0,"white"));
+
+        blocks.push(new Block(W/2,H-2,1,3,2,0,"white","|||"));
+      };
+      t = 0;
+      count = 0;
+      state = "title";
+      Resize();
+      if(loop){
+        loop = 0;
+        await Sleep(1000/20);
+      }
+      loop = 1;
+      Update();
+      Render(1);
+      Main();
+    }
+
+    //  ループ, フレームの制御
+    async function Main(){
+      if(!loop)return 0;
+      Update();
+      Render();
+      await Sleep(1000/60);
+      count = (count+1)%3600;
+      Main();
+    }
+
+    function Update(){
+      if(state !== blocks.state){
+        //ブロックの設定
+        if(state === "title"){
+          blocks.state = "title";
+
+          //  ブロック定義
+          blocks.reset();
+          blocks.push(new Block(W/2-6,3.5,1,1,3,0,"cyan"));
+          blocks.push(new Block(W/2-4,3.5,1,1,2,0,"cyan"));
+          blocks.push(new Block(W/2-5,2.5,1,1,1,0,"cyan"));
+          blocks.push(new Block(W/2-5,4.5,1,1,1,0,"cyan"));
+          blocks.push(new Block(W/2-4.25,2.25,1,.5,.5,0,"cyan"));
+          blocks.push(new Block(W/2-4.25,4.75,1,.5,.5,0,"cyan"));
+          blocks.push(new Block(W/2-3,3.75,1,1,1.5,0,"orange"));
+          blocks.push(new Block(W/2-1,3.25,1,1,1.5,0,"orange"));
+          blocks.push(new Block(W/2-2.25,2.5,1,1.5,1,0,"orange"));
+          blocks.push(new Block(W/2-1.75,4.5,1,1.5,1,0,"orange"));
+          blocks.push(new Block(W/2-1.25,2.25,1,.5,.5,0,"orange"));
+          blocks.push(new Block(W/2-2.75,4.75,1,.5,.5,0,"orange"));
+          blocks.push(new Block(W/2-.75,4.25,1,.5,.5,0,"orange"));
+          blocks.push(new Block(W/2-3.25,2.75,1,.5,.5,0,"orange"));
+          blocks.push(new Block(W/2,3.5,1,1,3,0,"lime"));
+          blocks.push(new Block(W/2+2,3.5,1,1,3,0,"lime"));
+          blocks.push(new Block(W/2+.75,3.25,1,.5,1.5,0,"lime"));
+          blocks.push(new Block(W/2+1.25,3.75,1,.5,1.5,0,"lime"));
+          blocks.push(new Block(W/2+3,2.75,1,1,1.5,0,"yellow"));
+          blocks.push(new Block(W/2+5,2.5,1,3,1,0,"purple"));
+          blocks.push(new Block(W/2+5,4,1,1,2,0,"purple"));
+
+          blocks.push(new Block(W/2-5.5,7,1,1,2,0,"red"));
+          blocks.push(new Block(W/2-4.5,8,1,1,2,0,"red"));
+          blocks.push(new Block(W/2-6.25,7,1,.5,1,0,"red"));
+          blocks.push(new Block(W/2-3.75,8,1,.5,1,0,"red"));
+          blocks.push(new Block(W/2-4.25,6.25,1,1.5,.5,0,"red"));
+          blocks.push(new Block(W/2-5.75,8.75,1,1.5,.5,0,"red"));
+          blocks.push(new Block(W/2-2,6.5,1,3,1,0,"blue"));
+          blocks.push(new Block(W/2-2,8,1,1,2,0,"blue"));
+          blocks.push(new Block(W/2,7.75,1,1,1.5,0,"pink"));
+          blocks.push(new Block(W/2+2,7.25,1,1,1.5,0,"pink"));
+          blocks.push(new Block(W/2+.75,6.5,1,1.5,1,0,"pink"));
+          blocks.push(new Block(W/2+1.25,8.5,1,1.5,1,0,"pink"));
+          blocks.push(new Block(W/2+1.75,6.25,1,.5,.5,0,"pink"));
+          blocks.push(new Block(W/2+.25,8.75,1,.5,.5,0,"pink"));
+          blocks.push(new Block(W/2+2.25,8.25,1,.5,.5,0,"pink"));
+          blocks.push(new Block(W/2-.25,6.75,1,.5,.5,0,"pink"));
+          blocks.push(new Block(W/2+3,7.5,1,1,3,0,"green"));
+          blocks.push(new Block(W/2+5,7.25,1,1,1.5,0,"green"));
+          blocks.push(new Block(W/2+4,6.5,1,1,1,0,"green"));
+          blocks.push(new Block(W/2+4,8,1,1,1,0,"green"));
+          blocks.push(new Block(W/2+4.75,6.25,1,.5,.5,0,"green"));
+          blocks.push(new Block(W/2+4.75,8.25,1,.5,.5,0,"green"));
+          blocks.push(new Block(W/2+6,7,1,1,2,0,"sky"));
+          blocks.push(new Block(W/2+6,8.75,1,1,.5,0,"sky"));
+        }
+      }
+      blocks.forEach((v,i) => {
+        v.update();
+      });
+    }
+
+    function Render(){
+      //  クリア
+      for(let i=0; i<cvs.length; i++){
+        ctx[i].clearRect(0,0,L*W,L*H);
+      }
+      blocks.forEach((v,i) => {
+        DrawBlock(v);
+      });
+    }
+
+    //  x,yを中心とした幅w,hのaだけ傾いたブロックをレイヤーzに色cで描画する
+    //  c未入力でクリア
+    function DrawBlock(block){
+      let {x,y,z,w,h,a,c,s}=block;
+      //  下部
+      ctx[z*2].save();
+      ctx[z*2].fillStyle = colors[c];
+      ctx[z*2].strokeStyle = "#333";
+      ctx[z*2].lineWidth = 3;
+      ctx[z*2].translate(L*x,L*y);
+      ctx[z*2].rotate(a);
+      ctx[z*2].beginPath();
+      ctx[z*2].moveTo(-L/2*w,-L/2*h);
+      ctx[z*2].lineTo(-L/2*w,+L/2*h);
+      ctx[z*2].lineTo(+L/2*w,+L/2*h);
+      ctx[z*2].lineTo(+L/2*w,-L/2*h);
+      ctx[z*2].clip();
+      if(c){
+        ctx[z*2].fillRect(-L/2*w,-L/2*h,L*w,L*h);
+        ctx[z*2].strokeRect(-L/2*w,-L/2*h,L*w,L*h);
+      }
+      else{
+        ctx[z*2].clearRect(-L/2*w,-L/2*h,L*w,L*h);
+      }
+      ctx[z*2].restore();
+
+      //  上部
+      ctx[z*2+1].save();
+      ctx[z*2+1].fillStyle = colors[c];
+      ctx[z*2+1].translate(L*x,L*y);
+      ctx[z*2+1].rotate(a);
+      ctx[z*2+1].beginPath();
+      if(!c){
+        ctx[z*2+1].clearRect(-L/2*w,-L/2*h,L*w,L*h);
+      }
+      else if(s){
+        ctx[z*2+1].fillText(s,0,0);
+      }
+      else{
+        for(let j=-h; j<h; j++){
+          for(let i=-w; i<w; i++){
+            ctx[z*2+1].moveTo(L/4*(i*2+1),L/4*(j*2+1));
+            ctx[z*2+1].arc(L/4*(i*2+1),L/4*(j*2+1),L/7,0,Math.PI*2);
+          }
+          ctx[z*2+1].fill();
+        }
+      }
+      ctx[z*2+1].restore();
+    }
+
+    //  滑らかにつなぐ関数
+    function Smooth(x,y0,y1){
+      return (y1-y0)*(1-Math.cos(Math.PI*x))/2+y0;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </script>
+</html>
