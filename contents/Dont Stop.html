@@ -41,13 +41,27 @@
         margin : auto;
         overflow: hidden;
       }
-      canvas{
+      .layer{
+        position : absolute;
+        display: inline-block;
+        top : 0;
+        left : 0;
+        bottom : 0;
+        right : 0;
+        margin : auto;
+        width : 100%;
+        height : 100%;
         filter : drop-shadow(1px 1px 1px #222);
+      }
+      canvas{
         width : 100%;
         height : 100%;
         position : absolute;
         left : 0;
         top : 0;
+      }
+      .joint{
+        filter : drop-shadow(1px 1px 1px #222);
       }
     </style>
   </head>
@@ -125,6 +139,7 @@
             });
           }
         }
+
         this.state = "preparing";
         this.f0 = count;
         if(Math.random()<.5){
@@ -136,6 +151,16 @@
           this.y0 = Math.random()<.5 ? -H/2 : H/2*3;
         }
 
+        if(!document.querySelector("#layer-"+this.z*2)){
+          let layer = document.createElement("div");
+          layer.className = "layer";
+          layer.id = "layer-"+this.z*2;
+          wr.append(layer);
+          layer = document.createElement("div");
+          layer.className = "layer";
+          layer.id = "layer-"+(this.z*2+1);
+          wr.append(layer);
+        }
         this.wr = document.createElement("div");
         this.wr.style.display = "inline-box";
         this.wr.style.position = "absolute";
@@ -144,13 +169,14 @@
         this.wr.style.left = `${(this.x0-this.w/2)/W*100}%`;
         this.wr.style.top = `${(this.y0-this.h/2)/H*100}%`;
         this.wr.style.transition = `${DT}ms`;
-        wr.append(this.wr);
+        document.querySelector("#layer-"+this.z).append(this.wr);
         this.cvs0 = document.createElement("canvas");
         this.cvs0.width = L*this.w;
         this.cvs0.height = L*this.h;
         this.ctx0 = this.cvs0.getContext("2d");
         this.wr.append(this.cvs0);
         this.cvs1 = document.createElement("canvas");
+        this.cvs1.className = "joint";
         this.cvs1.width = L*this.w;
         this.cvs1.height = L*this.h;
         this.ctx1 = this.cvs1.getContext("2d");
@@ -196,6 +222,7 @@
             this.x = this.x1;
             this.y = this.y1;
             this.state = "stable";
+            this.wr.style.transition = `${0}ms`;
           }
         }
       }
@@ -226,8 +253,17 @@
 
         blocks.push(new Block(W/2,H-2,1,3,2,0,"white","|||"));
       };
-      blocks.sort = () => {
-        //  ブロックのソート!!!
+      blocks.Sort = ()=>{
+        blocks.sort((a,b)=>{
+          if(a.z !== b.z)return a.z-b.z
+          if((b.x+b.w/2<=a.x-a.w/2)||(b.y+b.h/2<=a.y-a.h/2))return 1;
+          if((a.x+a.w/2<=b.x-b.w/2)||(a.y+a.h/2<=b.y-b.h/2))return -1;
+          return 0;
+        });
+
+        blocks.forEach((v,i) => {
+          v.wr.style.zIndex = i;
+        });
       }
       t = 0;
       count = 0;
