@@ -122,6 +122,32 @@
         //  操作
         if(window.ontouchstart === null){
           //  タッチ操作
+          wr.ontouchstart = (e) => {
+            e.preventDefault();
+            let l = Math.min(window.innerWidth/W,window.innerHeight/H)*.95;
+            let x = (e.touches[0].clientX-wr.getBoundingClientRect().left)/l;//  wr左上からのcanvaspx値
+            let y = (e.touches[0].clientY-wr.getBoundingClientRect().top)/l;
+
+            //  スライダーの判定
+            if(IsIn(x,y,slider.x,slider.y,slider.w,slider.h)){
+              slider.down = 1;
+            }
+          }
+          wr.ontouchmove = (e) => {
+            e.preventDefault();
+            let l = Math.min(window.innerWidth/W,window.innerHeight/H)*.95;
+            let x = (e.touches[0].clientX-wr.getBoundingClientRect().left)/l;
+            x = Math.min(Math.max(2.5,x),14.5);
+
+            //  スライダー操作
+            if(slider.down){
+              t = (x-8.5)/6*TMAX;
+              slider.moveTo(x,slider.y);
+            }
+          }
+          window.ontouchend = () => {
+            slider.down = 0;
+          }
         }
         else{
           //  マウス操作
@@ -132,7 +158,6 @@
             let y = e.offsetY/l;
 
             //  スライダーの判定
-            console.log(x,y,slider.x,slider.y,slider.w,slider.h);
             if(IsIn(x,y,slider.x,slider.y,slider.w,slider.h)){
               slider.down = 1;
             }
@@ -145,7 +170,6 @@
 
             //  スライダー操作
             if(slider.down){
-              console.log("move");
               t = (x-8.5)/6*TMAX;
               slider.moveTo(x,slider.y);
             }
