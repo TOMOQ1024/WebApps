@@ -166,10 +166,20 @@
             e.preventDefault();
             let l = Math.min(window.innerWidth/W,window.innerHeight/H)*.95;
             let x = e.offsetX/l;
+            let y = e.offsetY/l;
             x = Math.min(Math.max(2.5,x),14.5);
+
+            //  ポインタ
+            if(IsIn(x,y,slider.x,slider.y,slider.w,slider.h)){
+              document.body.style.cursor = "e-resize";
+            }
+            else{
+              document.body.style.cursor = "default";
+            }
 
             //  スライダー操作
             if(slider.down){
+              document.body.style.cursor = "e-resize";
               t = (x-8.5)/6*TMAX;
               slider.moveTo(x,slider.y);
             }
@@ -229,7 +239,7 @@
         this.wr.style.height = `${(this.h)/H*100}%`;
         this.wr.style.left = `${(this.x0-this.w/2)/W*100}%`;
         this.wr.style.top = `${(this.y0-this.h/2)/H*100}%`;
-        this.wr.style.transition = `${DT}ms`;
+        if(this.s)this.wr.style.transition = `${DT}ms`;
         document.querySelector("#layer-"+this.z).append(this.wr);
         this.cvs0 = document.createElement("canvas");
         this.cvs0.width = L*this.w;
@@ -280,7 +290,7 @@
           this.moveTo(this.x,this.y);
         }
         else if(this.state === "slidein"){
-          if(f/60*1000>DT){
+          if(!this.s || f/60*1000>DT){
             //  スライドイン終了
             this.state = "stable";
             this.wr.style.transition = `${0}ms`;
@@ -289,10 +299,8 @@
         else if(this.state === "slideout"){
           if(f/60*1000>DT){
             //  スライドアウト終了
-            this.x = this.x1;
-            this.y = this.y1;
-            this.state = "stable";
-            this.wr.style.transition = `${0}ms`;
+            blocks.splice(blocks.indexOf(this),1);
+            this.wr.parentElement.removeChild(this.wr);
           }
         }
       }
@@ -300,6 +308,8 @@
       moveTo(x,y){
         this.wr.style.left = `${(x-this.w/2)/W*100}%`;
         this.wr.style.top = `${(y-this.h/2)/H*100}%`;
+        this.x = x;
+        this.y = y;
       }
 
       slideout(){
