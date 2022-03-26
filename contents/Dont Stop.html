@@ -89,7 +89,7 @@
     let Sleep = ms => new Promise(r=>setTimeout(r,ms));
     Math.mod = (x,m)=>(x%m+m)%m;//  勝手にmod関数を定義
     const wr = document.querySelector("#wrapper");
-    const L=64,W=17,H=25,DT=1000,TMAX=2;
+    const L=64,W=17,H=25,DT=1000,SMAX=2;
     let colors = {
       white : "#ddd",
       gray : "#888",
@@ -106,7 +106,7 @@
       purple : "#82e",
       magenta : "#e09",
     };
-    let count,loop,state,value,blocks,t,slider;
+    let count,loop,state,value,blocks,s,t,slider;
 
     //  フォントの読み込み後に開始
     WebFont.load({
@@ -180,7 +180,7 @@
             //  スライダー操作
             if(slider.down){
               document.body.style.cursor = "e-resize";
-              t = (x-8.5)/6*TMAX;
+              s = (x-8.5)/6*SMAX;
               slider.moveTo(x,slider.y);
             }
           }
@@ -199,13 +199,15 @@
     class Block{
       //  定義の例 : blocks.push(new Block(0,()=>t,1,1,3,0,"cyan"));
       constructor(...arg){
-        const keys = "xyzwhacs";
+        const keys = ["x","y","z","w","h","angle","color","ornament"];//  最後の引数は数値であれば fixed, オブジェクトであれば ornament
+        this.movable = 0;//  update時に動くかどうか
         for(let i=0; i<keys.length; i++){
           if(typeof arg[i] === "function"){
             Object.defineProperty(this,keys[i],{
               get : arg[i],
               writable : 1
             });
+            this.movable = 1;
           }
           else{
             Object.defineProperty(this,keys[i],{
@@ -213,6 +215,10 @@
               writable : 1
             });
           }
+        }
+        if(typeof this.ornament === "number"){
+          this.fixed = this.ornament;
+          this.ornament = undefined;
         }
 
         this.state = "preparing";
@@ -239,7 +245,7 @@
         this.wr.style.height = `${(this.h)/H*100}%`;
         this.wr.style.left = `${(this.x0-this.w/2)/W*100}%`;
         this.wr.style.top = `${(this.y0-this.h/2)/H*100}%`;
-        if(this.s)this.wr.style.transition = `${DT}ms`;
+        if(!this.fixed)this.wr.style.transition = `${DT}ms`;
         document.querySelector("#layer-"+this.z).append(this.wr);
         this.cvs0 = document.createElement("canvas");
         this.cvs0.width = L*this.w;
@@ -258,7 +264,7 @@
 
       render(){
         //  下部
-        this.ctx0.fillStyle = colors[this.c];
+        this.ctx0.fillStyle = colors[this.color];
         this.ctx0.strokeStyle = "#333";
         this.ctx0.lineWidth = 3;
         this.ctx0.fillRect(0,0,L*this.w,L*this.h);
@@ -266,12 +272,12 @@
 
         //  上部
         if(this.isSlider){
-          this.ctx1.fillStyle = colors[this.c];
+          this.ctx1.fillStyle = colors[this.color];
           this.ctx1.arc(0,0,L,0,Math.PI*2);
           this.ctx1.fill();
         }
         else{
-          this.ctx1.fillStyle = colors[this.c];
+          this.ctx1.fillStyle = colors[this.color];
           this.ctx1.beginPath();
           for(let j=0; j<this.h*2; j++){
             for(let i=0; i<this.w*2; i++){
@@ -296,6 +302,12 @@
             this.wr.style.transition = `${0}ms`;
           }
         }
+        else if(this.sate === "stable"){
+          //  通常の更新
+          if(this.movable){
+            this.moveTo(this.x,this.y,this.angle);
+          }
+        }
         else if(this.state === "slideout"){
           if(f/60*1000>DT){
             //  スライドアウト終了
@@ -308,6 +320,7 @@
       moveTo(x,y){
         this.wr.style.left = `${(x-this.w/2)/W*100}%`;
         this.wr.style.top = `${(y-this.h/2)/H*100}%`;
+        this.wr.style.transform = `rotate(${this.angle}rad)`;
         this.x = x;
         this.y = y;
       }
@@ -337,15 +350,15 @@
         //  リセット
         blocks.splice(0,blocks.length);
         //  背景
-        blocks.push(new Block(W/2,H/2,0,W,H,0,"gray"));
+        blocks.push(new Block(W/2,H/2,0,W,H,0,"gray",1));
         //  枠
-        blocks.push(new Block(W/2,.5,1,W,1,0,"white"));
-        blocks.push(new Block(W/2,H-.5,1,W,1,0,"white"));
-        blocks.push(new Block(.5,H/2,1,1,H-2,0,"white"));
-        blocks.push(new Block(W-.5,H/2,1,1,H-2,0,"white"));
-        blocks.push(new Block(W/2,H-3.5,1,W-2,1,0,"white"));
+        blocks.push(new Block(W/2,.5,1,W,1,0,"white",1));
+        blocks.push(new Block(W/2,H-.5,1,W,1,0,"white",1));
+        blocks.push(new Block(.5,H/2,1,1,H-2,0,"white",1));
+        blocks.push(new Block(W-.5,H/2,1,1,H-2,0,"white",1));
+        blocks.push(new Block(W/2,H-3.5,1,W-2,1,0,"white",1));
 
-        slider = new Block(W/2,H-2,1,3,2,0,"white");
+        slider = new Block(W/2,H-2,1,3,2,0,"white",1);
         slider.isSlider = 1;
         blocks.push(slider);
       };
