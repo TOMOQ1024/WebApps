@@ -93,6 +93,7 @@
     let colors = {
       white : "#ddd",
       gray : "#888",
+      darkgray : "#888",//  一緒だお!!!
       black : "#111",
       red : "#d00",
       pink : "#f6a",
@@ -200,6 +201,11 @@
     class Block{
       //  定義の例 : blocks.push(new Block(0,()=>t,1,1,3,0,"cyan"));
       constructor(...arg){
+        /*\  this.ornament
+        \*\  fixed : スライドアニメーションの有無
+        \*\  preventDefault : 通常の描画法のキャンセル
+        \*\  removeEdge : 角の消去
+        \*/
         const keys = ["x","y","z","w","h","angle","color","ornament"];//  最後の引数は数値であれば fixed, オブジェクトであれば ornament
         this.movable = 0;//  update時に動くかどうか
         for(let i=0; i<keys.length; i++){
@@ -217,13 +223,15 @@
             });
           }
         }
-        if(typeof this.ornament === "number"){
-          this.fixed = this.ornament;
+        if(typeof this.ornament === "string"){
+          this.class = this.ornament;
           this.ornament = undefined;
+        }
+        else if(this.ornament && this.ornament.fixed){
+          this.class = "fixed";
         }
 
         this.state = "preparing";
-        this.isSlider = 0;
         this.f0 = count;
         if(Math.random()<.5){
           this.x0 = Math.random()<.5 ? -W/2 : W/2*3;
@@ -246,7 +254,7 @@
         this.wr.style.height = `${(this.h)/H*100}%`;
         this.wr.style.left = `${(this.x0-this.w/2)/W*100}%`;
         this.wr.style.top = `${(this.y0-this.h/2)/H*100}%`;
-        if(!this.fixed)this.wr.style.transition = `${DT}ms`;
+        if(this.class !== "fixed")this.wr.style.transition = `${DT}ms`;
         document.querySelector("#layer-"+this.z).append(this.wr);
         this.cvs0 = document.createElement("canvas");
         this.cvs0.width = L*this.w;
@@ -268,20 +276,42 @@
         this.ctx0.fillStyle = colors[this.color];
         this.ctx0.strokeStyle = "#333";
         this.ctx0.lineWidth = 3;
-        this.ctx0.fillRect(0,0,L*this.w,L*this.h);
-        this.ctx0.strokeRect(0,0,L*this.w,L*this.h);
-
-        //  上部
-        if(this.isSlider){
-          this.ctx1.fillStyle = colors[this.color];
-          this.ctx1.arc(0,0,L,0,Math.PI*2);
-          this.ctx1.fill();
+        if(this.ornament && this.ornament.removeEdge){
+          //  角なし
+          this.ctx0.beginPath();
+          this.ctx0.arc(L*(this.w-.25),L*(this.h-.25),L*.25,Math.PI*0,Math.PI*.5);
+          this.ctx0.arc(L*.25,L*(this.h-.25),L*.25,Math.PI*.5,Math.PI*1);
+          this.ctx0.arc(L*.25,L*.25,L*.25,Math.PI*1,Math.PI*1.5);
+          this.ctx0.arc(L*(this.w-.25),L*.25,L*.25,Math.PI*1.5,Math.PI*0);
+          this.ctx0.closePath();
+          this.ctx0.fill();
+          this.ctx0.stroke();
         }
         else{
+          this.ctx0.fillRect(0,0,L*this.w,L*this.h);
+          this.ctx0.strokeRect(0,0,L*this.w,L*this.h);
+        }
+
+        //  装飾
+        if(this.ornament && this.ornament.contents){
+          for(let i=0; i<this.ornament.contents.length; i++){
+            this.ornament.contents[i].draw(this);
+          }
+        }
+
+        //  上部
+        if(!(this.ornament && this.ornament.preventDefault)){
           this.ctx1.fillStyle = colors[this.color];
           this.ctx1.beginPath();
           for(let j=0; j<this.h*2; j++){
             for(let i=0; i<this.w*2; i++){
+              /*
+              if(0 && this.ornament && this.ornament.removeEdge){
+                if((!i||!(i-this.w*2+1))&&(!j||!(j-this.h*2+1))){
+                  continue;
+                }
+              }
+              */
               this.ctx1.moveTo(L/4*(i*2+1),L/4*(j*2+1));
               this.ctx1.arc(L/4*(i*2+1),L/4*(j*2+1),L/7,0,Math.PI*2);
             }
@@ -334,6 +364,23 @@
       }
     }
 
+    class Ornament{
+      constructor(ctxId,color,type,...arg){
+        if(type === "line"){
+          let [x0,y0,x1,y1] = arg;
+          this.draw = (block) => {
+            let ctx = ctxId ? block.ctx1 : block.ctx0;
+            ctx.fillStyle = colors[color];
+            ctx.beginPath();
+            ctx.arc(L*x0,L*y0,L/7,Math.PI,Math.PI*2);
+            ctx.arc(L*x1,L*y1,L/7,0,Math.PI);
+            ctx.closePath();
+            ctx.fill();
+          };
+        }
+      }
+    }
+
 
 
     function Resize(){
@@ -352,16 +399,28 @@
         //  リセット
         blocks.splice(0,blocks.length);
         //  背景
-        blocks.push(new Block(W/2,H/2,0,W,H,0,"gray",1));
+        blocks.push(new Block(W/2,H/2,0,W,H,0,"gray","fixed"));
         //  枠
-        blocks.push(new Block(W/2,.5,1,W,1,0,"white",1));
-        blocks.push(new Block(W/2,H-.5,1,W,1,0,"white",1));
-        blocks.push(new Block(.5,H/2,1,1,H-2,0,"white",1));
-        blocks.push(new Block(W-.5,H/2,1,1,H-2,0,"white",1));
-        blocks.push(new Block(W/2,H-3.5,1,W-2,1,0,"white",1));
+        blocks.push(new Block(W/2,.5,1,W,1,0,"white","fixed"));
+        blocks.push(new Block(W/2,H-.5,1,W,1,0,"white","fixed"));
+        blocks.push(new Block(.5,H/2,1,1,H-2,0,"white","fixed"));
+        blocks.push(new Block(W-.5,H/2,1,1,H-2,0,"white","fixed"));
+        blocks.push(new Block(W/2,H-3.5,1,W-2,1,0,"white","fixed"));
 
-        slider = new Block(W/2,H-2,1,3,2,0,"white");
-        slider.isSlider = 1;
+        slider = new Block(W/2,H-2,1,3,2,0,"white",{
+          removeEdge : 1,
+          preventDefault : 1,
+          contents : [
+            /*
+            new Ornament(1,"white","line",.75,.5,.75,1.5),
+            new Ornament(1,"white","line",1.5,.5,1.5,1.5),
+            new Ornament(1,"white","line",2.25,.5,2.25,1.5)
+            */
+            new Ornament(0,"darkgray","line",.75,.5,.75,1.5),
+            new Ornament(0,"darkgray","line",1.5,.5,1.5,1.5),
+            new Ornament(0,"darkgray","line",2.25,.5,2.25,1.5)
+          ]
+        });
         blocks.push(slider);
       };
 
@@ -385,67 +444,83 @@
       await Sleep(1000/60);
       count = (count+1)%3600;
       Main();
+      //  リクエスト???
+      //  maximum なんちゃら
     }
 
     async function Update(){
+      if(state === "title"){
+        if(.9<s){
+          //  PLAY
+        }
+        else if(s<-.9){
+          //  PREV
+        }
+      }
+
       if(state !== blocks.state){
         //ブロックの設定
+        blocks.reset();
         if(state === "title"){
           blocks.state = "title";
 
           //  ブロック定義
-          blocks.reset();
           if("DON'T"){
-            blocks.push(new Block(W/2-6,3.5,1,1,3,0,"cyan"));
-            blocks.push(new Block(W/2-4,3.5,1,1,2,0,"cyan"));
-            blocks.push(new Block(W/2-5,2.5,1,1,1,0,"cyan"));
-            blocks.push(new Block(W/2-5,4.5,1,1,1,0,"cyan"));
-            blocks.push(new Block(W/2-4.25,2.25,1,.5,.5,0,"cyan"));
-            blocks.push(new Block(W/2-4.25,4.75,1,.5,.5,0,"cyan"));
-            blocks.push(new Block(W/2-3,3.75,1,1,1.5,0,"orange"));
-            blocks.push(new Block(W/2-1,3.25,1,1,1.5,0,"orange"));
-            blocks.push(new Block(W/2-2.25,2.5,1,1.5,1,0,"orange"));
-            blocks.push(new Block(W/2-1.75,4.5,1,1.5,1,0,"orange"));
-            blocks.push(new Block(W/2-1.25,2.25,1,.5,.5,0,"orange"));
-            blocks.push(new Block(W/2-2.75,4.75,1,.5,.5,0,"orange"));
-            blocks.push(new Block(W/2-.75,4.25,1,.5,.5,0,"orange"));
-            blocks.push(new Block(W/2-3.25,2.75,1,.5,.5,0,"orange"));
-            blocks.push(new Block(W/2,3.5,1,1,3,0,"lime"));
-            blocks.push(new Block(W/2+2,3.5,1,1,3,0,"lime"));
-            blocks.push(new Block(W/2+.75,3.25,1,.5,1.5,0,"lime"));
-            blocks.push(new Block(W/2+1.25,3.75,1,.5,1.5,0,"lime"));
-            blocks.push(new Block(W/2+3,2.75,1,1,1.5,0,"yellow"));
-            blocks.push(new Block(W/2+5,2.5,1,3,1,0,"purple"));
-            blocks.push(new Block(W/2+5,4,1,1,2,0,"purple"));
+            blocks.push(new Block(W/2-6,3.5,1,1,3,0,"cyan","title"));
+            blocks.push(new Block(W/2-4,3.5,1,1,2,0,"cyan","title"));
+            blocks.push(new Block(W/2-5,2.5,1,1,1,0,"cyan","title"));
+            blocks.push(new Block(W/2-5,4.5,1,1,1,0,"cyan","title"));
+            blocks.push(new Block(W/2-4.25,2.25,1,.5,.5,0,"cyan","title"));
+            blocks.push(new Block(W/2-4.25,4.75,1,.5,.5,0,"cyan","title"));
+            blocks.push(new Block(W/2-3,3.75,1,1,1.5,0,"orange","title"));
+            blocks.push(new Block(W/2-1,3.25,1,1,1.5,0,"orange","title"));
+            blocks.push(new Block(W/2-2.25,2.5,1,1.5,1,0,"orange","title"));
+            blocks.push(new Block(W/2-1.75,4.5,1,1.5,1,0,"orange","title"));
+            blocks.push(new Block(W/2-1.25,2.25,1,.5,.5,0,"orange","title"));
+            blocks.push(new Block(W/2-2.75,4.75,1,.5,.5,0,"orange","title"));
+            blocks.push(new Block(W/2-.75,4.25,1,.5,.5,0,"orange","title"));
+            blocks.push(new Block(W/2-3.25,2.75,1,.5,.5,0,"orange","title"));
+            blocks.push(new Block(W/2,3.5,1,1,3,0,"lime","title"));
+            blocks.push(new Block(W/2+2,3.5,1,1,3,0,"lime","title"));
+            blocks.push(new Block(W/2+.75,3.25,1,.5,1.5,0,"lime","title"));
+            blocks.push(new Block(W/2+1.25,3.75,1,.5,1.5,0,"lime","title"));
+            blocks.push(new Block(W/2+3,2.75,1,1,1.5,0,"yellow","title"));
+            blocks.push(new Block(W/2+5,2.5,1,3,1,0,"purple","title"));
+            blocks.push(new Block(W/2+5,4,1,1,2,0,"purple","title"));
           }
           if("STOP!"){
-            blocks.push(new Block(W/2-5.5,7,1,1,2,0,"red"));
-            blocks.push(new Block(W/2-4.5,8,1,1,2,0,"red"));
-            blocks.push(new Block(W/2-6.25,7,1,.5,1,0,"red"));
-            blocks.push(new Block(W/2-3.75,8,1,.5,1,0,"red"));
-            blocks.push(new Block(W/2-4.25,6.25,1,1.5,.5,0,"red"));
-            blocks.push(new Block(W/2-5.75,8.75,1,1.5,.5,0,"red"));
-            blocks.push(new Block(W/2-2,6.5,1,3,1,0,"blue"));
-            blocks.push(new Block(W/2-2,8,1,1,2,0,"blue"));
-            blocks.push(new Block(W/2,7.75,1,1,1.5,0,"pink"));
-            blocks.push(new Block(W/2+2,7.25,1,1,1.5,0,"pink"));
-            blocks.push(new Block(W/2+.75,6.5,1,1.5,1,0,"pink"));
-            blocks.push(new Block(W/2+1.25,8.5,1,1.5,1,0,"pink"));
-            blocks.push(new Block(W/2+1.75,6.25,1,.5,.5,0,"pink"));
-            blocks.push(new Block(W/2+.25,8.75,1,.5,.5,0,"pink"));
-            blocks.push(new Block(W/2+2.25,8.25,1,.5,.5,0,"pink"));
-            blocks.push(new Block(W/2-.25,6.75,1,.5,.5,0,"pink"));
-            blocks.push(new Block(W/2+3,7.5,1,1,3,0,"green"));
-            blocks.push(new Block(W/2+5,7.25,1,1,1.5,0,"green"));
-            blocks.push(new Block(W/2+4,6.5,1,1,1,0,"green"));
-            blocks.push(new Block(W/2+4,8,1,1,1,0,"green"));
-            blocks.push(new Block(W/2+4.75,6.25,1,.5,.5,0,"green"));
-            blocks.push(new Block(W/2+4.75,8.25,1,.5,.5,0,"green"));
-            blocks.push(new Block(W/2+6,7,1,1,2,0,"sky"));
-            blocks.push(new Block(W/2+6,8.75,1,1,.5,0,"sky"));
+            blocks.push(new Block(W/2-5.5,7,1,1,2,0,"red","title"));
+            blocks.push(new Block(W/2-4.5,8,1,1,2,0,"red","title"));
+            blocks.push(new Block(W/2-6.25,7,1,.5,1,0,"red","title"));
+            blocks.push(new Block(W/2-3.75,8,1,.5,1,0,"red","title"));
+            blocks.push(new Block(W/2-4.25,6.25,1,1.5,.5,0,"red","title"));
+            blocks.push(new Block(W/2-5.75,8.75,1,1.5,.5,0,"red","title"));
+            blocks.push(new Block(W/2-2,6.5,1,3,1,0,"blue","title"));
+            blocks.push(new Block(W/2-2,8,1,1,2,0,"blue","title"));
+            blocks.push(new Block(W/2,7.75,1,1,1.5,0,"pink","title"));
+            blocks.push(new Block(W/2+2,7.25,1,1,1.5,0,"pink","title"));
+            blocks.push(new Block(W/2+.75,6.5,1,1.5,1,0,"pink","title"));
+            blocks.push(new Block(W/2+1.25,8.5,1,1.5,1,0,"pink","title"));
+            blocks.push(new Block(W/2+1.75,6.25,1,.5,.5,0,"pink","title"));
+            blocks.push(new Block(W/2+.25,8.75,1,.5,.5,0,"pink","title"));
+            blocks.push(new Block(W/2+2.25,8.25,1,.5,.5,0,"pink","title"));
+            blocks.push(new Block(W/2-.25,6.75,1,.5,.5,0,"pink","title"));
+            blocks.push(new Block(W/2+3,7.5,1,1,3,0,"green","title"));
+            blocks.push(new Block(W/2+5,7.25,1,1,1.5,0,"green","title"));
+            blocks.push(new Block(W/2+4,6.5,1,1,1,0,"green","title"));
+            blocks.push(new Block(W/2+4,8,1,1,1,0,"green","title"));
+            blocks.push(new Block(W/2+4.75,6.25,1,.5,.5,0,"green","title"));
+            blocks.push(new Block(W/2+4.75,8.25,1,.5,.5,0,"green","title"));
+            blocks.push(new Block(W/2+6,7,1,1,2,0,"sky","title"));
+            blocks.push(new Block(W/2+6,8.75,1,1,.5,0,"sky","title"));
           }
         }
-        await Sleep(100);
+        if(state === "title_play"){
+          //
+        }
+
+        //  ちょっと待ってから動かす．
+        await Sleep(300);
         blocks.forEach((v,i) => {
           v.update();
           v.state = "ready";
