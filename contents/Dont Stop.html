@@ -14,6 +14,8 @@
         font-size: 0;
         display: inline-block;
         text-align: center;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
       }
       @font-face
       {
@@ -60,6 +62,7 @@
         display: inline-block;
         position: absolute;
         pointer-events: none;
+        will-change: top,left,transform;
       }
       canvas{
         width : 100%;
