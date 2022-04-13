@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>Langton's Ant</title>
-    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="../Style.css">
     <style>
       *{
         /* overflow: hidden; */
@@ -49,7 +49,7 @@
   </head>
   <body>
     <div id="menu_wrapper">
-      <input id="menubtn" type="image" src="buttons/l1.png">
+      <input id="menubtn" type="image" src="images/l1.png">
       <div style="margin-top:15%;">
         <span id="step"></span> STEP
         PER
@@ -59,7 +59,7 @@
         STEP : <span id="crntstep">0</span>
       </div>
       <div style="margin-top:8%;">
-        <input id="pausebtn" type="image" src="buttons/r1.png">
+        <input id="pausebtn" type="image" src="images/r1.png">
       </div>
       <div style="margin-top:8%;">
         LOOP : <span id="loop"></span>
@@ -146,11 +146,11 @@
       menu.ipt.onclick = ()=>{
         if(menu.bool){
           //  閉める
-          menu.ipt.src = "buttons/r1.png";
+          menu.ipt.src = "images/r1.png";
           menu.wr.style.transform = "translateX(-100%)";
         }else{
           //  開ける
-          menu.ipt.src = "buttons/l1.png";
+          menu.ipt.src = "images/l1.png";
           menu.wr.style.transform = "";
         }
         menu.bool = 1 - menu.bool;
@@ -169,7 +169,7 @@
         let i = parseInt(prompt("数値を入力(現在"+crntstep+")"));
         if(!i)return 0;
         pause = 1;
-        menu.pausebtn.src = "buttons/r1.png";
+        menu.pausebtn.src = "images/r1.png";
         Init();
         setTimeout(function(){
           Update(i);
@@ -179,10 +179,10 @@
       menu.pausebtn.onclick = ()=>{
         if(pause){
           //  再生
-          menu.pausebtn.src = "buttons/pause.png";
+          menu.pausebtn.src = "images/pause.png";
         }else{
           //  一時停止
-          menu.pausebtn.src = "buttons/r1.png";
+          menu.pausebtn.src = "images/r1.png";
         }
         pause = 1 - pause;
       }
@@ -198,10 +198,10 @@
       }
       for(let i=0; i<tiles.length; i++){
         menu.tiles[i].style.background = tiles[i][1];
-        menu.tiles[i].firstElementChild.src = "buttons/"+(tiles[i][0]>0 ? "l" : "r")+"1.png";
+        menu.tiles[i].firstElementChild.src = "images/"+(tiles[i][0]>0 ? "l" : "r")+"1.png";
         menu.tiles[i].onclick = () => {
           tiles[i][0] *= -1;
-          menu.tiles[i].firstElementChild.src = "buttons/"+(tiles[i][0]>0 ? "l" : "r")+"1.png";
+          menu.tiles[i].firstElementChild.src = "images/"+(tiles[i][0]>0 ? "l" : "r")+"1.png";
           stop = 1;
           setTimeout(function(){
             Init();
@@ -226,7 +226,7 @@
         stop = 1;
         crntstep = 0;
         pause = 1;
-        menu.pausebtn.src = "buttons/r1.png";
+        menu.pausebtn.src = "images/r1.png";
         ant = {
           x: Math.ceil(width/2),
           y: Math.ceil(height/2),
