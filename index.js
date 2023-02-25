@@ -5,8 +5,8 @@
     let r = json.findIndex(o=>o.name === location.hash.slice(1));
     if(0<=r){
       console.log(json[r].name+'!!!!!');
-      //Redirect(r.name);
-      //return;
+      Redirect(json[r].name);
+      return;
     }
     let wr = document.createElement("div");
     wr.className = "app-wrapper";
@@ -32,5 +32,6 @@ function AddAppCard(wr, app,i){
 }
 
 function PopUp(app){
-  console.log(app.name);
+  //console.log(app.name);
+  Redirect(app.name);
 }

@@ -9,7 +9,11 @@ function getFileRef(name, type){
   switch(type){
     case "js":
       return `/apps/${dir}/${name}/index.js`;
+    case "css":
+      return `/apps/${dir}/${name}/style.css`;
     case "icon":
       return `/icons/${dir}/${name}-icon.png`;
+    case "assets":
+      return `/apps/${dir}/${name}/assets/`;
   }
 }
