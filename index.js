@@ -16,9 +16,10 @@
   });
 })()
 
-function AddAppCard(wr, app,i){
+function AddAppCard(wr, app){
+  const disabled = 0<=app.tags.indexOf("coming soon");
   let awr = document.createElement("div");
-  awr.className = "app-card";
+  awr.className = "app-card" + (disabled ? " disabled" : "");
   let btn = document.createElement("input");
   btn.className = "app-icon";
   btn.type = "image";
