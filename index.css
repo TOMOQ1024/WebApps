@@ -11,6 +11,8 @@
 .app-card {
   margin: Calc(var(--maxlength)*0.03);
   position: relative;
+  font-size: large;
+  overflow: hidden;
 }
 
 .app-icon {
@@ -22,9 +24,34 @@
   filter: saturate(0.2) brightness(0.6);
 }
 
+.app-card.app-card.disabled::before {
+  content: "COMING SOON";
+  position: absolute;
+  margin-top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  rotate: -25deg;
+  pointer-events: none;
+  z-index: 100;
+  color: white;
+  font-weight: bold;
+  text-shadow:
+    0 0 5px black,
+    0 0 5px black,
+    0 0 5px black,
+    0 0 5px black,
+    0 0 5px black,
+    0 0 5px black,
+    0 0 5px black;
+  transition: .3s;
+}
+
+.app-card.app-card.disabled:hover::before {
+  scale: 1.1 1.1;
+}
+
 .app-card.disabled::after {
   cursor: not-allowed;
-  font-size: 20px;
   content: "";
   position: absolute;
   --disabled-color: #c00;

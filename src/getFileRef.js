@@ -13,7 +13,7 @@ function getFileRef(name, type){
       return `/apps/${dir}/${name}/style.css`;
     case "icon":
       return `/icons/${dir}/${name}-icon.png`;
-    case "assets":
-      return `/apps/${dir}/${name}/assets/`;
+    case "root":
+      return `/apps/${dir}/${name}/`;
   }
 }
