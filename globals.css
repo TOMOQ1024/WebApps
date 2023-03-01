@@ -15,6 +15,8 @@
 :root {
   --maxlength: min(100vw, 100vh);
   --headerheight: 100px;
+  --cvs-max-width: calc(100vw - 8px);
+  --cvs-max-height: calc(100vh - var(--headerheight) - 8px);
 }
 
 
@@ -83,13 +85,27 @@ header > #header-inner {
   max-height: calc(100vh - var(--headerheight));
 }
 
+@media (min-height: calc(100vw + 100px)) {
+  .cvs-single {
+    width: 100vw;
+    height: auto;
+  }
+}
+
+@media (min-width: calc(100vh - 100px)) {
+  .cvs-single {
+    height: 100vh;
+    width: auto;
+  }
+}
+
 .cvs-single {
   position: absolute;
   top: 50%;
   left: 50%;
   translate: -50% -50%;
-  max-width: calc(100vw - 8px);
-  max-height: calc(100vh - var(--headerheight) - 8px);
+  max-width: var(--cvs-max-width);
+  max-height: var(--cvs-max-height);
 }
 
 /* #wrapper{

@@ -43,7 +43,7 @@
     0 0 5px black,
     0 0 5px black,
     0 0 5px black;
-  transition: .3s;
+  transition: cubic-bezier(0.25, 0.1, 0.75, 2.96) .1s;
 }
 
 .app-card.app-card.disabled:hover::before {

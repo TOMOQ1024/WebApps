@@ -1,7 +1,7 @@
 
 (() => {
-  loadScript("/src/Utils.js");
   loadScript("/src/Vec2.js");
+  loadScript("/src/Utils.js");
   loadScript("/src/Mouse.js");
   loadScript("/src/Scene.js");
   loadScript("/src/Object2D.js");
@@ -162,6 +162,46 @@
               fontSize: 120,
               color: "white",
               onclick: ()=>{
+                sceneMgr.setScene("result");
+              }
+            }),
+          },
+          ...(()=>{
+            cells = [];
+            for(let y=0; y<height; y++){
+              cells.push([]);
+              for(let x=0; x<width; x++){
+                cells[y].push(0);
+              }
+            }
+            console.log(cells);
+            for(let y=0; y<height; y++){
+              for(let x=0; x<width; x++){
+                if(Math.random() < 0.5){
+                  Flip(x, y);
+                }
+              }
+            }
+            console.log(cells);
+            return [];
+            //return [{name:"temp", obj: new RectObj2D()}]
+          })()
+          );
+        },
+      }),
+
+      result: new Scene({
+        onMounted: ()=>{
+          let self = sceneMgr.crntScene;
+          self.addObjects({
+            name: "go back",
+            obj: new TextObj2D({
+              text: "Go back",
+              x: cvs.width / 2,
+              y: cvs.height / 2,
+              fontSize: 120,
+              color: "white",
+              onclick: ()=>{
                 sceneMgr.setScene("title");
               }
             }),
@@ -170,48 +210,24 @@
       }),
     });
 
-    sceneMgr.setScene("title");
+    sceneMgr.setScene("game");
     console.log(sceneMgr);
     GameLoop();
   }, 100);
 
 
 
+  function Flip(x0, y0){
+    const dir = Utils.directions;
+    let x, y;
 
-
-  function Update(){
-    switch(scene){
-      case "->title":
-        time = [0, 0, []];
-        scene = "title";
-        break;
-      case "title":
-        //cvs.style.cursor = mouse.x < 500 ? "pointer" : "cell";
-        objs.title.updateCursor(mouse);
-        break;
-      case "settings":
-        break;
-      case "game":
-        break;
-      case "result":
-        break;
-    }
-  }
-
-  function Render(){
-    ctx.clearRect(0, 0, cvs.width, cvs.height);
-    switch(scene){
-      case "title":
-        objs.title.fill();
-        break;
-      case "settings":
-        ctx.textBaseline = "top";
-        ctx.fillText("Settings", cvs.width / 2, 0);
-        break;
-      case "game":
-        break;
-      case "result":
-        break;
+    cells[y0][x0] ^= 1;
+    for(let i=0; i<4; i++){
+      x = x0 + dir[i].x;
+      y = y0 + dir[i].y;
+      if(Utils.isIn_v(x, y, 0, 0, width, height)){
+        cells[y][x] ^= 1;
+      }
     }
   }
 

@@ -3,5 +3,13 @@ function loadScript(path, exclusive=false) {
   if(exclusive)scwr.innerHTML = "";
   let el = document.createElement("script");
   el.src = path;
-  scwr.appendChild(el);
+
+  // すでに読み込んでいた場合は追加しない
+  if(
+    [...document.querySelectorAll("script")].findIndex(
+      e => e.src === el.src
+    ) < 0
+  ){
+    scwr.appendChild(el);
+  }
 }

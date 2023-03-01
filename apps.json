@@ -1,7 +1,7 @@
 [
   {
     "name": "Minesweeper",
-    "tags": ["game", "puzzle", "coming soon"],
+    "tags": ["game", "puzzle"],
     "description": "すべての地雷の位置を特定すればクリア．ただし地雷パネルを開くとゲームオーバー．パネルの数字は周囲の八マスにある地雷の数を表す．操作は左右クリック・タップ"
   },
   {
