@@ -1,5 +1,6 @@
 (() => {
   //
+  const rootPath = getFileRef("Maze", "root");
   let width = 5;
   let height = 5;
   let texture = 0;
@@ -10,17 +11,17 @@
   let player = {};
   let cells;//  0:壁, 1:未, 2:過, 3:既, 4:解, 5:始, 6:終
   const img = new Image();
-  img.src = getFileRef("Maze","assets")+"Maze.png";
+  img.src = rootPath+"assets/Maze.png";
 
 
-  let len = Math.round(Math.min(window.innerWidth / (width * 2 + 1), window.innerHeight / (height * 2 + 1)) * 0.9);
+  let len = 100;
   let cvs = document.createElement("canvas");
-  cvs.onclick = OnClick;
+  cvs.onclick = (e)=>{OnClick(e)};
   document.getElementById("main").appendChild(cvs);
   cvs.width = len * (width * 2 + 1);
   cvs.height = len * (height * 2 + 1);
-  cvs.style.transition =  ".3s";
-  cvs.style.backgroundImage = `url(${getFileRef("Maze","assets")}202020-o.png)`;
+  cvs.className = "cvs-single";
+  cvs.style.backgroundImage = `url(${rootPath}assets/202020-o.png)`;
   cvs.style.backgroundSize = "calc(100%/11) calc(100%/11)";
   cvs.style.zIndex = "10";
   let ctx = cvs.getContext("2d");
@@ -46,8 +47,9 @@
 
   //  //
   function OnClick(e) {
-    let x = e.offsetX / len;
-    let y = e.offsetY / len;
+    const rect = cvs.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * 11 / rect.width;
+    const y = (e.clientY - rect.top) * 11 / rect.height;
     let rr = (a, b) => a * a + 2 * b * b + a * Math.abs(a) - 1;
     let i;
 
@@ -70,7 +72,6 @@
         width = 57;
         height = 57;
       }
-      len = Math.round(Math.min(window.innerWidth / (width * 2 + 1), window.innerHeight / (height * 2 + 1)) * 0.9);
       cvs.width = len * (width * 2 + 1);
       cvs.height = len * (height * 2 + 1);
       if (!texture) cvs.style.background = "#202020";
@@ -89,7 +90,7 @@
     cvs.style.backgroundSize = "" + 100 / (width * 2 + 1) + "% " + 100 / (height * 2 + 1) + "%";
   }
 
-  //  draw in settings (this will be rewrited later)
+  //  draw in settings (this will be overridden later)
   function Draw() {
     ctx.clearRect(0, 0, cvs.width, cvs.height);
     ctx.fillStyle = "cyan";

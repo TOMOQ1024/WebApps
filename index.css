@@ -12,7 +12,7 @@
   margin: Calc(var(--maxlength)*0.03);
   position: relative;
   font-size: large;
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 .app-icon {
@@ -21,7 +21,7 @@
 }
 
 .app-card.disabled > .app-icon {
-  filter: saturate(0.2) brightness(0.6);
+  filter: drop-shadow(0 0 10px #444) saturate(0.2) brightness(0.6);
 }
 
 .app-card.app-card.disabled::before {

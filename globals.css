@@ -80,12 +80,11 @@ header > #header-inner {
 #main {
   font-size: 0;
   position: relative;
-  height: 100vh;
   max-width: 100vw;
-  max-height: calc(100vh - var(--headerheight));
+  height: calc(100vh - var(--headerheight));
 }
 
-@media (min-height: calc(100vw + 100px)) {
+/* @media (min-height: calc(100vw + 100px)) {
   .cvs-single {
     width: 100vw;
     height: auto;
@@ -97,10 +96,11 @@ header > #header-inner {
     height: 100vh;
     width: auto;
   }
-}
+} */
 
 .cvs-single {
   position: absolute;
+  transition: .3s;
   top: 50%;
   left: 50%;
   translate: -50% -50%;
