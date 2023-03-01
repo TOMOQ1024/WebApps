@@ -11,7 +11,7 @@
   },
   {
     "name": "Tetris",
-    "tags": ["game", "puzzle", "coming soon"],
+    "tags": ["game", "puzzle"],
     "description": "降ってくるブロックを横一列に埋めるとスコアが加算される．一度に消す行数が多いほどスコアが多く手に入る．操作はキーボード・スワイプ"
   },
   {
