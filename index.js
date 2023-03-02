@@ -2,7 +2,8 @@
   fetch("./apps.json")
   .then(res=>res.json())
   .then(json=>{
-    let r = json.findIndex(o=>o.name === location.hash.slice(1));
+    const hash = location.hash.slice(1);
+    let r = json.findIndex(o=>o.name.replace(/[\s']/g,'') === hash);
     if(0<=r){
       console.log(json[r].name+'!!!!!');
       Redirect(json[r].name);

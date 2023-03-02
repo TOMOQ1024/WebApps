@@ -78,9 +78,7 @@ header > #header-inner {
 }
 
 #main {
-  font-size: 0;
   position: relative;
-  max-width: 100vw;
   height: calc(100vh - var(--headerheight));
 }
 
